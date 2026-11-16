@@ -1,0 +1,73 @@
+{
+  "orden": 2,
+  "codigo": "SQL",
+  "numero": 1,
+  "titulo": "La base",
+  "subtitulo": "Tablas, claves y datos: aerotaller.db se crea sola al arrancar",
+  "tipo": "desafio",
+  "minutosEstimados": 100,
+  "temas": [
+    { "numero": "07", "titulo": "Bases de datos", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-07-bases-de-datos/index.html" },
+    { "numero": "08", "titulo": "ADO.NET", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-08-ado-net/index.html" }
+  ],
+  "insignia": "base",
+  "tareas": [
+    { "id": "paquete", "texto": "Agregué el paquete Microsoft.Data.Sqlite a AeroTaller", "ayuda": "cd AeroTaller y después dotnet add package Microsoft.Data.Sqlite" },
+    { "id": "script", "texto": "AeroTaller/aerotaller.sql crea Aeropuerto, Vuelo, Pasajero y Reserva con los nombres del CONTRATO, sus claves foráneas, y carga material/datos.sql sin errores", "ayuda": "Probalo entero en DB Browser for SQLite (Ejecutar SQL) antes de usarlo desde C#." },
+    { "id": "arranque", "texto": "appsettings.json tiene ConnectionStrings:AeroTaller y, con la app apagada, borré aerotaller.db: al arrancar se volvió a crear con los datos", "ayuda": "Fijate que el .csproj copie aerotaller.sql a la salida (CopyToOutputDirectory)." },
+    { "id": "consultas", "texto": "Corrí las 6 consultas en DB Browser (ORDER BY, LIKE, JOIN doble, LEFT JOIN + GROUP BY, UPDATE y DELETE con WHERE)" },
+    { "id": "push", "texto": "Commit y push con el mensaje del desafío, y lo veo en GitHub (aerotaller.db NO se sube: está en .gitignore)" },
+    { "id": "verificador", "texto": "El verificador da todo en verde para el desafío 1 (botón Verificar o dotnet run --project verificador -- 1)" }
+  ],
+  "quiz": [
+    {
+      "id": "p1",
+      "texto": "Con un breakpoint en la línea if (File.Exists(archivo)) return; de CrearBaseSiNoExiste, arrancás con F5 (configuración AeroTaller). ¿Qué valor muestra archivo en el panel Variables?",
+      "codigo": "var archivo = new SqliteConnectionStringBuilder(cadenaConexion).DataSource;\nif (File.Exists(archivo)) return;   // ← 🔴",
+      "opciones": [
+        { "id": "a", "texto": "\"Data Source=aerotaller.db;Foreign Keys=True\"" },
+        { "id": "b", "texto": "\"aerotaller.db\"" },
+        { "id": "c", "texto": "La ruta completa: \".../AeroTaller/bin/Debug/net10.0/aerotaller.db\"" },
+        { "id": "d", "texto": "null, porque la base todavía no existe" }
+      ],
+      "correcta": "b",
+      "pista": "Comparalo con el valor de cadenaConexion (pasá el mouse por encima o agregalo al Watch). ¿Qué parte de la cadena se queda el builder?",
+      "explicacion": "SqliteConnectionStringBuilder parte la cadena en sus claves y DataSource es solo el valor de 'Data Source': \"aerotaller.db\", una ruta relativa a la carpeta desde donde corre la app (AeroTaller/). Cuando el verificador te pasa su propia cadena, ese mismo valor es una ruta completa a una carpeta temporal: por eso no se escribe \"aerotaller.db\" a mano en File.Exists.",
+      "etiquetas": ["depurador"]
+    },
+    {
+      "id": "p2",
+      "texto": "Querés la ocupación de TODOS los vuelos (reservas confirmadas por vuelo) y escribís esta consulta. ¿Qué pasa con AT4001 y AT3110, que no tienen ninguna reserva confirmada?",
+      "codigo": "SELECT v.Numero, COUNT(r.Id) AS Ocupados\nFROM Vuelo v\nLEFT JOIN Reserva r ON r.VueloId = v.Id\nWHERE r.Estado = 'Confirmada'\nGROUP BY v.Id, v.Numero;",
+      "opciones": [
+        { "id": "a", "texto": "Aparecen con Ocupados = 0, porque es un LEFT JOIN" },
+        { "id": "b", "texto": "Aparecen con Ocupados = 1, porque COUNT cuenta la fila del vuelo" },
+        { "id": "c", "texto": "La consulta da error: no se puede usar WHERE con LEFT JOIN" },
+        { "id": "d", "texto": "No aparecen: el WHERE descarta las filas donde r.Estado es NULL" }
+      ],
+      "correcta": "d",
+      "pista": "Pensá en la fila que arma el LEFT JOIN para un vuelo sin reservas: ¿qué valor tienen las columnas de r? ¿Y qué hace el WHERE con esa fila?",
+      "explicacion": "El LEFT JOIN conserva el vuelo sin reservas, pero con todas las columnas de r en NULL. Después el WHERE pregunta r.Estado = 'Confirmada', NULL no es igual a nada, y la fila se descarta: el LEFT JOIN quedó convertido en un INNER JOIN. La condición del estado va en el ON (LEFT JOIN Reserva r ON r.VueloId = v.Id AND r.Estado = 'Confirmada')."
+    },
+    {
+      "id": "p3",
+      "texto": "¿Por qué las fechas de AeroTaller se guardan como TEXT con el formato 'AAAA-MM-DD HH:MM' (por ejemplo '2026-11-18 07:30') y no como '18/11/2026 07:30'?",
+      "opciones": [
+        { "id": "a", "texto": "Porque con año-mes-día, ordenar o comparar los textos da el mismo resultado que ordenar o comparar las fechas" },
+        { "id": "b", "texto": "Porque SQLite rechaza cualquier otro formato con un error" },
+        { "id": "c", "texto": "Porque es el formato que usa la cultura es-AR que configuramos en Program.cs" },
+        { "id": "d", "texto": "Porque ocupa menos espacio en el archivo .db" }
+      ],
+      "correcta": "a",
+      "pista": "SQLite no tiene un tipo fecha: compara esos valores como texto, carácter por carácter. Probá a mano: ¿'18/11/2026' es mayor o menor que '17/12/2026'?",
+      "explicacion": "Comparando texto carácter por carácter, '18/11/2026' > '17/12/2026' aunque sea un mes antes. Con año-mes-día, el orden de los textos coincide con el orden cronológico: ORDER BY Salida y WHERE Salida >= @desde funcionan sin convertir nada. SQLite acepta cualquier texto (no da error), y por eso el formato es responsabilidad nuestra."
+    }
+  ],
+  "lecturas": [
+    { "id": "tema07", "titulo": "Tema 07 — Bases de datos", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-07-bases-de-datos/index.html", "fuente": "Diapositivas de la cátedra", "pregunta": "¿Qué tres problemas de 'guardar todo junto' resuelven las tablas relacionadas, y cuál de ellos evita la clave foránea?" },
+    { "id": "sqlite-fk", "titulo": "SQLite Foreign Key Support", "url": "https://www.sqlite.org/foreignkeys.html", "fuente": "SQLite (en inglés)", "pregunta": "¿Por qué las claves foráneas se activan por conexión y qué pasa con un INSERT inválido si nadie las activó?" },
+    { "id": "configuracion", "titulo": "Configuración en ASP.NET Core", "url": "https://learn.microsoft.com/es-es/aspnet/core/fundamentals/configuration/", "fuente": "Microsoft Learn", "pregunta": "Si la misma clave está en appsettings.json y en una variable de entorno, ¿cuál gana? (Así es como el verificador te cambia la base)" },
+    { "id": "w3schools-sql", "titulo": "Tutorial de SQL", "url": "https://www.w3schools.com/sql/", "fuente": "W3Schools", "pregunta": "En la página de LEFT JOIN: ¿qué devuelve para las filas de la izquierda que no tienen pareja a la derecha?" }
+  ],
+  "commit": { "mensaje": "Desafío 1: script de la base y creación al arrancar", "detalle": "Commiteá aerotaller.sql, el .csproj, appsettings.json y Program.cs. La base (aerotaller.db) no se sube: se genera sola a partir del script." }
+}

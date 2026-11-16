@@ -1,0 +1,73 @@
+{
+  "orden": 5,
+  "codigo": "MVC",
+  "numero": 3,
+  "titulo": "Controladores y vistas",
+  "subtitulo": "Vuelos, pasajeros y el tablero: AeroTaller por fin se ve",
+  "tipo": "desafio",
+  "minutosEstimados": 120,
+  "temas": [
+    { "numero": "10", "titulo": "MVC", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-10-mvc/index.html" },
+    { "numero": "11", "titulo": "Layout y vistas", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-11-layout-y-vistas/index.html" }
+  ],
+  "insignia": "mvc",
+  "tareas": [
+    { "id": "registro", "texto": "Program.cs registra los cuatro repositorios con AddScoped y los controladores los reciben por el constructor (ninguno hace new de un repositorio ni usa SqliteConnection)", "ayuda": "builder.Services.AddScoped(_ => new VueloRepository(cadenaConexion));" },
+    { "id": "vuelos", "texto": "La página de inicio muestra el tablero de ocupación y /Vuelos lista los vuelos con un link al detalle de cada uno" },
+    { "id": "detalle", "texto": "/Vuelos/Detalle/{id} muestra los datos del vuelo y /Vuelos/Detalle/999 responde 404" },
+    { "id": "pasajeros", "texto": "/Pasajeros?buscar=ana filtra la lista y /Pasajeros/Detalle/{id} muestra las reservas de ese pasajero" },
+    { "id": "push", "texto": "Commit y push con el mensaje del desafío, y lo veo en GitHub" },
+    { "id": "verificador", "texto": "El verificador da todo en verde para el desafío 3 (botón Verificar o dotnet run --project verificador -- 3)" }
+  ],
+  "quiz": [
+    {
+      "id": "p1",
+      "texto": "Ponés un breakpoint en el return View(ocupacion); de HomeController.Index y abrís http://localhost:5210/ con la base recién creada. ¿Cuántos elementos tiene ocupacion (mirá Count en el panel Variables)?",
+      "opciones": [
+        { "id": "a", "texto": "9: uno por cada vuelo de la tabla" },
+        { "id": "b", "texto": "15: uno por cada reserva" },
+        { "id": "c", "texto": "0: el tablero todavía no tiene datos" },
+        { "id": "d", "texto": "8" }
+      ],
+      "correcta": "d",
+      "pista": "Desplegá la lista y buscá el AT0999. Después mirá el WHERE de ListarOcupacion: ¿todos los vuelos pasan ese filtro?",
+      "explicacion": "Hay 9 vuelos, pero ListarOcupacion filtra WHERE v.Salida >= @ahora: el AT0999 salió ayer y queda afuera. Los vuelos sin reservas (AT4001 y AT3110) sí están, con Ocupados = 0, gracias al LEFT JOIN. Y no son 15 porque el GROUP BY junta todas las reservas de un vuelo en una sola fila.",
+      "etiquetas": ["depurador"]
+    },
+    {
+      "id": "p2",
+      "texto": "Con un breakpoint en la primera línea de VuelosController.Detalle(int id), abrís /Vuelos/Detalle/abc. ¿Qué pasa?",
+      "opciones": [
+        { "id": "a", "texto": "Explota con FormatException: \"abc\" no se puede convertir a int" },
+        { "id": "b", "texto": "El breakpoint frena con id = 0; Obtener(0) devuelve null y la acción responde 404" },
+        { "id": "c", "texto": "El breakpoint no frena: el ruteo no encuentra una acción para \"abc\" y responde 405" },
+        { "id": "d", "texto": "El breakpoint frena con id = null" }
+      ],
+      "correcta": "b",
+      "pista": "Mirá el valor de id en Variables cuando frena. ¿Un int puede ser null? ¿Qué valor tiene un int que nadie pudo llenar?",
+      "explicacion": "El model binding intenta convertir \"abc\" a int, no puede y deja el valor por defecto: 0 (un int no puede ser null). No hay ningún vuelo con Id 0, así que Obtener devuelve null y la acción hace return NotFound(). Es la misma tabla de la diapositiva 'GET con un id en la ruta' del tema 11.",
+      "etiquetas": ["depurador"]
+    },
+    {
+      "id": "p3",
+      "texto": "En Views/Pasajeros/Detalle.cshtml escribís este link para cada reserva. Si la reserva es del vuelo con Id 2, ¿qué href le llega al navegador?",
+      "codigo": "<a asp-controller=\"Vuelos\" asp-action=\"Detalle\" asp-route-id=\"@reserva.Vuelo.Id\">@reserva.Vuelo.Numero</a>",
+      "opciones": [
+        { "id": "a", "texto": "/Pasajeros/Detalle/2, porque la vista es del controlador Pasajeros" },
+        { "id": "b", "texto": "/Vuelos/Detalle?id=2" },
+        { "id": "c", "texto": "/Vuelos/Detalle/2" },
+        { "id": "d", "texto": "El navegador recibe asp-route-id tal cual y arma la URL con JavaScript" }
+      ],
+      "correcta": "c",
+      "pista": "Los tag helpers se resuelven en el servidor con la plantilla de la ruta: {controller=Home}/{action=Index}/{id?}. ¿id está en la plantilla?",
+      "explicacion": "asp-controller cambia de controlador, y como id es parte de la plantilla {controller}/{action}/{id?}, va como tramo de la URL: /Vuelos/Detalle/2. Un valor que no está en la plantilla (asp-route-buscar=\"ana\") iría en la query string. Todo se resuelve en el servidor: al navegador le llega un href común."
+    }
+  ],
+  "lecturas": [
+    { "id": "ruteo", "titulo": "Enrutamiento a acciones de controlador", "url": "https://learn.microsoft.com/es-es/aspnet/core/mvc/controllers/routing", "fuente": "Microsoft Learn", "pregunta": "¿Qué diferencia hay entre el ruteo convencional (el nuestro) y el ruteo por atributos que usábamos en la Web API?" },
+    { "id": "tag-helpers", "titulo": "Tag helpers integrados", "url": "https://learn.microsoft.com/es-es/aspnet/core/mvc/views/tag-helpers/built-in/", "fuente": "Microsoft Learn", "pregunta": "En el tag helper de anclaje: ¿qué hace asp-route-{valor} cuando el valor no está en la plantilla de la ruta?" },
+    { "id": "razor", "titulo": "Referencia de la sintaxis de Razor", "url": "https://learn.microsoft.com/es-es/aspnet/core/mvc/views/razor", "fuente": "Microsoft Learn", "pregunta": "¿Cuándo hace falta una expresión explícita @( … ) en vez de una implícita @algo?" },
+    { "id": "tema11", "titulo": "Tema 11 — Layout y vistas", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-11-layout-y-vistas/index.html", "fuente": "Diapositivas de la cátedra", "pregunta": "En 'El título de cada página': ¿por qué el layout puede leer ViewData[\"Title\"] si lo escribe la vista?" }
+  ],
+  "commit": { "mensaje": "Desafío 3: controladores y vistas de vuelos y pasajeros", "detalle": "Revisá con git status que estén las carpetas nuevas de Views/ y los controladores." }
+}

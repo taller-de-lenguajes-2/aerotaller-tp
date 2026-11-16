@@ -1,0 +1,20 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build-aerotaller",
+      "command": "dotnet",
+      "type": "process",
+      "args": ["build", "${workspaceFolder}/AeroTaller/AeroTaller.csproj"],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "torre-de-control",
+      "command": "dotnet",
+      "type": "process",
+      "args": ["run", "--project", "${workspaceFolder}/torre-de-control"],
+      "isBackground": true,
+      "problemMatcher": []
+    }
+  ]
+}

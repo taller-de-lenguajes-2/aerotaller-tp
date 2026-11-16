@@ -1,0 +1,41 @@
+{
+  // F5 en VS Code (con la extensión C# Dev Kit): elegí "AeroTaller" en el panel Ejecutar y depurar
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "AeroTaller",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-aerotaller",
+      "program": "${workspaceFolder}/AeroTaller/bin/Debug/net10.0/AeroTaller.dll",
+      "cwd": "${workspaceFolder}/AeroTaller",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5210"
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+      },
+      "stopAtEntry": false
+    },
+    {
+      "name": "AeroTaller (datos falsos)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-aerotaller",
+      "program": "${workspaceFolder}/AeroTaller/bin/Debug/net10.0/AeroTaller.dll",
+      "args": ["--OrigenDeDatos=Falso"],
+      "cwd": "${workspaceFolder}/AeroTaller",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5210"
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+      },
+      "stopAtEntry": false
+    }
+  ]
+}

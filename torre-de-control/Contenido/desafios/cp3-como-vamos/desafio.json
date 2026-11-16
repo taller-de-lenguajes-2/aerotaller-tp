@@ -1,0 +1,24 @@
+{
+  "orden": 12,
+  "codigo": "CP3",
+  "numero": null,
+  "titulo": "¿Cómo vamos? · Checkpoint 3",
+  "subtitulo": "Antes de la torre: capas, contenedor y caja negra",
+  "tipo": "checkpoint",
+  "minutosEstimados": 25,
+  "minutosLimite": null,
+  "temas": [
+    { "numero": "14", "titulo": "Inyección de dependencias", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-14-inyeccion-de-dependencias/index.html" },
+    { "numero": "16", "titulo": "Excepciones", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-16-excepciones/index.html" },
+    { "numero": "17", "titulo": "Logs", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-17-logs/index.html" }
+  ],
+  "insignia": null,
+  "tareas": [],
+  "quiz": [],
+  "lecturas": [
+    { "id": "tema14", "titulo": "Tema 14 — Inyección de dependencias", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-14-inyeccion-de-dependencias/index.html", "fuente": "Diapositivas de la cátedra", "pregunta": "Sin mirar la diapositiva «¿Cuál usar?»: ¿qué tiempo de vida le darías a un repositorio, a ConexionDb y a una caché de aeropuertos? Después comprobalo." },
+    { "id": "tema16", "titulo": "Tema 16 — Excepciones", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-16-excepciones/index.html", "fuente": "Diapositivas de la cátedra", "pregunta": "Repasá «Reglas de oro»: ¿cuál de las seis rompiste alguna vez en este TP, y dónde?" },
+    { "id": "tema17", "titulo": "Tema 17 — Logs", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-17-logs/index.html", "fuente": "Diapositivas de la cátedra", "pregunta": "En «¿Dónde colocar el log?»: ¿por qué el catch que relanza no debería loguear?" }
+  ],
+  "commit": null
+}

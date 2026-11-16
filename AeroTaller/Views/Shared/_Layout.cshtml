@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    @* Cada vista pone su título en ViewData["Title"] *@
+    <title>@ViewData["Title"] · AeroTaller</title>
+    <link rel="stylesheet" href="~/css/sitio.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <a class="marca" asp-controller="Home" asp-action="Index">✈ AeroTaller</a>
+        <nav>
+            @* Estos links van a funcionar cuando existan los controladores (desafío 3 en adelante) *@
+            <a asp-controller="Vuelos" asp-action="Index">Vuelos</a>
+            <a asp-controller="Reservas" asp-action="Index">Reservas</a>
+            <a asp-controller="Pasajeros" asp-action="Index">Pasajeros</a>
+        </nav>
+    </header>
+
+    <main>
+        @* Acá se dibuja la vista que eligió el controlador *@
+        @RenderBody()
+    </main>
+
+    <footer>
+        AeroTaller · TP integrador de Taller de Lenguajes 2 · FACET · @DateTime.Now.Year
+    </footer>
+
+    @* Scripts propios de cada vista; si una vista no los define, no pasa nada *@
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

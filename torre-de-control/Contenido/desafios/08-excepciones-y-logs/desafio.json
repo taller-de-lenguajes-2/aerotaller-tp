@@ -1,0 +1,92 @@
+{
+  "orden": 11,
+  "codigo": "LOG",
+  "numero": 8,
+  "titulo": "Excepciones y logs",
+  "subtitulo": "La caja negra: que nada explote en la cara del usuario y que todo quede registrado",
+  "tipo": "desafio",
+  "minutosEstimados": 120,
+  "minutosLimite": null,
+  "temas": [
+    { "numero": "16", "titulo": "Excepciones", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-16-excepciones/index.html" },
+    { "numero": "17", "titulo": "Logs", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-17-logs/index.html" }
+  ],
+  "insignia": "caja-negra",
+  "tareas": [
+    {
+      "id": "indice",
+      "texto": "Agregué a aerotaller.sql el índice único parcial (VueloId, Asiento) WHERE Estado = 'Confirmada', borré aerotaller.db con la app apagada y la app la volvió a crear",
+      "ayuda": "En DB Browser, pestaña Estructura de la base: tiene que aparecer el índice debajo de la tabla Reserva"
+    },
+    {
+      "id": "choque",
+      "texto": "ReservaService atrapa SqliteException when (ex.SqliteErrorCode == 19) alrededor del Insertar y lanza ReglaDeNegocioException en el campo Asiento, con ex como causa",
+      "ayuda": "Frená con un breakpoint justo antes del Insertar, ocupá ese asiento desde DB Browser (Escribir cambios) y seguí con F10"
+    },
+    {
+      "id": "serilog",
+      "texto": "Serilog escribe en la consola y en AeroTaller/logs/aerotaller-AAAAMMDD.txt, y cada reserva queda registrada con una plantilla ({ReservaId}, sin $ ni +)"
+    },
+    {
+      "id": "error",
+      "texto": "Con la base en solo lectura, reservar muestra la página «Algo salió mal» (sin detalles técnicos), el error completo queda en el log y lo encontré buscando el código de la página",
+      "ayuda": "dotnet run --project AeroTaller -- \"--ConnectionStrings:AeroTaller=Data Source=aerotaller.db;Mode=ReadOnly\""
+    },
+    { "id": "push", "texto": "Hice commit y push con el mensaje del desafío y lo veo en GitHub (la carpeta logs/ NO se sube: está en .gitignore)" },
+    { "id": "verificador", "texto": "El verificador da todo en verde para el desafío 8 (botón Verificar o dotnet run --project verificador -- 8)" }
+  ],
+  "quiz": [
+    {
+      "id": "p1",
+      "texto": "Arrancás con la base en solo lectura, activás «All Exceptions» en el panel Puntos de interrupción e intentás reservar. El depurador frena en ReservaRepository.Insertar. Mirás $exception en Variables: ¿cuánto vale SqliteErrorCode, y qué pasa al seguir con F5?",
+      "codigo": "catch (SqliteException ex) when (ex.SqliteErrorCode == ErrorDeRestriccion)   // ErrorDeRestriccion = 19",
+      "opciones": [
+        { "id": "a", "texto": "19: entra al catch de ReservaService y el usuario ve «Alguien acaba de reservar el asiento»" },
+        { "id": "b", "texto": "8: el when da false, ese catch se saltea, y la excepción sigue subiendo hasta UseExceptionHandler, que muestra la página de error" },
+        { "id": "c", "texto": "8: entra igual al catch, porque el tipo de la excepción es SqliteException" },
+        { "id": "d", "texto": "19: pero como la base es de solo lectura, el catch tampoco puede escribir y la app se cae" }
+      ],
+      "correcta": "b",
+      "pista": "Leé el Message de la excepción: ¿es un problema de restricción (UNIQUE, FOREIGN KEY) o de otra cosa? Un catch con when necesita que coincidan el tipo Y la condición.",
+      "explicacion": "Escribir en una base de solo lectura es SQLITE_READONLY (código 8: «attempt to write a readonly database»), no SQLITE_CONSTRAINT (19). El filtro when da false, el catch no la atrapa y la excepción sigue subiendo: controlador → middleware. UseExceptionHandler la registra en el log y muestra Views/Home/Error.cshtml. Así debe ser: el servicio solo atrapa lo que sabe traducir.",
+      "etiquetas": ["depurador"]
+    },
+    {
+      "id": "p2",
+      "texto": "Un compañero escribió esto en ReservaRepository. ¿Cuál es el problema?",
+      "codigo": "public int Insertar(Reserva reserva)\n{\n    try\n    {\n        // … using var conexion, comando, parámetros …\n        return Convert.ToInt32(comando.ExecuteScalar());\n    }\n    catch (Exception ex)\n    {\n        Console.WriteLine(ex.Message);\n        return 0;\n    }\n}",
+      "opciones": [
+        { "id": "a", "texto": "Ninguno: el repositorio queda más robusto porque nunca lanza excepciones" },
+        { "id": "b", "texto": "Que tendría que ser throw ex; en vez de return 0" },
+        { "id": "c", "texto": "Que el using no cierra la conexión si hay un catch" },
+        { "id": "d", "texto": "Se traga el error: el servicio recibe Id 0 como si se hubiera insertado, el usuario ve «Reserva confirmada», el choque de asientos nunca llega al servicio y nada queda en el log" }
+      ],
+      "correcta": "d",
+      "pista": "Seguí qué recibe ReservaService cuando la base rechaza el INSERT. ¿Se entera alguien de que falló? ¿Dónde queda escrito Console.WriteLine en una app web?",
+      "explicacion": "Atrapar Exception para devolver un valor «de mentira» esconde el error: el resto del programa sigue en un estado inválido. El repositorio no sabe qué hacer con un error de la base, así que no atrapa: deja que suba. El using cierra la conexión igual (es un finally). Y throw ex; tampoco: pisa el StackTrace; si hay que relanzar, es throw;."
+    },
+    {
+      "id": "p3",
+      "texto": "¿Cuál de estas líneas es la correcta para registrar una reserva nueva en ReservaService?",
+      "opciones": [
+        { "id": "a", "texto": "logger.LogInformation(\"Reserva {ReservaId} confirmada: vuelo {Numero}, asiento {Asiento}\", reserva.Id, vuelo.Numero, asiento);" },
+        { "id": "b", "texto": "logger.LogInformation($\"Reserva {reserva.Id} confirmada: vuelo {vuelo.Numero}, asiento {asiento}\");" },
+        { "id": "c", "texto": "logger.LogInformation(\"Reserva {ReservaId} confirmada para el DNI {Dni}\", reserva.Id, pasajero.Dni);" },
+        { "id": "d", "texto": "logger.LogError(\"Reserva \" + reserva.Id + \" confirmada\");" }
+      ],
+      "correcta": "a",
+      "pista": "Tres cosas a mirar: ¿es una plantilla con los valores aparte, o un texto ya armado? ¿El nivel corresponde a algo que salió bien? ¿Registra algún dato personal que no hace falta?",
+      "explicacion": "Plantilla con marcadores con nombre y los valores aparte (sin $ ni +): el log guarda ReservaId, Numero y Asiento como datos que se pueden buscar. Information porque es el flujo normal del negocio. El DNI es un dato personal: no va al log si no hace falta (alcanza con el Id del pasajero)."
+    }
+  ],
+  "lecturas": [
+    { "id": "tema17", "titulo": "Tema 17 — Logs", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-17-logs/index.html", "fuente": "Diapositivas de la cátedra", "pregunta": "En «Cuidado con el orden del pipeline»: ¿qué registra UseSerilogRequestLogging si va DESPUÉS de UseExceptionHandler, y por qué está mal?" },
+    { "id": "buenas-practicas", "titulo": "Procedimientos recomendados para excepciones", "url": "https://learn.microsoft.com/es-es/dotnet/standard/exceptions/best-practices-for-exceptions", "fuente": "Microsoft Learn", "pregunta": "¿Qué recomienda hacer, en lugar de lanzar una excepción, para las condiciones que ocurren seguido? ¿Dónde aplicaste eso en AeroTaller?" },
+    { "id": "manejo-errores", "titulo": "Control de errores en ASP.NET Core", "url": "https://learn.microsoft.com/es-es/aspnet/core/fundamentals/error-handling", "fuente": "Microsoft Learn", "pregunta": "¿Por qué recomienda NO poner [HttpGet] en la acción que muestra la página de error? ¿Qué método HTTP tenía el request que falló en tu prueba?" },
+    { "id": "owasp-logging", "titulo": "Logging Cheat Sheet", "url": "https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html", "fuente": "OWASP", "pregunta": "Buscá la lista de datos que nunca deberían registrarse directamente: ¿cuáles de esos tiene AeroTaller?" }
+  ],
+  "commit": {
+    "mensaje": "Desafío 8: índice único, excepciones y logs con Serilog",
+    "detalle": "Revisá el diff: aerotaller.sql, el .csproj (Serilog), appsettings.json, Program.cs, ReservaService, HomeController y Views/Home/Error.cshtml. Ni aerotaller.db ni logs/ se suben."
+  }
+}

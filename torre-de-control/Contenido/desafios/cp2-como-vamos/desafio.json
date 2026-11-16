@@ -1,0 +1,23 @@
+{
+  "orden": 8,
+  "codigo": "CP2",
+  "numero": null,
+  "titulo": "¿Cómo vamos? · Checkpoint 2",
+  "subtitulo": "Mitad del vuelo: pantallas con ViewModels y formularios que no dejan pasar cualquier cosa",
+  "tipo": "checkpoint",
+  "minutosEstimados": 25,
+  "minutosLimite": null,
+  "temas": [
+    { "numero": "12", "titulo": "ViewModels", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-12-viewmodels/index.html" },
+    { "numero": "13", "titulo": "Validación", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-13-validacion/index.html" }
+  ],
+  "insignia": null,
+  "tareas": [],
+  "quiz": [],
+  "lecturas": [
+    { "id": "formularios", "titulo": "Tag helpers en formularios", "url": "https://learn.microsoft.com/es-es/aspnet/core/mvc/views/working-with-forms", "fuente": "Microsoft Learn", "pregunta": "¿Qué HTML genera asp-for para una propiedad int, una DateTime y un string con [EmailAddress]?" },
+    { "id": "validation-tag-helpers", "titulo": "Tag helpers de validación", "url": "https://learn.microsoft.com/es-es/aspnet/core/mvc/views/working-with-forms#the-validation-tag-helpers", "fuente": "Microsoft Learn", "pregunta": "¿Qué diferencia hay entre asp-validation-summary=\"All\" y \"ModelOnly\"?" },
+    { "id": "arquitecturas", "titulo": "Arquitecturas comunes de aplicaciones web", "url": "https://learn.microsoft.com/es-es/dotnet/architecture/modern-web-apps-azure/common-web-application-architectures", "fuente": "Microsoft Learn", "pregunta": "En el diagrama de capas, ¿dónde ubicarías hoy tus reglas de reserva? ¿Dónde deberían estar?" }
+  ],
+  "commit": null
+}

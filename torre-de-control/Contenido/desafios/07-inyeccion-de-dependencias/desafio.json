@@ -1,0 +1,91 @@
+{
+  "orden": 10,
+  "codigo": "DIN",
+  "numero": 7,
+  "titulo": "Inyección de dependencias",
+  "subtitulo": "Cambiá SQLite por una base en memoria tocando solo Program.cs",
+  "tipo": "desafio",
+  "minutosEstimados": 120,
+  "minutosLimite": null,
+  "temas": [
+    { "numero": "14", "titulo": "Inyección de dependencias", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-14-inyeccion-de-dependencias/index.html" },
+    { "numero": "04", "titulo": "Interfaces y clases abstractas", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-04-interfaces-y-clases-abstractas/index.html" }
+  ],
+  "insignia": "inyeccion",
+  "tareas": [
+    {
+      "id": "interfaces",
+      "texto": "Creé Repositorios/Interfaces.cs (IAeropuertoRepository, IVueloRepository, IPasajeroRepository, IReservaRepository); cada repositorio implementa la suya y recibe ConexionDb en vez de un string",
+      "ayuda": "public record ConexionDb(string Cadena); en Repositorios/ConexionDb.cs, registrado con AddSingleton(new ConexionDb(cadenaConexion))"
+    },
+    {
+      "id": "contenedor",
+      "texto": "Program.cs registra AddScoped<IVueloRepository, VueloRepository>() (y las otras tres), y ningún controlador ni servicio pide una clase concreta ni hace new de un repositorio",
+      "ayuda": "Buscá en Controllers/ y Servicios/: «new » seguido de Repository, y parámetros de tipo VueloRepository, PasajeroRepository…"
+    },
+    {
+      "id": "falsos",
+      "texto": "Con OrigenDeDatos=Falso (configuración «AeroTaller (datos falsos)») la app anda con Repositorios/Falsos/, muestra el aviso amarillo y NO crea aerotaller.db",
+      "ayuda": "Probalo con la app apagada y aerotaller.db renombrado: con Falso no tiene que aparecer un archivo nuevo"
+    },
+    {
+      "id": "tiempos",
+      "texto": "Probé BaseFalsa como AddScoped, vi que el pasajero nuevo desaparece en el request siguiente, y la volví a AddSingleton"
+    },
+    { "id": "push", "texto": "Hice commit y push con el mensaje del desafío y lo veo en GitHub" },
+    { "id": "verificador", "texto": "El verificador da todo en verde para el desafío 7 (botón Verificar o dotnet run --project verificador -- 7)" }
+  ],
+  "quiz": [
+    {
+      "id": "p1",
+      "texto": "Arrancás con la configuración «AeroTaller (datos falsos)», ponés un punto de interrupción en la primera línea de VuelosController.Index y abrís /Vuelos. Pasás el mouse sobre el parámetro vuelos (o lo buscás en Variables, adentro de this). ¿De qué clase es el objeto que recibió el controlador?",
+      "codigo": "public class VuelosController(IVueloRepository vuelos, ...) : Controller",
+      "opciones": [
+        { "id": "a", "texto": "IVueloRepository: es el tipo que declara el constructor" },
+        { "id": "b", "texto": "VueloRepositoryFalso" },
+        { "id": "c", "texto": "VueloRepository, porque el controlador siempre usa SQLite" },
+        { "id": "d", "texto": "BaseFalsa" }
+      ],
+      "correcta": "b",
+      "pista": "El constructor declara un tipo, pero una interfaz no se puede instanciar: alguien tuvo que crear un objeto de una clase concreta. ¿Qué clase registraste para IVueloRepository en la rama Falso de Program.cs?",
+      "explicacion": "El controlador pide IVueloRepository; el contenedor le entrega la clase que dice Program.cs. Con «AeroTaller (datos falsos)» es VueloRepositoryFalso; con «AeroTaller» sería VueloRepository. El controlador no cambió ni una letra: eso es depender de una abstracción.",
+      "etiquetas": ["depurador"]
+    },
+    {
+      "id": "p2",
+      "texto": "Cambiás AddSingleton<BaseFalsa>() por AddScoped<BaseFalsa>() y creás un pasajero con datos falsos. El POST te redirige a /Pasajeros/Detalle/3… y da 404. ¿Por qué?",
+      "opciones": [
+        { "id": "a", "texto": "PasajeroRepositoryFalso.Insertar no asigna el Id, entonces el 3 no existe" },
+        { "id": "b", "texto": "Con Scoped el contenedor guarda la BaseFalsa en la sesión del navegador, y el redirect la pierde" },
+        { "id": "c", "texto": "El redirect es un GET y los repositorios falsos solo guardan datos en los POST" },
+        { "id": "d", "texto": "Cada request recibe una BaseFalsa nueva, armada desde su constructor: el pasajero quedó en la del POST, que se descartó al terminar ese request" }
+      ],
+      "correcta": "d",
+      "pista": "Scoped significa «uno por request». El POST y el GET del redirect, ¿son el mismo request? ¿Qué hace el constructor de BaseFalsa cada vez que se ejecuta?",
+      "explicacion": "Scoped = un objeto por request. El pasajero se agregó a la lista de la BaseFalsa del POST; el GET /Pasajeros/Detalle/3 es otro request, con otra BaseFalsa recién construida (con los 2 pasajeros de siempre). Por eso BaseFalsa es Singleton: una sola para toda la app, como una base de datos de verdad."
+    },
+    {
+      "id": "p3",
+      "texto": "¿Cuál de estos pares de registros hace que AeroTaller NO arranque en Development?",
+      "opciones": [
+        { "id": "a", "texto": "AddSingleton<BaseFalsa>() y AddScoped<IVueloRepository, VueloRepositoryFalso>()" },
+        { "id": "b", "texto": "AddSingleton(new ConexionDb(cadena)) y AddScoped<IReservaRepository, ReservaRepository>()" },
+        { "id": "c", "texto": "AddScoped<IReservaRepository, ReservaRepository>() y AddSingleton<IReservaService, ReservaService>()" },
+        { "id": "d", "texto": "AddScoped<IReservaRepository, ReservaRepository>() y AddScoped<IReservaService, ReservaService>()" }
+      ],
+      "correcta": "c",
+      "pista": "Regla de la diapositiva: un servicio solo puede recibir servicios que vivan igual o más que él. Fijate en cada par quién recibe a quién y cuánto vive cada uno.",
+      "explicacion": "Un Singleton (ReservaService) que recibe un Scoped (el repositorio) se quedaría con el del primer request para siempre: es una dependencia cautiva. En Development .NET lo detecta al arrancar: «Cannot consume scoped service 'IReservaRepository' from singleton 'IReservaService'». En los otros pares, el que recibe vive igual o menos que lo que recibe."
+    }
+  ],
+  "lecturas": [
+    { "id": "tema14", "titulo": "Tema 14 — Inyección de dependencias", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-14-inyeccion-de-dependencias/index.html", "fuente": "Diapositivas de la cátedra", "pregunta": "En la diapositiva «Las dependencias de las dependencias»: ¿en qué orden crea el contenedor los objetos para atender GET /Turnos, y qué es lo único que se arma a mano?" },
+    { "id": "di-aspnet", "titulo": "Inserción de dependencias en ASP.NET Core", "url": "https://learn.microsoft.com/es-es/aspnet/core/fundamentals/dependency-injection", "fuente": "Microsoft Learn", "pregunta": "Buscá la sección sobre duración de los servicios: ¿qué pasa si resolvés un servicio Scoped desde un Singleton, y qué hace la validación de ámbitos en Development?" },
+    { "id": "di-pautas", "titulo": "Instrucciones de inserción de dependencias", "url": "https://learn.microsoft.com/es-es/dotnet/core/extensions/dependency-injection-guidelines", "fuente": "Microsoft Learn", "pregunta": "¿Qué dice sobre los servicios Singleton y la seguridad para subprocesos (thread safety)? ¿Por qué BaseFalsa tiene un Candado?" },
+    { "id": "fowler", "titulo": "Inversion of Control Containers and the Dependency Injection pattern", "url": "https://martinfowler.com/articles/injection.html", "fuente": "Martin Fowler (2004)", "pregunta": "¿Qué diferencia hay entre la inyección por constructor y un Service Locator? ¿Cuál de las dos usamos en AeroTaller?" }
+  ],
+  "commit": {
+    "mensaje": "Desafío 7: interfaces, contenedor y repositorios falsos",
+    "detalle": "Antes de commitear, dejá BaseFalsa como Singleton y OrigenDeDatos en Sqlite en appsettings.json: los experimentos de tiempos de vida no se suben."
+  }
+}

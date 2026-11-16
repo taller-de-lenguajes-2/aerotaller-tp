@@ -1,0 +1,142 @@
+# Corrección automática de GitHub Classroom.
+# Cada push corre el verificador desafío por desafío; cada uno suma puntos si da todo en verde.
+# Es el MISMO verificador que tenés en tu máquina: dotnet run --project verificador -- <número>
+name: Autograding Tests
+'on':
+  - push
+  - repository_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    # No corre en el repo plantilla (está vacío a propósito); sí en el repo de cada alumno
+    if: github.actor != 'github-classroom[bot]' && !github.event.repository.is_template
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Instalar .NET 10
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+    - name: Compilar el verificador
+      run: dotnet build verificador -v q
+    - name: Desafío 0 · Check-in
+      id: desafio-0
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Desafío 0 · Check-in
+        setup-command: ''
+        command: dotnet run --no-build --project verificador -- 0
+        timeout: 5
+        max-score: 5
+    - name: Desafío 1 · La base
+      id: desafio-1
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Desafío 1 · La base
+        setup-command: ''
+        command: dotnet run --no-build --project verificador -- 1
+        timeout: 5
+        max-score: 10
+    - name: Desafío 2 · Modelos y repositorios
+      id: desafio-2
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Desafío 2 · Modelos y repositorios
+        setup-command: ''
+        command: dotnet run --no-build --project verificador -- 2
+        timeout: 5
+        max-score: 10
+    - name: Desafío 3 · Controladores y vistas
+      id: desafio-3
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Desafío 3 · Controladores y vistas
+        setup-command: ''
+        command: dotnet run --no-build --project verificador -- 3
+        timeout: 5
+        max-score: 10
+    - name: Desafío 4 · ViewModels
+      id: desafio-4
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Desafío 4 · ViewModels
+        setup-command: ''
+        command: dotnet run --no-build --project verificador -- 4
+        timeout: 5
+        max-score: 10
+    - name: Desafío 5 · Validación
+      id: desafio-5
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Desafío 5 · Validación
+        setup-command: ''
+        command: dotnet run --no-build --project verificador -- 5
+        timeout: 5
+        max-score: 10
+    - name: Desafío 6 · Capa de servicios
+      id: desafio-6
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Desafío 6 · Capa de servicios
+        setup-command: ''
+        command: dotnet run --no-build --project verificador -- 6
+        timeout: 5
+        max-score: 10
+    - name: Desafío 7 · Inyección de dependencias
+      id: desafio-7
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Desafío 7 · Inyección de dependencias
+        setup-command: ''
+        command: dotnet run --no-build --project verificador -- 7
+        timeout: 5
+        max-score: 10
+    - name: Desafío 8 · Excepciones y logs
+      id: desafio-8
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Desafío 8 · Excepciones y logs
+        setup-command: ''
+        command: dotnet run --no-build --project verificador -- 8
+        timeout: 5
+        max-score: 10
+    - name: Desafío 9 · Autenticación
+      id: desafio-9
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Desafío 9 · Autenticación
+        setup-command: ''
+        command: dotnet run --no-build --project verificador -- 9
+        timeout: 5
+        max-score: 10
+    - name: Desafío 10 · Simulacro (equipaje)
+      id: desafio-10
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Desafío 10 · Simulacro (equipaje)
+        setup-command: ''
+        command: dotnet run --no-build --project verificador -- 10
+        timeout: 5
+        max-score: 5
+    - name: Autograding Reporter
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        DESAFIO-0_RESULTS: "${{steps.desafio-0.outputs.result}}"
+        DESAFIO-1_RESULTS: "${{steps.desafio-1.outputs.result}}"
+        DESAFIO-2_RESULTS: "${{steps.desafio-2.outputs.result}}"
+        DESAFIO-3_RESULTS: "${{steps.desafio-3.outputs.result}}"
+        DESAFIO-4_RESULTS: "${{steps.desafio-4.outputs.result}}"
+        DESAFIO-5_RESULTS: "${{steps.desafio-5.outputs.result}}"
+        DESAFIO-6_RESULTS: "${{steps.desafio-6.outputs.result}}"
+        DESAFIO-7_RESULTS: "${{steps.desafio-7.outputs.result}}"
+        DESAFIO-8_RESULTS: "${{steps.desafio-8.outputs.result}}"
+        DESAFIO-9_RESULTS: "${{steps.desafio-9.outputs.result}}"
+        DESAFIO-10_RESULTS: "${{steps.desafio-10.outputs.result}}"
+      with:
+        runners: desafio-0,desafio-1,desafio-2,desafio-3,desafio-4,desafio-5,desafio-6,desafio-7,desafio-8,desafio-9,desafio-10

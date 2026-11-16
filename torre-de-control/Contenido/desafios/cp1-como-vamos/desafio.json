@@ -1,0 +1,23 @@
+{
+  "orden": 4,
+  "codigo": "CP1",
+  "numero": null,
+  "titulo": "¿Cómo vamos? · Escala 1",
+  "subtitulo": "Base y repositorios listos: revisá el equipaje antes de subir a MVC",
+  "tipo": "checkpoint",
+  "minutosEstimados": 20,
+  "temas": [
+    { "numero": "07", "titulo": "Bases de datos", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-07-bases-de-datos/index.html" },
+    { "numero": "08", "titulo": "ADO.NET", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-08-ado-net/index.html" },
+    { "numero": "09", "titulo": "Repositorios", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-09-repositorios/index.html" }
+  ],
+  "insignia": null,
+  "tareas": [],
+  "quiz": [],
+  "lecturas": [
+    { "id": "repaso-tema07", "titulo": "Tema 07 — SELECT, JOIN y GROUP BY", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-07-bases-de-datos/index.html", "fuente": "Diapositivas de la cátedra", "pregunta": "Sin mirar tu código: ¿podés escribir en un papel el JOIN de Vuelo con sus dos aeropuertos?" },
+    { "id": "repaso-tema08", "titulo": "Tema 08 — La receta de ADO.NET", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-08-ado-net/index.html", "fuente": "Diapositivas de la cátedra", "pregunta": "En la diapositiva 'La receta': ¿qué método de ejecución corresponde a cada tipo de consulta, y qué devuelve cada uno?" },
+    { "id": "repaso-tema09", "titulo": "Tema 09 — El patrón repositorio", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-09-repositorios/index.html", "fuente": "Diapositivas de la cátedra", "pregunta": "La prueba de la diapositiva final: ¿podrías cambiar SQLite por un JSON sin tocar nada fuera de tus repositorios?" }
+  ],
+  "commit": null
+}

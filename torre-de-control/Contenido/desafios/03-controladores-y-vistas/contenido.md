@@ -1,0 +1,511 @@
+## 🎯 Misión
+
+Hasta ahora AeroTaller sabía todo, pero no le mostraba nada a nadie. Hoy la torre de control prende las pantallas:
+
+1. La **página de inicio** pasa a ser un tablero con la ocupación de las próximas salidas.
+2. **`/Vuelos`**: el listado de vuelos, con un link al detalle de cada uno.
+3. **`/Vuelos/Detalle/{id}`**: la ficha del vuelo, o un **404** si no existe.
+4. **`/Pasajeros`**: el listado con un **buscador** (`?buscar=ana`), y **`/Pasajeros/Detalle/{id}`** con las reservas de esa persona.
+
+Los repositorios del desafío 2 se usan tal cual: los controladores **no escriben SQL ni abren conexiones**, solo piden
+datos y eligen qué vista los muestra. Todavía no hay formularios que guarden cosas (eso empieza en el desafío 4).
+
+:::nota
+El link **Reservas** del menú va a seguir dando 404 hasta el desafío 4, y el mapa de asientos del detalle del vuelo
+también llega ahí. Es a propósito: hoy el foco es el viaje del request, de la URL a la vista.
+:::
+
+## 📚 Repaso
+
+El viaje de un request en MVC, como en el tema 10, ahora con AeroTaller:
+
+| Paso | Quién | En AeroTaller |
+|---|---|---|
+| 1 | el navegador pide | `GET /Vuelos/Detalle/3` |
+| 2 | el **ruteo** convencional `{controller=Home}/{action=Index}/{id?}` | controlador `Vuelos`, acción `Detalle`, `id = 3` |
+| 3 | ASP.NET **crea el controlador** y le pasa lo que pide su constructor | `new VuelosController(un VueloRepository)` |
+| 4 | la **acción** usa el modelo | `vuelos.Obtener(3)` → un `Vuelo` (o `null` → `NotFound()`) |
+| 5 | `View(vuelo)` elige la **vista** y le pasa el modelo | `Views/Vuelos/Detalle.cshtml` con `@model Vuelo` |
+| 6 | Razor arma el HTML dentro del `_Layout` | vuelve una página común, sin rastro de C# |
+
+Lo que necesitás de Razor (tema 11):
+
+| Escribís | Para |
+|---|---|
+| `@model List<Vuelo>` | decir qué tipo de objeto recibe la vista (arriba de todo, con minúscula) |
+| `Model` | ese objeto, con IntelliSense (con mayúscula) |
+| `@vuelo.Numero` / `@(vuelo.Precio * 2)` | mostrar un valor; con paréntesis si hay espacios u operadores |
+| `@foreach`, `@if` | recorrer y decidir, adentro del HTML |
+| `<a asp-action="Detalle" asp-route-id="@vuelo.Id">` | un link que arma el ruteo: `/Vuelos/Detalle/3` |
+| `ViewData["Title"] = "Vuelos";` | el título que usa el layout en `<title>` |
+
+:::catedra
+Todo esto está en las diapositivas del [tema 10](https://taller-de-lenguajes-2.github.io/clases/tema-10-mvc/index.html)
+("El controlador", "La vista: HTML con C#", "Program.cs: de Web API a MVC") y del
+[tema 11](https://taller-de-lenguajes-2.github.io/clases/tema-11-layout-y-vistas/index.html) ("GET con query string",
+"Links con asp-route", "El título de cada página"). El proyecto de ejemplo de la clínica es el mismo esquema: si te trabás,
+abrí `tema-11-layout-y-vistas/proyecto-ejemplo/Controllers/PacientesController.cs` al lado del tuyo.
+:::
+
+## 💻 Paso a paso
+
+### Paso 1 · Registrar los repositorios en `Program.cs`
+
+Un controlador no hace `new VueloRepository(…)`: lo **pide** en su constructor y ASP.NET se lo da. Para eso, el
+repositorio tiene que estar registrado en el **contenedor de servicios**. En `Program.cs`, después de `CrearBaseSiNoExiste`
+y antes de `AddControllersWithViews`:
+
+```csharp
+// Desafío 3: los repositorios, en el contenedor. Cada vez que un controlador pide uno, se ejecuta la lambda.
+builder.Services.AddScoped(_ => new AeropuertoRepository(cadenaConexion));
+builder.Services.AddScoped(_ => new VueloRepository(cadenaConexion));
+builder.Services.AddScoped(_ => new PasajeroRepository(cadenaConexion));
+builder.Services.AddScoped(_ => new ReservaRepository(cadenaConexion));
+```
+
+- **`AddScoped`**: un objeto nuevo **por request** (si en el mismo request dos clases piden un `VueloRepository`, reciben el mismo).
+- **`_ => new …`**: una función que sabe fabricarlo. El `_` es un parámetro que no usamos (el propio contenedor).
+  La cadena la conoce `Program.cs`, que es el único que la leyó de la configuración.
+
+Es exactamente la línea del tema 10. Los tiempos de vida (`Scoped`, `Singleton`, `Transient`) y la forma "con interfaces"
+los vemos a fondo en el desafío 7.
+
+### Paso 2 · El tablero en la página de inicio
+
+`HomeController` pasa a recibir un `VueloRepository` y a mandarle a la vista la ocupación (la consulta con `LEFT JOIN` y
+`GROUP BY` que escribiste en el desafío 2):
+
+```csharp
+using Microsoft.AspNetCore.Mvc;
+
+public class HomeController(VueloRepository vuelos) : Controller
+{
+    // GET /  →  el tablero: ocupación de los próximos vuelos
+    public IActionResult Index()
+    {
+        List<OcupacionVuelo> ocupacion = vuelos.ListarOcupacion();
+        return View(ocupacion);      // Views/Home/Index.cshtml recibe la lista
+    }
+}
+```
+
+Reemplazá el contenido de `Views/Home/Index.cshtml` por una tabla con número (link al detalle), ruta, salida y ocupación.
+Para la barra de ocupación, el CSS de la plantilla ya trae las clases `barra`:
+
+```cshtml
+<div class="barra" title="@vuelo.Ocupados de @vuelo.Capacidad">
+    <span style="width: @(vuelo.Porcentaje)%"></span>
+</div>
+@vuelo.Ocupados / @vuelo.Capacidad
+```
+
+:::solucion Ver Views/Home/Index.cshtml
+```cshtml
+@model List<OcupacionVuelo>
+@{
+    ViewData["Title"] = "Tablero";
+}
+
+<h1>Próximas salidas</h1>
+<p class="nota">Ocupación de cada vuelo: reservas confirmadas sobre la capacidad del avión.</p>
+
+<table>
+    <thead>
+        <tr><th>Vuelo</th><th>Ruta</th><th>Salida</th><th>Ocupación</th></tr>
+    </thead>
+    <tbody>
+        @foreach (OcupacionVuelo vuelo in Model)
+        {
+            <tr>
+                <td><a asp-controller="Vuelos" asp-action="Detalle" asp-route-id="@vuelo.VueloId">@vuelo.Numero</a></td>
+                <td>@vuelo.Ruta</td>
+                <td>@vuelo.Salida.ToString("ddd dd/MM HH:mm")</td>
+                <td>
+                    <div class="barra" title="@vuelo.Ocupados de @vuelo.Capacidad">
+                        <span style="width: @(vuelo.Porcentaje)%"></span>
+                    </div>
+                    @vuelo.Ocupados / @vuelo.Capacidad
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (Model.Count == 0)
+{
+    <p>No hay vuelos programados.</p>
+}
+```
+:::
+
+`asp-controller="Vuelos"` hace falta porque el link sale de una vista de **Home** hacia otro controlador. Sin él, el tag
+helper arma la URL con el controlador actual.
+
+### Paso 3 · El listado de vuelos
+
+Creá `Controllers/VuelosController.cs` con la acción `Index` y la vista `Views/Vuelos/Index.cshtml`. La carpeta se llama
+como el controlador **sin** el sufijo `Controller`, y el archivo como la acción.
+
+```csharp
+using Microsoft.AspNetCore.Mvc;
+
+// El controlador recibe lo que necesita por el constructor: nunca hace "new" de un repositorio
+public class VuelosController(VueloRepository vuelos) : Controller
+{
+    // GET /Vuelos
+    public IActionResult Index()
+    {
+        List<Vuelo> lista = vuelos.Listar();
+        return View(lista);
+    }
+}
+```
+
+En la vista, aprovechá que el modelo es rico: `vuelo.Origen.Codigo`, `vuelo.Llegada`, `vuelo.LlegaAlOtroDia`,
+`vuelo.YaSalio`. Ninguna de esas cosas se calcula en la vista: ya vienen hechas.
+
+| Columna | Cómo |
+|---|---|
+| Vuelo | link al detalle: `<a asp-action="Detalle" asp-route-id="@vuelo.Id">@vuelo.Numero</a>` |
+| Ruta | `@vuelo.Origen.Codigo → @vuelo.Destino.Codigo` (las ciudades, en un `title`) |
+| Sale | `@vuelo.Salida.ToString("ddd dd/MM HH:mm")` → "mié 18/11 07:30" (la cultura es-AR de `Program.cs` pone el día en castellano) |
+| Llega | la hora, y un "(+1)" si `LlegaAlOtroDia` |
+| Precio | `@vuelo.Precio.ToString("C0")` → "$ 98.000" |
+
+Los vuelos que ya salieron, en gris: el CSS trae la clase `pasado` para las filas (`<tr class="@(vuelo.YaSalio ? "pasado" : "")">`).
+
+:::solucion Ver Views/Vuelos/Index.cshtml
+```cshtml
+@model List<Vuelo>
+@{
+    ViewData["Title"] = "Vuelos";
+}
+
+<h1>Vuelos</h1>
+
+<table>
+    <thead>
+        <tr><th>Vuelo</th><th>Ruta</th><th>Sale</th><th>Llega</th><th>Precio</th></tr>
+    </thead>
+    <tbody>
+        @foreach (Vuelo vuelo in Model)
+        {
+            <tr class="@(vuelo.YaSalio ? "pasado" : "")">
+                <td><a asp-action="Detalle" asp-route-id="@vuelo.Id">@vuelo.Numero</a></td>
+                <td title="@vuelo.Origen.Ciudad → @vuelo.Destino.Ciudad">@vuelo.Origen.Codigo → @vuelo.Destino.Codigo</td>
+                <td>@vuelo.Salida.ToString("ddd dd/MM HH:mm")</td>
+                <td>@vuelo.Llegada.ToString("HH:mm")@(vuelo.LlegaAlOtroDia ? " (+1)" : "")</td>
+                <td>@vuelo.Precio.ToString("C0")</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (Model.Count == 0)
+{
+    <p>No hay vuelos cargados.</p>
+}
+```
+:::
+
+### Paso 4 · El detalle del vuelo (y el 404)
+
+Agregá a `VuelosController` la acción `Detalle`. El parámetro **se tiene que llamar `id`**, igual que en la plantilla de
+la ruta, para que `/Vuelos/Detalle/3` lo llene:
+
+```csharp
+// GET /Vuelos/Detalle/3  →  id = 3 (ruteo convencional)
+public IActionResult Detalle(int id)
+{
+    Vuelo? vuelo = vuelos.Obtener(id);
+    if (vuelo is null) return NotFound();   // 404: el vuelo no existe
+
+    return View(vuelo);                     // Views/Vuelos/Detalle.cshtml con @model Vuelo
+}
+```
+
+El repositorio dice "no existe" (`null`); el **controlador** decide qué significa eso en HTTP (404). Cada uno con su
+responsabilidad, como en el tema 09.
+
+La vista es una ficha con `<dl class="ficha">` (la plantilla ya trae el estilo): ruta con ciudades y códigos, salida,
+llegada, duración, capacidad y precio. Si el vuelo ya salió, avisalo.
+
+:::pista La duración en horas y minutos
+`DuracionMinutos` es un `int`: `@(Model.DuracionMinutos / 60) h @(Model.DuracionMinutos % 60) min`. Sin los paréntesis,
+Razor mostraría el número y después el texto "/ 60".
+:::
+
+:::solucion Ver Views/Vuelos/Detalle.cshtml
+```cshtml
+@model Vuelo
+@{
+    ViewData["Title"] = $"Vuelo {Model.Numero}";
+}
+
+<h1>Vuelo @Model.Numero</h1>
+
+<dl class="ficha">
+    <dt>Ruta</dt>      <dd>@Model.Origen.Ciudad (@Model.Origen.Codigo) → @Model.Destino.Ciudad (@Model.Destino.Codigo)</dd>
+    <dt>Sale</dt>      <dd>@Model.Salida.ToString("dddd dd/MM/yyyy HH:mm")</dd>
+    <dt>Llega</dt>     <dd>@Model.Llegada.ToString("dddd dd/MM/yyyy HH:mm")</dd>
+    <dt>Duración</dt>  <dd>@(Model.DuracionMinutos / 60) h @(Model.DuracionMinutos % 60) min</dd>
+    <dt>Capacidad</dt> <dd>@Model.Capacidad asientos (@Model.Filas filas de 6)</dd>
+    <dt>Precio</dt>    <dd>@Model.Precio.ToString("C0")</dd>
+</dl>
+
+@if (Model.YaSalio)
+{
+    <p class="nota">Este vuelo ya salió: no admite reservas.</p>
+}
+
+<p><a asp-action="Index">← Volver a los vuelos</a></p>
+```
+:::
+
+Probá `/Vuelos/Detalle/2` (el AT1001) y después `/Vuelos/Detalle/999`. El navegador muestra su propia página de error
+404: es lo esperado (el verificador mira el **código** de respuesta, no el diseño).
+
+### Paso 5 · Pasajeros, con buscador
+
+`PasajerosController.Index` recibe el texto a buscar por **query string**: `/Pasajeros?buscar=ana`. El parámetro se llama
+como la clave de la URL y es `string?`, porque si no viene llega `null`:
+
+```csharp
+using Microsoft.AspNetCore.Mvc;
+
+public class PasajerosController(PasajeroRepository pasajeros, ReservaRepository reservas) : Controller
+{
+    // GET /Pasajeros             → todos
+    // GET /Pasajeros?buscar=ana  → filtrados por nombre o DNI
+    public IActionResult Index(string? buscar)
+    {
+        List<Pasajero> lista = string.IsNullOrWhiteSpace(buscar)
+            ? pasajeros.Listar()
+            : pasajeros.Buscar(buscar);
+
+        ViewData["Buscar"] = buscar;    // para que el buscador muestre lo que se buscó
+        return View(lista);
+    }
+}
+```
+
+En la vista, el buscador es un formulario **GET**: sus campos viajan en la URL, así que no hace falta ninguna acción POST.
+El `name` del input tiene que ser `buscar`, igual que el parámetro:
+
+```cshtml
+@* method="get": el texto viaja en la URL → /Pasajeros?buscar=ana *@
+<form asp-action="Index" method="get" class="buscador">
+    <input type="search" name="buscar" value="@ViewData["Buscar"]" placeholder="Nombre o DNI" />
+    <button type="submit">Buscar</button>
+</form>
+```
+
+Debajo, una tabla con nombre (link al detalle), DNI y email (`@(pasajero.Email ?? "—")`), o un mensaje si no hay resultados.
+
+:::cuidado
+Probá el buscador con `ana`, con `ez` o con un pedazo de DNI (`301`). **No** pruebes con `gom` esperando a Gómez: el
+`LIKE` de SQLite no iguala `o` con `ó` (lo viste en la consulta 2 del desafío 1). No es un error tuyo.
+:::
+
+:::solucion Ver Views/Pasajeros/Index.cshtml
+```cshtml
+@model List<Pasajero>
+@{
+    ViewData["Title"] = "Pasajeros";
+}
+
+<h1>Pasajeros</h1>
+
+@* method="get": el texto viaja en la URL → /Pasajeros?buscar=ana *@
+<form asp-action="Index" method="get" class="buscador">
+    <input type="search" name="buscar" value="@ViewData["Buscar"]" placeholder="Nombre o DNI" />
+    <button type="submit">Buscar</button>
+</form>
+
+@if (Model.Count == 0)
+{
+    <p>No hay pasajeros que coincidan con «@ViewData["Buscar"]».</p>
+}
+else
+{
+    <table>
+        <thead>
+            <tr><th>Nombre</th><th>DNI</th><th>Email</th></tr>
+        </thead>
+        <tbody>
+            @foreach (Pasajero pasajero in Model)
+            {
+                <tr>
+                    <td><a asp-action="Detalle" asp-route-id="@pasajero.Id">@pasajero.Nombre</a></td>
+                    <td>@pasajero.Dni</td>
+                    <td>@(pasajero.Email ?? "—")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+```
+:::
+
+### Paso 6 · El detalle del pasajero, con sus reservas
+
+Acá aparece un problema nuevo: la vista necesita **dos cosas** (el pasajero y sus reservas), pero `View(…)` recibe **un
+solo** modelo. Por hoy, el pasajero va como modelo y las reservas viajan aparte, en `ViewData`:
+
+```csharp
+// GET /Pasajeros/Detalle/1
+public IActionResult Detalle(int id)
+{
+    Pasajero? pasajero = pasajeros.Obtener(id);
+    if (pasajero is null) return NotFound();
+
+    // Provisorio: View() recibe UN modelo. Las reservas viajan aparte, en el diccionario ViewData.
+    // En el desafío 4 esto se reemplaza por un PasajeroDetalleViewModel.
+    ViewData["Reservas"] = reservas.ListarPorPasajero(id);
+    return View(pasajero);
+}
+```
+
+`ViewData` guarda todo como `object`: en la vista hay que convertirlo de vuelta al tipo real.
+
+```cshtml
+@model Pasajero
+@{
+    ViewData["Title"] = Model.Nombre;
+    // ViewData guarda object: lo convertimos. Si no vino, una lista vacía (así el foreach no explota)
+    var reservasDelPasajero = ViewData["Reservas"] as List<Reserva> ?? new List<Reserva>();
+}
+```
+
+Después, una ficha con DNI y email, y una tabla con las reservas: vuelo (link a `/Vuelos/Detalle/{id}`), ruta, salida,
+asiento y estado. Las canceladas, con la clase `pasado`.
+
+:::solucion Ver Views/Pasajeros/Detalle.cshtml
+```cshtml
+@model Pasajero
+@{
+    ViewData["Title"] = Model.Nombre;
+    // ViewData guarda object: lo convertimos. Si no vino, una lista vacía (así el foreach no explota)
+    var reservasDelPasajero = ViewData["Reservas"] as List<Reserva> ?? new List<Reserva>();
+}
+
+<h1>@Model.Nombre</h1>
+
+<dl class="ficha">
+    <dt>DNI</dt>   <dd>@Model.Dni</dd>
+    <dt>Email</dt> <dd>@(Model.Email ?? "—")</dd>
+</dl>
+
+<h2>Reservas</h2>
+@if (reservasDelPasajero.Count == 0)
+{
+    <p>Todavía no tiene reservas.</p>
+}
+else
+{
+    <table>
+        <thead>
+            <tr><th>Vuelo</th><th>Ruta</th><th>Salida</th><th>Asiento</th><th>Estado</th></tr>
+        </thead>
+        <tbody>
+            @foreach (Reserva reserva in reservasDelPasajero)
+            {
+                <tr class="@(reserva.Estado == EstadoReserva.Cancelada ? "pasado" : "")">
+                    <td><a asp-controller="Vuelos" asp-action="Detalle" asp-route-id="@reserva.Vuelo.Id">@reserva.Vuelo.Numero</a></td>
+                    <td>@reserva.Vuelo.Origen.Codigo → @reserva.Vuelo.Destino.Codigo</td>
+                    <td>@reserva.Vuelo.Salida.ToString("dd/MM HH:mm")</td>
+                    <td>@reserva.Asiento</td>
+                    <td>@reserva.Estado</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<p><a asp-action="Index">← Volver a los pasajeros</a></p>
+```
+:::
+
+Abrí `/Pasajeros/Detalle/1` (Ana Gómez): tres reservas en el 3A, una de un vuelo que ya salió. Y `/Pasajeros/Detalle/4`
+(Diego Herrera): una cancelada en gris.
+
+### Paso 7 · Recorrer la app y revisar
+
+Navegá **solo con clics**, sin escribir URLs: inicio → un vuelo del tablero → volver → Pasajeros → buscar → un pasajero →
+uno de sus vuelos. Si algún link te lleva a un lugar raro, revisá su tag helper.
+
+Antes del commit, tres controles rápidos:
+
+- En `Controllers/` no hay ningún `using Microsoft.Data.Sqlite` ni ningún `new …Repository(`.
+- Cada vista tiene su `ViewData["Title"]` (mirá la pestaña del navegador).
+- Ningún link está escrito a mano con `href="/Vuelos/…"`: todos con `asp-action` / `asp-controller` / `asp-route-…`.
+
+## 🔴 Breakpoints
+
+:::breakpoint HomeController.cs · Index
+Poné el punto en `return View(ocupacion);` y abrí la página de inicio. En Variables, desplegá `ocupacion`: ¿cuántos
+vuelos hay y por qué no está el AT0999? Mirá el primero: `Ocupados`, `Capacidad` y `Porcentaje`. Ahora mirá el **Call Stack**:
+tu `Index` está arriba de todo y abajo hay mucho código de ASP.NET. ¿En algún lado aparece un `new HomeController`
+escrito por vos?
+:::
+
+:::breakpoint VuelosController.cs · Detalle
+Poné el punto en la primera línea de `Detalle` y probá, una por una: `/Vuelos/Detalle/3`, `/Vuelos/Detalle/999`,
+`/Vuelos/Detalle/abc`, `/Vuelos/Detalle` (sin id) y `/Vuelos/Detalle?id=3`. Anotá cuánto vale `id` en cada caso. Con F10
+pasá el `Obtener` y mirá `vuelo`: ¿cuándo es `null`? ¿Qué devolvió la acción en cada caso?
+:::
+
+:::breakpoint PasajerosController.cs · Index
+Frená en la primera línea y probá `/Pasajeros?buscar=ana`, `/Pasajeros`, `/Pasajeros?buscar=` y `/Pasajeros?BUSCAR=ana`:
+¿cuánto vale `buscar`? Con `buscar = "ana"`, apretá **F11** sobre `pasajeros.Buscar(buscar)`: entrás al repositorio del
+desafío 2. Mirá el Call Stack: controlador → repositorio. Ese es el viaje completo, de la URL al SQL.
+:::
+
+Preguntate:
+
+- La lambda `_ => new VueloRepository(cadenaConexion)`, ¿se ejecuta al arrancar o en cada request? (Pista: `AddScoped`.)
+- Si en `Detalle` cambiás el parámetro a `int vueloId`, ¿qué valor llega con `/Vuelos/Detalle/3`?
+
+## 🔀 Alternativas
+
+**¿Cómo llega el repositorio al controlador?**
+
+| Forma | Código | A favor | En contra | Cuándo |
+|---|---|---|---|---|
+| Registrado con una lambda y recibido por el constructor | `AddScoped(_ => new VueloRepository(cadenaConexion))` | la cadena vive en un solo lugar (`Program.cs`); el controlador no sabe de dónde sale | el controlador depende de la clase concreta | **hoy** (tema 10) |
+| `new` adentro de la acción | `var vuelos = new VueloRepository("Data Source=aerotaller.db");` | no hay que registrar nada | la cadena repetida en cada controlador; el verificador no puede cambiarte la base; imposible cambiar de repositorio sin tocar todos | nunca |
+| Interfaz + registro por tipo | `AddScoped<IVueloRepository, VueloRepository>()` + `ConexionDb` | el controlador depende de un contrato: se puede cambiar SQLite por datos en memoria tocando solo `Program.cs` | más piezas (interfaz, `ConexionDb`) | desafío 7 (tema 14) |
+
+**¿Cómo mandarle a una vista más de un dato?**
+
+| Forma | En el controlador | En la vista | A favor | En contra |
+|---|---|---|---|---|
+| `ViewData` | `ViewData["Reservas"] = lista;` | `ViewData["Reservas"] as List<Reserva>` | ya lo conocés (el `Title`) | sin tipo: un error de tipeo en la clave da `null` y nadie te avisa |
+| `ViewBag` | `ViewBag.Reservas = lista;` | `ViewBag.Reservas` | más corto | `dynamic`: sin IntelliSense y los errores aparecen recién al abrir la página |
+| Tupla como modelo | `View((pasajero, lista))` | `@model (Pasajero Pasajero, List<Reserva> Reservas)` | con tipo | se vuelve ilegible con tres o cuatro datos |
+| Un ViewModel | `View(new PasajeroDetalleViewModel(…))` | `@model PasajeroDetalleViewModel` | con tipo, con nombre, hecho a medida de la pantalla | una clase más (llega en el **desafío 4**) |
+
+:::catedra
+En el [tema 11](https://taller-de-lenguajes-2.github.io/clases/tema-11-layout-y-vistas/index.html) la diapositiva
+"El título de cada página" lo adelanta: `ViewData` sirve para datos sueltos como el título; para los datos de la página,
+mejor un modelo con tipo, que es el tema 12. Por eso hoy usamos `ViewData` para las reservas **de forma provisoria**.
+Otra diferencia menor: en el ejemplo de la clínica el buscador usa `?texto=ana`; en AeroTaller el contrato pide `?buscar=ana`.
+:::
+
+## ⚠️ Errores típicos
+
+- **`InvalidOperationException: Unable to resolve service for type 'VueloRepository' while attempting to activate
+  'VuelosController'`**: el controlador pide algo que no registraste en `Program.cs`.
+- **`InvalidOperationException: The view 'Detalle' was not found`**, con la lista de rutas donde la buscó: la carpeta se
+  llama `Vuelo` en vez de `Vuelos`, o el archivo no coincide con la acción. Leé las rutas del mensaje: te dicen dónde ponerla.
+- **`The model item passed into the ViewDataDictionary is of type 'List<Vuelo>', but this ViewDataDictionary instance
+  requires a model item of type 'Vuelo'`** (con los nombres completos de los tipos): el `@model` de la vista no coincide
+  con lo que mandó `View(…)`.
+- **El parámetro con otro nombre**: `Detalle(int vueloId)` con `/Vuelos/Detalle/3` recibe `0` y **todo** da 404. En la
+  ruta se llama `id`.
+- **Un controlador con SQL**: `using Microsoft.Data.Sqlite` o `new SqliteConnection` en `Controllers/`. Funciona, pero
+  rompe las capas y el verificador lo marca. El controlador coordina; el SQL vive en el repositorio.
+- **`NullReferenceException` en `Pasajeros/Detalle`**: la vista hace `foreach` sobre `ViewData["Reservas"]` y la acción
+  nunca lo cargó (o lo cargó con otra clave, como `"ReservasDelPasajero"`). El `as … ?? new List<Reserva>()` evita la explosión,
+  pero revisá la clave.
+- **Razor sin paréntesis**: `@vuelo.Precio * 2` muestra el precio seguido del texto "* 2". Con operadores, `@( … )`.
