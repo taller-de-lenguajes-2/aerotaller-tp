@@ -1,6 +1,6 @@
 -- ============================================================
 -- datos-equipaje.sql — equipaje de ejemplo (simulacro de parcial)
--- Pegalo al final de aerotaller.sql, después del CREATE TABLE Equipaje.
+-- Se agrega al final de aerotaller.sql, después del CREATE TABLE Equipaje.
 -- ============================================================
 
 INSERT INTO Equipaje (ReservaId, Tipo, PesoKg) VALUES

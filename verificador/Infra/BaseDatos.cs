@@ -9,7 +9,7 @@ public class BaseDatos(string ruta)
     private SqliteConnection Abrir()
     {
         if (!File.Exists(Ruta))
-            throw new VerificacionAbortada("La app arrancó pero no creó la base de datos: primero completá el desafío 1 (CrearBaseSiNoExiste con la cadena de la configuración).");
+            throw new VerificacionAbortada("La aplicación inició pero no creó la base de datos: primero debe completarse el desafío 1 (CrearBaseSiNoExiste con la cadena de la configuración).");
         // Pooling=False: no dejar el archivo abierto (la app del alumno también lo usa)
         var conexion = new SqliteConnection($"Data Source={Ruta};Mode=ReadOnly;Pooling=False");
         conexion.Open();

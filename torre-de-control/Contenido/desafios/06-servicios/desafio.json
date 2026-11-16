@@ -14,17 +14,17 @@
   ],
   "insignia": "servicios",
   "tareas": [
-    { "id": "servicios", "texto": "Tengo Servicios/ con IReservaService/ReservaService, IPasajeroService/PasajeroService e IVueloService/VueloService, registrados con AddScoped<IX, X>() en Program.cs", "ayuda": "Los servicios reciben los repositorios concretos por el constructor; las interfaces de los repositorios llegan en el desafío 7" },
-    { "id": "excepcion", "texto": "Excepciones/ReglaDeNegocioException existe, los controladores ya no tienen reglas del negocio y atrapan solo esa excepción con ModelState.AddModelError(ex.Campo, ex.Message)", "ayuda": "Todas las pruebas de reservas del desafío 5 (25A, 3A, Ana Gómez repetida, AT0500 lleno, AT0999) tienen que seguir dando el mismo error en el mismo campo" },
-    { "id": "cancelar", "texto": "Cancelo una reserva desde /Reservas: aparece el mensaje en verde, en DB Browser su Estado pasó a 'Cancelada' (la fila sigue ahí) y el asiento vuelve a estar libre en el mapa" },
-    { "id": "pasajeros", "texto": "Edito un pasajero (el DNI repetido sigue dando error) y, al intentar eliminar uno con reservas, veo el mensaje en rojo y no se borra" },
-    { "id": "push", "texto": "Hice commit y push con el mensaje del desafío y lo veo en GitHub" },
+    { "id": "servicios", "texto": "Carpeta Servicios/ creada con IReservaService/ReservaService, IPasajeroService/PasajeroService e IVueloService/VueloService, registrados con AddScoped<IX, X>() en Program.cs", "ayuda": "Los servicios reciben los repositorios concretos por el constructor; las interfaces de los repositorios llegan en el desafío 7" },
+    { "id": "excepcion", "texto": "Excepciones/ReglaDeNegocioException existe, los controladores ya no tienen reglas del negocio y atrapan solo esa excepción con ModelState.AddModelError(ex.Campo, ex.Message)", "ayuda": "Todas las pruebas de reservas del desafío 5 (25A, 3A, Ana Gómez repetida, AT0500 lleno, AT0999) deben seguir dando el mismo error en el mismo campo" },
+    { "id": "cancelar", "texto": "Reserva cancelada desde /Reservas: aparece el mensaje en verde, en DB Browser su Estado pasó a 'Cancelada' (la fila se conserva) y el asiento vuelve a estar libre en el mapa" },
+    { "id": "pasajeros", "texto": "Edición de pasajeros funcionando (el DNI repetido sigue dando error); al intentar eliminar uno con reservas aparece el mensaje en rojo y no se borra" },
+    { "id": "push", "texto": "Commit y push realizados con el mensaje del desafío; el commit se ve en GitHub" },
     { "id": "verificador", "texto": "El verificador da todo en verde para el desafío 6 (botón Verificar o dotnet run --project verificador -- 6)" }
   ],
   "quiz": [
     {
       "id": "p1",
-      "texto": "Con la base recién creada, reservás el 1F del AT0500 (la avioneta de 6 asientos) y queda llena. Después intentás reservar el 1A del mismo vuelo con Hernán Molina. Con un breakpoint en el catch de ReservasController.Crear, ¿cuánto vale ex.Campo?",
+      "texto": "Con la base recién creada, se reserva el 1F del AT0500 (la avioneta de 6 asientos) y queda llena. Después se intenta reservar el 1A del mismo vuelo con Hernán Molina. Con un breakpoint en el catch de ReservasController.Crear, ¿cuánto vale ex.Campo?",
       "opciones": [
         { "id": "a", "texto": "\"Asiento\", porque el 1A está ocupado" },
         { "id": "b", "texto": "\"PasajeroId\", porque Hernán ya tiene reservas" },
@@ -32,7 +32,7 @@
         { "id": "d", "texto": "\"VueloId\", porque el chequeo de vuelo lleno va antes que el de asiento ocupado" }
       ],
       "correcta": "d",
-      "pista": "El servicio lanza la excepción en la PRIMERA regla que no se cumple. Mirá en qué orden escribiste las reglas en Reservar, o seguilas con F10.",
+      "pista": "El servicio lanza la excepción en la PRIMERA regla que no se cumple. Revisar en qué orden están escritas las reglas en Reservar, o recorrerlas con F10.",
       "explicacion": "Las reglas van en orden: vuelo que ya salió → asiento que no existe → vuelo lleno → asiento ocupado → pasajero repetido. El 1A existe en el AT0500, pero el avión ya tiene 6 de 6: la tercera regla lanza ReglaDeNegocioException(\"VueloId\", …) y las siguientes ni se evalúan. Por eso el error aparece debajo del desplegable de vuelos.",
       "etiquetas": ["depurador"]
     },
@@ -46,7 +46,7 @@
         { "id": "d", "texto": "Porque el servicio no puede recibir parámetros que no sean repositorios" }
       ],
       "correcta": "a",
-      "pista": "Pensá en las capas del tema 09: ¿qué capa conoce los formularios y la vista? ¿Podrías reusar ReservaService desde una Web API si dependiera de ModelState?",
+      "pista": "Considerar las capas del tema 09: ¿qué capa conoce los formularios y la vista? ¿Podría reutilizarse ReservaService desde una Web API si dependiera de ModelState?",
       "explicacion": "Cada capa usa solo a la de abajo y no conoce a la de arriba. El servicio dice QUÉ salió mal (y en qué campo) sin saber de formularios; el controlador traduce eso a ModelState. Además, el tema 16 lo dice: una excepción propia tiene sentido cuando el error es del dominio y alguien la va a capturar por su tipo."
     },
     {
@@ -59,15 +59,15 @@
         { "id": "d", "texto": "Porque TempData se guarda en la base de datos" }
       ],
       "correcta": "c",
-      "pista": "Contá los requests: el POST de Cancelar y el GET del Index. ¿Cuánto vive ViewData?",
+      "pista": "Contar los requests: el POST de Cancelar y el GET del Index. ¿Cuánto vive ViewData?",
       "explicacion": "ViewData vive lo que dura un request. Con POST → Redirect → GET hay dos requests: el mensaje tiene que cruzar de uno al otro, y para eso está TempData (por defecto viaja en una cookie y se borra cuando se lee)."
     }
   ],
   "lecturas": [
     { "id": "tema09", "titulo": "Tema 09 — Repositorios: arquitectura en capas", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-09-repositorios/index.html", "fuente": "Diapositivas de la cátedra", "pregunta": "¿Qué capa aparece entre los controladores y los repositorios, y qué dice la diapositiva sobre los proyectos chicos?" },
-    { "id": "principios", "titulo": "Principios de arquitectura", "url": "https://learn.microsoft.com/es-es/dotnet/architecture/modern-web-apps-azure/architectural-principles", "fuente": "Microsoft Learn", "pregunta": "¿Qué dicen la separación de intereses y la responsabilidad única? ¿Cuál de las dos violaba tu ReservasController del desafío 5?" },
+    { "id": "principios", "titulo": "Principios de arquitectura", "url": "https://learn.microsoft.com/es-es/dotnet/architecture/modern-web-apps-azure/architectural-principles", "fuente": "Microsoft Learn", "pregunta": "¿Qué dicen la separación de intereses y la responsabilidad única? ¿Cuál de las dos violaba el ReservasController del desafío 5?" },
     { "id": "excepciones", "titulo": "Procedimientos recomendados para excepciones", "url": "https://learn.microsoft.com/es-es/dotnet/standard/exceptions/best-practices-for-exceptions", "fuente": "Microsoft Learn", "pregunta": "¿Qué recomienda sobre crear excepciones propias y sobre qué excepciones conviene atrapar?" },
     { "id": "app-state", "titulo": "Administración de sesiones y estado (TempData)", "url": "https://learn.microsoft.com/es-es/aspnet/core/fundamentals/app-state", "fuente": "Microsoft Learn", "pregunta": "¿Cuándo se borra un valor de TempData y qué hacen Keep y Peek?" }
   ],
-  "commit": { "mensaje": "Desafío 6: capa de servicios y cancelación de reservas", "detalle": "Un buen momento para dos commits: uno al mudar las reglas (todo tiene que seguir andando igual) y otro con cancelar, editar y eliminar." }
+  "commit": { "mensaje": "Desafío 6: capa de servicios y cancelación de reservas", "detalle": "Es un buen momento para dos commits: uno al trasladar las reglas (todo debe seguir funcionando igual) y otro con cancelar, editar y eliminar." }
 }

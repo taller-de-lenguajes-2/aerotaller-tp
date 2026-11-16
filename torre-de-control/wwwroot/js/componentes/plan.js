@@ -75,7 +75,7 @@ export default {
           <div class="suave" v-if="proxima" style="font-size:.85rem">{{ proxima.titulo }}</div>
         </div>
         <div class="dato">
-          <div class="nombre">Tu repo</div>
+          <div class="nombre">Repositorio</div>
           <div v-if="!repo" class="suave">revisando…</div>
           <div v-else-if="!repo.esRepo" class="suave" style="font-size:.85rem">{{ repo.mensaje }}</div>
           <template v-else>
@@ -124,13 +124,13 @@ export default {
             <p v-else class="suave">Todavía no hay commits.</p>
           </div>
           <div class="tarjeta">
-            <h3>El ritual de cada escala</h3>
+            <h3>Procedimiento de cada escala</h3>
             <ol style="margin:0;padding-left:1.2rem;font-size:.92rem">
-              <li>Leé la misión y el repaso.</li>
-              <li>Intentá cada paso <em>antes</em> de abrir la solución.</li>
-              <li>Poné los breakpoints y mirá el flujo.</li>
-              <li>Verificá, commit y <strong>push</strong>.</li>
-              <li>Respondé el cuestionario y despegá.</li>
+              <li>Leer la misión y el repaso.</li>
+              <li>Intentar cada paso <em>antes</em> de abrir la solución.</li>
+              <li>Colocar los breakpoints y seguir el flujo.</li>
+              <li>Verificar, hacer commit y <strong>push</strong>.</li>
+              <li>Responder el cuestionario y completar la escala.</li>
             </ol>
           </div>
         </aside>

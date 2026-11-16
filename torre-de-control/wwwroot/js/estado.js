@@ -43,7 +43,7 @@ export function avisar(texto, { icono = '✈', tipo = '', titulo = '', duracion 
 
 export function festejarInsignias(insignias) {
   (insignias || []).forEach((ins, i) =>
-    setTimeout(() => avisar(ins.descripcion, { icono: ins.icono, titulo: `¡Nueva insignia: ${ins.nombre}!`, tipo: 'insignia-nueva', duracion: 6500 }), i * 700));
+    setTimeout(() => avisar(ins.descripcion, { icono: ins.icono, titulo: `Nueva insignia: ${ins.nombre}`, tipo: 'insignia-nueva', duracion: 6500 }), i * 700));
   if (insignias && insignias.length) refrescarResumen();
 }
 

@@ -1,41 +1,43 @@
-# ✈ AeroTaller — TP integrador de Taller de Lenguajes 2
+# AeroTaller — TP integrador de Taller de Lenguajes 2
 
-Alumno/a: _(tu nombre)_ · Legajo: _(tu legajo)_
+Alumno/a: _(nombre y apellido)_
 
-Vas a construir, de a una escala por vez, la aplicación web de una aerolínea: vuelos con mapa de asientos, pasajeros,
-reservas con reglas de negocio, logs y login con roles. ASP.NET Core MVC (.NET 10), ADO.NET con SQLite, repositorios,
-servicios, inyección de dependencias, ViewModels y validación: **lo mismo que te va a pedir el parcial**.
+El TP consiste en construir, por etapas, la aplicación web de una aerolínea: vuelos con mapa de asientos, pasajeros,
+reservas con reglas de negocio, registro de logs e inicio de sesión con roles. Se trabaja con ASP.NET Core MVC (.NET 10),
+ADO.NET con SQLite, repositorios, servicios, inyección de dependencias, ViewModels y validación: los mismos contenidos que
+evalúa el parcial.
 
-## Antes de empezar
+## Requisitos
 
-- [.NET SDK 10](https://dotnet.microsoft.com/download) → `dotnet --list-sdks`
+- [.NET SDK 10](https://dotnet.microsoft.com/download) (`dotnet --list-sdks`)
 - [VS Code](https://code.visualstudio.com/) con la extensión **C# Dev Kit**
-- Git y tu cuenta de GitHub
-- [DB Browser for SQLite](https://sqlitebrowser.org/) (para mirar la base)
+- Git y una cuenta de GitHub
+- [DB Browser for SQLite](https://sqlitebrowser.org/) (para inspeccionar la base)
 
-## Tres comandos
+## Comandos
 
 ```bash
-dotnet run --project torre-de-control      # el tutorial interactivo → http://localhost:5200
-dotnet run --project AeroTaller            # TU aplicación          → http://localhost:5210
-dotnet run --project verificador -- 3      # revisa el desafío 3 (o 0-10, o todos)
+dotnet run --project torre-de-control      # tutorial interactivo  → http://localhost:5200
+dotnet run --project AeroTaller            # aplicación del TP     → http://localhost:5210
+dotnet run --project verificador -- 3      # verificación del desafío 3 (también 0-10 o todos)
 ```
 
-Para **depurar** tu aplicación: abrí la carpeta del repo en VS Code y apretá **F5** (configuración "AeroTaller").
+Para **depurar** la aplicación: abrir la carpeta del repositorio en VS Code y presionar **F5** (configuración "AeroTaller").
 
-## La Torre de Control
+## Torre de Control
 
-Es el tutorial: te guía desafío por desafío con la misión, un repaso, el paso a paso, los breakpoints para poner,
-alternativas, errores típicos de parcial, lecturas, una checklist y un cuestionario corto para desbloquear la siguiente escala.
-Cada 3 desafíos hay un checkpoint "¿Cómo vamos?" con tu bitácora (qué hiciste, qué falta, dudas para la consulta).
+Es el tutorial del TP. Presenta cada desafío con la misión, un repaso teórico, el paso a paso, los puntos de interrupción
+sugeridos, alternativas, errores frecuentes, lecturas, una lista de tareas y un cuestionario breve que habilita la etapa
+siguiente. Cada tres desafíos hay un checkpoint "¿Cómo vamos?" con una bitácora (lo realizado, lo pendiente y las dudas para
+la consulta).
 
-Tu progreso se guarda en `torre-de-control/progreso.db` (en tu máquina; no se sube al repo).
+El progreso se guarda en `torre-de-control/progreso.db`, en la computadora local (no se sube al repositorio).
 
 ## Plan de vuelo
 
 | Escala | Desafío | Temas |
 |---|---|---|
-| CHK | 0 · Check-in: repo, proyecto corriendo, primer breakpoint | 00 · 10 |
+| CHK | 0 · Check-in: repositorio, proyecto en ejecución, primer punto de interrupción | 00 · 10 |
 | SQL | 1 · La base: tablas, claves, datos y `CrearBaseSiNoExiste` | 07 · 08 |
 | REP | 2 · Modelos y repositorios con ADO.NET | 01 · 02 · 08 · 09 |
 | CP1 | ¿Cómo vamos? | |
@@ -47,32 +49,33 @@ Tu progreso se guarda en `torre-de-control/progreso.db` (en tu máquina; no se s
 | DIN | 7 · Inyección de dependencias y repositorios falsos | 14 |
 | LOG | 8 · Excepciones y logs | 16 · 17 |
 | CP3 | ¿Cómo vamos? | |
-| AUT | 9 · Autenticación: login, sesión y roles | 15 |
-| SIM | 10 · Simulacro de parcial (equipaje, 120 minutos) | todos |
+| AUT | 9 · Autenticación: inicio de sesión, sesión y roles | 15 |
+| SIM | 10 · Simulacro de parcial (equipaje, 2 h 30 min, sin puntaje: porcentaje de completitud) | todos |
 
 ## Corrección automática
 
-Cada `git push` corre el verificador en GitHub (pestaña **Actions** de tu repo) y suma puntos por cada desafío en verde.
-Es exactamente el mismo programa que corrés con `dotnet run --project verificador`. Los nombres que busca están en
+Cada `git push` ejecuta el verificador en GitHub (pestaña **Actions** del repositorio) y asigna puntos por cada desafío
+aprobado. Es el mismo programa que se ejecuta con `dotnet run --project verificador`. Los nombres que verifica están en
 [CONTRATO.md](./CONTRATO.md).
 
-⚠️ No modifiques `verificador/`, `.github/` ni `material/datos.sql`: la cátedra vuelve a correr el verificador oficial al corregir.
+No deben modificarse `verificador/`, `.github/` ni `material/datos.sql`: la cátedra vuelve a ejecutar el verificador
+oficial al corregir.
 
-## Qué hay en el repo
+## Contenido del repositorio
 
 ```
-AeroTaller/          ← tu proyecto (empieza casi vacío)
+AeroTaller/          ← proyecto del TP (parte casi vacío)
 material/            ← datos de ejemplo para la base (desafíos 1, 9 y simulacro)
-torre-de-control/    ← el tutorial (ASP.NET Web API + Vue)
-verificador/         ← el programa que revisa tu TP
+torre-de-control/    ← tutorial (ASP.NET Web API + Vue)
+verificador/         ← programa que verifica el TP
 CONTRATO.md          ← nombres obligatorios
-.vscode/             ← configuración para depurar con F5
+.vscode/             ← configuración de depuración (F5)
 ```
 
-## El ritual de cada desafío
+## Procedimiento sugerido para cada desafío
 
-1. Leé la misión. Intentá cada paso **antes** de abrir la solución.
-2. Poné los breakpoints que propone el desafío y seguí el flujo.
-3. `dotnet run --project verificador -- N` hasta que esté todo en verde.
-4. `git add -A` · `git commit -m "Desafío N: …"` · `git push` · mirá GitHub.
-5. Cuestionario y a la próxima escala.
+1. Leer la misión e intentar cada paso **antes** de consultar la solución.
+2. Colocar los puntos de interrupción indicados y seguir el flujo de ejecución.
+3. Ejecutar `dotnet run --project verificador -- N` hasta obtener todos los chequeos aprobados.
+4. `git add -A` · `git commit -m "Desafío N: …"` · `git push` · comprobar el commit en GitHub.
+5. Responder el cuestionario y continuar con la etapa siguiente.

@@ -1,34 +1,34 @@
 ## 🎯 Misión
 
-La base ya existe, pero C# todavía no la conoce. En este desafío construís las dos piezas que conectan el mundo de las
+La base ya existe, pero C# todavía no la conoce. En este desafío se construyen las dos piezas que conectan el mundo de las
 **filas** con el mundo de los **objetos**:
 
 1. **El modelo** (`Models/Modelos.cs`): las clases de AeroTaller (`Vuelo`, `Pasajero`, `Reserva`…), que no saben nada de
    SQL ni de HTML.
-2. **Los repositorios** (`Repositorios/`): una clase por tabla con **todo** el SQL, siempre con parámetros. De afuera se
+2. **Los repositorios** (`Repositorios/`): una clase por tabla con **todo** el SQL, siempre con parámetros. Desde afuera se
    ve `Listar()` u `Obtener(id)`; adentro quedan las conexiones, los comandos y los lectores.
 
-Y los vas a probar **sin pantallas**: un poquito de código temporal en `Program.cs` y un breakpoint para mirar los objetos
-que devuelven. En el desafío 3 los controladores los van a usar tal cual.
+Y se prueban **sin pantallas**: un poco de código temporal en `Program.cs` y un breakpoint para inspeccionar los objetos
+que devuelven. En el desafío 3 los controladores los usan tal cual.
 
 :::nota
 Es el desafío más largo del TP, y el que más se parece al parcial: en casi todos los parciales hay una tabla nueva con su
-repositorio. Si te lleva dos sesiones, está bien. Hacé un commit al terminar cada repositorio.
+repositorio. Es razonable que requiera dos sesiones. Conviene hacer un commit al terminar cada repositorio.
 :::
 
 ## 📚 Repaso
 
-Cuatro temas se juntan acá:
+Cuatro temas confluyen en este desafío:
 
-| Tema | La idea | Dónde aparece hoy |
+| Tema | La idea | Dónde aparece en este desafío |
 |---|---|---|
-| 01 · Abstracción | de la realidad me quedo con lo que necesita **mi** sistema | `Vuelo` tiene `Filas`, no la marca del avión |
+| 01 · Abstracción | de la realidad se conserva lo que necesita **el** sistema | `Vuelo` tiene `Filas`, no la marca del avión |
 | 01 · Ocultamiento | lo que es detalle va `private` | `LeerAeropuerto(lector)` no se ve de afuera |
 | 02 · Asociación | una clase tiene como miembro a otra | `Reserva` tiene un `Vuelo` y un `Pasajero` (objetos, no Ids) |
 | 08 · ADO.NET | `SqliteConnection` → `SqliteCommand` → `SqliteDataReader`, parámetros | el cuerpo de cada método |
 | 09 · Repositorio | una clase por entidad, una sola razón para cambiar | `VueloRepository`, `PasajeroRepository`… |
 
-La **receta** del tema 08, que vas a repetir en cada método:
+La **receta** del tema 08, que se repite en cada método:
 
 1. `using var conexion = new SqliteConnection(cadenaConexion);` y `conexion.Open();`
 2. El SQL, con `@parámetros` para todo lo que venga de afuera.
@@ -47,16 +47,16 @@ Y la regla del tema 09 para saber si algo va en el repositorio:
 
 :::catedra
 En el [tema 09](https://taller-de-lenguajes-2.github.io/clases/tema-09-repositorios/index.html) el repositorio venía
-con su interfaz (`IPacienteRepository`). En AeroTaller **la interfaz llega en el desafío 7**: por ahora escribís la clase
+con su interfaz (`IPacienteRepository`). En AeroTaller **la interfaz llega en el desafío 7**: por ahora se escribe la clase
 concreta, que recibe la cadena por el constructor igual que `PacienteRepository(string cadenaConexion)` de los temas 09
-y 10. Cuando en el desafío 7 cambies SQLite por datos en memoria, vas a sentir para qué sirve la interfaz.
+y 10. Cuando en el desafío 7 se reemplace SQLite por datos en memoria, quedará claro para qué sirve la interfaz.
 :::
 
 ## 💻 Paso a paso
 
 ### Paso 1 · El modelo: `Models/Modelos.cs`
 
-Creá la carpeta `Models/` y adentro `Modelos.cs`. Sin `namespace` (como en los ejemplos de la cátedra): así las vistas
+Crear la carpeta `Models/` y dentro `Modelos.cs`. Sin `namespace` (como en los ejemplos de la cátedra): así las vistas
 y los controladores las ven sin `using`.
 
 Las decisiones de abstracción importantes:
@@ -65,7 +65,7 @@ Las decisiones de abstracción importantes:
   foránea; en C#, un objeto adentro de otro. Así una vista escribe `vuelo.Origen.Ciudad` sin pedir nada más.
 - **Lo que se deduce, se calcula**: la llegada, la capacidad, si ya salió. No son columnas de la tabla: son propiedades
   de solo lectura (`=>`). Si cambia `Filas`, `Capacidad` nunca queda desactualizada.
-- **El estado es un `enum`**, no un `string`: el compilador no te deja escribir `"Confirmda"`.
+- **El estado es un `enum`**, no un `string`: el compilador no permite escribir `"Confirmda"`.
 
 ```csharp
 public class Vuelo
@@ -96,12 +96,12 @@ public class Vuelo
 }
 ```
 
-`= null!` le dice al compilador "confiá, el repositorio siempre lo completa". Con `Nullable` activado, sin eso te avisa
-que la propiedad podría quedar en `null`.
+`= null!` le indica al compilador que el repositorio siempre completa ese valor. Con `Nullable` activado, sin eso el compilador
+advierte que la propiedad podría quedar en `null`.
 
-:::pista TieneAsiento, sin mirar la solución
+:::pista TieneAsiento, sin consultar la solución
 `asiento[^1]` es el último carácter (la letra) y `asiento[..^1]` es todo menos el último (la fila).
-Usá `int.TryParse` para la fila y `LetrasAsiento.Contains(letra)` para la letra. Ojo con `""` y con `"A"`.
+Usar `int.TryParse` para la fila y `LetrasAsiento.Contains(letra)` para la letra. Contemplar los casos `""` y `"A"`.
 :::
 
 :::solucion Ver Modelos.cs completo
@@ -189,21 +189,21 @@ public record OcupacionVuelo(int VueloId, string Numero, string Ruta, DateTime S
 :::catedra
 ¿`Vuelo` → `Aeropuerto` es composición o agregación? En el [tema 08](https://taller-de-lenguajes-2.github.io/clases/tema-08-ado-net/index.html)
 la diapositiva "Una clase por tabla" dice que `Turno` tiene un objeto `Paciente` y lo llama **composición**, en el sentido
-amplio de "un objeto armado con otros". Si aplicás la pregunta del [tema 02](https://taller-de-lenguajes-2.github.io/clases/tema-02-composicion-y-agregacion/index.html)
+amplio de "un objeto armado con otros". Si se aplica la pregunta del [tema 02](https://taller-de-lenguajes-2.github.io/clases/tema-02-composicion-y-agregacion/index.html)
 ("si destruyo el contenedor, ¿el contenido tiene sentido por sí solo?"), el aeropuerto de Tucumán sigue existiendo aunque
-se cancele el vuelo: con ese criterio es **agregación** (◇). Si te lo preguntan en el parcial, la respuesta que suma es
+se cancele el vuelo: con ese criterio es **agregación** (◇). Si se pregunta en el parcial, la respuesta que suma es
 la que **justifica con el ciclo de vida**.
 :::
 
 ### Paso 2 · El más simple: `AeropuertoRepository`
 
-Creá la carpeta `Repositorios/` y empezá por el más corto, para fijar la receta. Dos métodos: `Listar()` (ordenado por
+Crear la carpeta `Repositorios/` y empezar por el más corto, para fijar la receta. Dos métodos: `Listar()` (ordenado por
 ciudad) y `Obtener(int id)`.
 
 ```csharp
 using Microsoft.Data.Sqlite;
 
-// Todo el SQL de la tabla Aeropuerto vive acá
+// Todo el SQL de la tabla Aeropuerto vive aquí
 public class AeropuertoRepository(string cadenaConexion)
 {
     public Aeropuerto? Obtener(int id)
@@ -232,14 +232,14 @@ public class AeropuertoRepository(string cadenaConexion)
 `(string cadenaConexion)` después del nombre de la clase es un **primary constructor**: el parámetro se puede usar en todos
 los métodos. El repositorio **recibe** la cadena; no la inventa ni la lee de `appsettings.json` (eso es trabajo de `Program.cs`).
 
-Escribí vos `Listar()`: mismo esquema, `ORDER BY Ciudad`, y un `while (lector.Read())` que agrega a una lista.
+Escribir `Listar()` sin ayuda: mismo esquema, `ORDER BY Ciudad`, y un `while (lector.Read())` que agrega a una lista.
 
 ### Paso 3 · El CRUD completo: `PasajeroRepository`
 
 Es el repositorio "de libro" del tema 09: `Listar`, `Buscar`, `Obtener`, `Insertar`, `Actualizar`, `Eliminar`, más
-`ExisteDni` (lo vas a necesitar en el desafío 5 para no repetir DNIs). Tres cosas nuevas respecto del aeropuerto:
+`ExisteDni` (se necesita en el desafío 5 para no repetir DNIs). Tres cosas nuevas respecto del aeropuerto:
 
-**El `NULL` de la base.** `Email` es opcional: un `NULL` llega como `DBNull` y `GetString` explota. Se pregunta antes:
+**El `NULL` de la base.** `Email` es opcional: un `NULL` llega como `DBNull` y `GetString` lanza una excepción. Se pregunta antes:
 
 ```csharp
 Email = lector.IsDBNull(3) ? null : lector.GetString(3)
@@ -273,8 +273,8 @@ var sql = """
 ```
 
 :::pista Un lector reutilizable con "desde"
-Hacé `LeerPasajero(SqliteDataReader lector, int desde)` **public static**: lee `Id` en `desde`, `Nombre` en `desde + 1`…
-Acá la llamás con `0`; en el paso 5, `ReservaRepository` la va a llamar con otra posición, porque en su JOIN las columnas
+Declarar `LeerPasajero(SqliteDataReader lector, int desde)` como **public static**: lee `Id` en `desde`, `Nombre` en `desde + 1`…
+Aquí se la llama con `0`; en el paso 5, `ReservaRepository` la llama con otra posición, porque en su JOIN las columnas
 del pasajero vienen al final.
 :::
 
@@ -446,9 +446,9 @@ public static DateTime LeerFecha(SqliteDataReader lector, int columna) =>
 comando.Parameters.AddWithValue("@salida", vuelo.Salida.ToString(FormatoFecha, CultureInfo.InvariantCulture));
 ```
 
-Los métodos del repositorio, y cuándo los vas a usar:
+Los métodos del repositorio, y cuándo se usan:
 
-| Método | Qué hace | Lo usás en |
+| Método | Qué hace | Se usa en |
 |---|---|---|
 | `Listar()` | todos, `ORDER BY v.Salida` | desafío 3 |
 | `Obtener(int id)` | uno o `null` | desafío 3 |
@@ -457,12 +457,12 @@ Los métodos del repositorio, y cuándo los vas a usar:
 | `ExisteNumero(string numero)` | ¿ya hay un vuelo con ese número? | desafío 5 |
 | `Insertar(Vuelo vuelo)` | `INSERT … RETURNING Id` con `vuelo.Origen.Id` y `vuelo.Destino.Id` | desafío 5 |
 
-Podés escribir hoy los seis o dejar los últimos tres para cuando los necesites. El verificador de este desafío mira que
+Pueden escribirse ahora los seis o dejar los últimos tres para cuando se necesiten. El verificador de este desafío comprueba que
 existan los cuatro repositorios y que usen parámetros.
 
 :::nota
 En `Buscar` el `WHERE` se arma de a pedazos según qué filtros vinieron (`condiciones.Add("v.DestinoId = @destinoId")`).
-Eso **no** es inyección: los pedazos son texto fijo escrito por vos y los valores van como parámetros. Lo peligroso es
+Eso **no** es inyección: los pedazos son texto fijo escrito por quien programa y los valores van como parámetros. Lo peligroso es
 pegar en el SQL algo que escribió el usuario.
 :::
 
@@ -649,7 +649,7 @@ public class VueloRepository(string cadenaConexion)
 ### Paso 5 · Juntar todo: `ReservaRepository`
 
 La reserva es la que más tablas toca: la reserva, su vuelo **con los dos aeropuertos** y el pasajero. Son cuatro tablas,
-pero `Aeropuerto` aparece dos veces: cinco alias. El truco es ordenar las columnas **en bloques** y reutilizar los
+pero `Aeropuerto` aparece dos veces: cinco alias. La técnica consiste en ordenar las columnas **en bloques** y reutilizar los
 lectores de los otros repositorios:
 
 | Posiciones | Bloque | Lo lee |
@@ -680,8 +680,8 @@ Los métodos, y para qué sirven más adelante:
 
 :::cuidado
 Las consultas que cuentan o buscan asientos (`AsientosOcupados`, `ContarConfirmadas`, `PasajeroTieneReserva`) filtran
-`Estado = 'Confirmada'`. Una reserva cancelada **libera** el asiento: si te olvidás el filtro, el 1C del AT1001 (cancelado
-en los datos de ejemplo) va a figurar como ocupado para siempre.
+`Estado = 'Confirmada'`. Una reserva cancelada **libera** el asiento: si se omite el filtro, el 1C del AT1001 (cancelado
+en los datos de ejemplo) figura como ocupado para siempre.
 :::
 
 :::solucion Ver ReservaRepository.cs
@@ -841,64 +841,64 @@ public class ReservaRepository(string cadenaConexion)
 
 ### Paso 6 · Probarlos sin pantallas
 
-Todavía no hay controladores que usen los repositorios, pero los podés probar ya. En `Program.cs`, **justo después** de
-`CrearBaseSiNoExiste(cadenaConexion);`, agregá este bloque temporal:
+Todavía no hay controladores que usen los repositorios, pero ya pueden probarse. En `Program.cs`, **justo después** de
+`CrearBaseSiNoExiste(cadenaConexion);`, agregar este bloque temporal:
 
 ```csharp
-// ── PRUEBA TEMPORAL (desafío 2): borrala cuando termines ──
+// ── PRUEBA TEMPORAL (desafío 2): eliminar al terminar ──
 var prueba = new VueloRepository(cadenaConexion).Listar();
 var reservasDeAna = new ReservaRepository(cadenaConexion).ListarPorPasajero(1);
 var terminanEnEz = new PasajeroRepository(cadenaConexion).Buscar("ez");
 var ocupacion = new VueloRepository(cadenaConexion).ListarOcupacion();
-Console.WriteLine($"Vuelos: {prueba.Count} · reservas de Ana: {reservasDeAna.Count}");   // ← 🔴 breakpoint acá
+Console.WriteLine($"Vuelos: {prueba.Count} · reservas de Ana: {reservasDeAna.Count}");   // ← 🔴 breakpoint aquí
 ```
 
-Poné el breakpoint en el `Console.WriteLine` y arrancá con **F5**. Frena antes de que la app empiece a atender pedidos.
-En el panel **Variables**, desplegá cada lista y comprobá:
+Colocar el breakpoint en el `Console.WriteLine` y arrancar con **F5**. Se detiene antes de que la app empiece a atender pedidos.
+En el panel **Variables**, desplegar cada lista y comprobar:
 
-| Variable | Qué tenés que ver |
+| Variable | Qué debe verse |
 |---|---|
 | `prueba` | 9 vuelos ordenados por salida; cada uno con `Origen` y `Destino` desplegables |
 | `reservasDeAna` | 3 reservas, todas en el 3A, cada una con su `Vuelo` (con aeropuertos) y su `Pasajero` |
 | `terminanEnEz` | Ana Gómez y Facundo López |
 | `ocupacion` | 8 vuelos (el que ya salió no está) con `Ocupados` y `Porcentaje` |
 
-Si algo explota, mejor: el mensaje te dice qué columna leíste mal (mirá los errores típicos de abajo).
+Si algo falla, el mensaje de la excepción indica qué columna se leyó mal (ver los errores típicos más abajo).
 
 :::cuidado
-Cuando todo cierre, **borrá el bloque de prueba**. Es código para vos, no para el repo: la app no tiene que hacer
-consultas de prueba cada vez que arranca. En el desafío 3 los repositorios los van a crear los controladores… sin `new`.
+Cuando todo funcione, **eliminar el bloque de prueba**. Es código de exploración, no para el repositorio: la app no debe hacer
+consultas de prueba cada vez que arranca. En el desafío 3 los repositorios los crean los controladores… sin `new`.
 :::
 
 ### Paso 7 · Commit
 
-Como decía la misión: un commit por repositorio es una buena costumbre. Al final, el commit del desafío con
+Como se indicó en la misión: un commit por repositorio es una buena costumbre. Al final, el commit del desafío con
 `Program.cs` limpio.
 
 ## 🔴 Breakpoints
 
 :::breakpoint Program.cs · el Console.WriteLine de la prueba
-Desplegá `prueba[1]`. ¿Qué vuelo es y por qué no es el `AT1001`? Mirá `Capacidad`, `Llegada`, `YaSalio` y `LlegaAlOtroDia`:
-ninguna es una columna, pero el depurador las muestra como si lo fueran. Buscá en la lista el `AT3110`: ¿`LlegaAlOtroDia`
-es `true`? Agregá al Watch `prueba[0].Origen == prueba[1].Origen`: ¿es el mismo objeto aunque los dos salgan de Tucumán?
+Desplegar `prueba[1]`. ¿Qué vuelo es y por qué no es el `AT1001`? Observar `Capacidad`, `Llegada`, `YaSalio` y `LlegaAlOtroDia`:
+ninguna es una columna, pero el depurador las muestra como si lo fueran. Buscar en la lista el `AT3110`: ¿`LlegaAlOtroDia`
+es `true`? Agregar al Watch `prueba[0].Origen == prueba[1].Origen`: ¿es el mismo objeto aunque los dos salgan de Tucumán?
 :::
 
 :::breakpoint VueloRepository.cs · LeerVuelo
-Poné un breakpoint adentro de `LeerVuelo` y arrancá. Frena primero desde `Listar` (mirá el **Call Stack**: `LeerVuelos`
-→ `Listar` → `Program`). Apretá F5 varias veces hasta que la pila diga `LeerReservas` (la llamada de `ReservaRepository`):
-¿cuánto vale `desde` en cada caso? Agregá al Watch `lector.GetString(desde + 1)`: siempre tiene que ser un número de vuelo.
+Colocar un breakpoint dentro de `LeerVuelo` y arrancar. Se detiene primero desde `Listar` (observar el **Call Stack**: `LeerVuelos`
+→ `Listar` → `Program`). Presionar F5 varias veces hasta que la pila muestre `LeerReservas` (la llamada de `ReservaRepository`):
+¿cuánto vale `desde` en cada caso? Agregar al Watch `lector.GetString(desde + 1)`: siempre debe ser un número de vuelo.
 :::
 
 :::breakpoint PasajeroRepository.cs · Buscar
-Frená en el `return LeerPasajeros(comando);` y mirá en el Watch `comando.CommandText` y `comando.Parameters[0].Value`.
-El SQL nunca contiene `ez`: el valor viaja aparte. Ahora cambiá en la prueba `Buscar("ez")` por `Buscar("' OR '1'='1")`:
+Detener la ejecución en el `return LeerPasajeros(comando);` y observar en el Watch `comando.CommandText` y `comando.Parameters[0].Value`.
+El SQL nunca contiene `ez`: el valor viaja aparte. A continuación, cambiar en la prueba `Buscar("ez")` por `Buscar("' OR '1'='1")`:
 ¿cuántos pasajeros trae?
 :::
 
-Preguntate:
+Preguntas para analizar:
 
 - Si dos vuelos salen de TUC, ¿cuántos objetos `Aeropuerto` de Tucumán hay en memoria? ¿Importa?
-- ¿Qué pasa con `reservasDeAna` si borrás la reserva 1 en DB Browser y volvés a arrancar?
+- ¿Qué ocurre con `reservasDeAna` si se borra la reserva 1 en DB Browser y se vuelve a arrancar?
 
 ## 🔀 Alternativas
 
@@ -906,7 +906,7 @@ Preguntate:
 
 | Forma | Ejemplo | A favor | En contra | Cuándo |
 |---|---|---|---|---|
-| Por posición | `lector.GetInt32(0)` | rápido, tipado, permite el truco de `desde` para reutilizar bloques | si cambia el orden del `SELECT`, lee datos cruzados | la que usamos (tema 08) |
+| Por posición | `lector.GetInt32(0)` | rápido, tipado, permite la técnica de `desde` para reutilizar bloques | si cambia el orden del `SELECT`, lee datos cruzados | la que se usa en AeroTaller (tema 08) |
 | Por nombre | `lector["Nombre"]` | se entiende solo; el orden no importa | devuelve `object` (hay que convertir); en un JOIN dos columnas se llaman `Id`: hacen falta alias con `AS` | consultas cortas, sin JOIN |
 | Posición a partir del nombre | `lector.GetString(lector.GetOrdinal("Nombre"))` | tipado y sin depender del orden | más largo; mismo problema de nombres repetidos | cuando el `SELECT` cambia seguido |
 
@@ -917,31 +917,31 @@ Preguntate:
 | Objeto completo | `Vuelo.Origen` es un `Aeropuerto` | la vista escribe `vuelo.Origen.Ciudad` sin otra consulta; es orientado a objetos | cada lectura necesita el JOIN; para insertar hay que armar el objeto (o al menos su `Id`) |
 | Solo el Id | `Vuelo.OrigenId` es un `int` | igual a la tabla, simple de insertar | para mostrar la ciudad hay que hacer otra consulta por cada vuelo (el problema "N+1") |
 
-En AeroTaller usamos el objeto completo en el modelo. En el desafío 4 vas a ver que los **formularios** sí trabajan con
+En AeroTaller se usa el objeto completo en el modelo. En el desafío 4 se verá que los **formularios** sí trabajan con
 Ids (`OrigenId`, `VueloId`): ahí es donde entran los ViewModels.
 
 :::catedra
 En el [tema 08](https://taller-de-lenguajes-2.github.io/clases/tema-08-ado-net/index.html) el JOIN de turnos se leía **por
-nombre**, con alias (`p.Nombre AS PacienteNombre`, `lector["PacienteNombre"]`). Acá se lee **por posición**, con un
+nombre**, con alias (`p.Nombre AS PacienteNombre`, `lector["PacienteNombre"]`). En AeroTaller se lee **por posición**, con un
 `desde`, para reutilizar `LeerVuelo` y `LeerPasajero` desde `ReservaRepository`. Las dos formas son correctas: en el
-parcial, elegí una y sé consistente. Para el Id generado, la diapositiva también menciona `SELECT last_insert_rowid()`
+parcial, lo importante es elegir una y ser consistente. Para el Id generado, la diapositiva también menciona `SELECT last_insert_rowid()`
 después del `INSERT`; `RETURNING Id` hace lo mismo en una sola instrucción.
 :::
 
 ## ⚠️ Errores típicos
 
 - **`GetString` sobre un `NULL`**: `The data is NULL at ordinal 3. This method can't be called on NULL values. Check using
-  IsDBNull before calling.` Es el `Email` de Bruno Díaz. Preguntá `IsDBNull` antes.
+  IsDBNull before calling.` Es el `Email` de Bruno Díaz. Consultar `IsDBNull` antes.
 - **SQL armado con el valor adentro**: `$"… WHERE Dni = '{dni}'"` o `"… WHERE Id = " + id`. Funciona en la prueba, es
   inyección SQL en la vida real y el verificador lo marca en rojo. Todo valor de afuera va con `AddWithValue`.
 - **El `%` en el SQL**: `"… LIKE '%@texto%'"` no reemplaza nada (adentro de comillas `@texto` es texto común) y la búsqueda
   no trae resultados. Los `%` van en el valor: `$"%{texto}%"`.
-- **Posiciones corridas** en `LeerVuelo` o `LeerReservas`: a veces explota con una conversión inválida y a veces, peor,
-  lee datos cruzados sin avisar (la ciudad en el nombre, el Id del aeropuerto en `Filas`). Contá las columnas del `SELECT`
+- **Posiciones corridas** en `LeerVuelo` o `LeerReservas`: a veces falla con una conversión inválida y a veces, peor,
+  lee datos cruzados sin avisar (la ciudad en el nombre, el Id del aeropuerto en `Filas`). Contar las columnas del `SELECT`
   desde 0, con el breakpoint de `LeerVuelo`.
 - **Fechas sin formato fijo**: `DateTime.Parse` o `vuelo.Salida.ToString()` usan la cultura de la máquina (`18/11/2026 7:30:00 a. m.`
-  en es-AR). Al guardar se rompe el orden de los textos y al leer, `ParseExact` tira `FormatException`. Siempre
+  en es-AR). Al guardar se rompe el orden de los textos y al leer, `ParseExact` lanza `FormatException`. Siempre
   `FormatoFecha` + `CultureInfo.InvariantCulture`.
 - **El enum como número**: `AddWithValue("@estado", reserva.Estado)` manda `0` y el `CHECK` de la tabla lo rechaza:
-  `CHECK constraint failed: Estado IN ('Confirmada', 'Cancelada')`. Mandá `reserva.Estado.ToString()`.
+  `CHECK constraint failed: Estado IN ('Confirmada', 'Cancelada')`. Enviar `reserva.Estado.ToString()`.
 - **Olvidarse el código de prueba en `Program.cs`**: la app hace cuatro consultas cada vez que arranca y el commit queda sucio.

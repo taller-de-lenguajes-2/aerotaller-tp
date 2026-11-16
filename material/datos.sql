@@ -1,9 +1,9 @@
 -- ============================================================
 -- datos.sql — datos de ejemplo de AeroTaller (desafío 1)
--- Pegalos AL FINAL de tu aerotaller.sql, DESPUÉS de tus CREATE TABLE.
--- Si tus tablas o columnas no se llaman exactamente como dice el desafío 1, estos INSERT fallan:
+-- Se agregan AL FINAL de aerotaller.sql, DESPUÉS de los CREATE TABLE.
+-- Si las tablas o columnas no se llaman exactamente como indica el desafío 1, estos INSERT fallan:
 -- es a propósito (es el "contrato" que también revisa el verificador).
--- No los modifiques: el verificador cuenta con estos datos (por ejemplo, que el 3A del AT1001 está ocupado).
+-- No deben modificarse: el verificador cuenta con estos datos (por ejemplo, que el 3A del AT1001 está ocupado).
 -- ============================================================
 
 INSERT INTO Aeropuerto (Codigo, Ciudad, Nombre) VALUES

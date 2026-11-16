@@ -1,30 +1,31 @@
 ## 🎯 Misión
 
-Hasta ahora cada vista recibía una entidad tal cual (`@model List<Vuelo>`, `@model Vuelo`). Funciona para pantallas
-simples, pero AeroTaller ya pide cosas que **ninguna entidad tiene**:
+Hasta este punto cada vista recibía una entidad tal cual (`@model List<Vuelo>`, `@model Vuelo`). Eso funciona para
+pantallas simples, pero AeroTaller ya requiere datos que **ninguna entidad tiene**:
 
-- El listado de vuelos quiere la ruta armada (`TUC → AEP`), la duración en horas y minutos, el precio con formato y
-  **cuántos asientos quedan libres** (eso sale de otra consulta).
-- El detalle del vuelo quiere un **mapa de asientos**: 20 filas de 6, con el pasillo entre la C y la D, los ocupados en
-  gris y los libres como links para reservar.
-- El formulario de reserva quiere **las listas de vuelos y pasajeros** para los desplegables.
+- El listado de vuelos necesita la ruta armada (`TUC → AEP`), la duración en horas y minutos, el precio con formato y
+  **cuántos asientos quedan libres** (eso surge de otra consulta).
+- El detalle del vuelo necesita un **mapa de asientos**: 20 filas de 6, con el pasillo entre la C y la D, los ocupados
+  en gris y los libres como enlaces para reservar.
+- El formulario de reserva necesita **las listas de vuelos y pasajeros** para los desplegables.
 
 Al terminar este desafío:
 
 1. Hay una carpeta `ViewModels/` y cada pantalla recibe **exactamente** lo que necesita, ya formateado.
 2. `/Vuelos` busca por destino y fecha.
 3. `/Vuelos/Detalle/{id}` muestra el **mapa de asientos**.
-4. `/Reservas` lista las reservas y `/Reservas/Crear` tiene el formulario (con el vuelo y el asiento precargados si venís del mapa).
+4. `/Reservas` lista las reservas y `/Reservas/Crear` tiene el formulario (con el vuelo y el asiento precargados cuando
+   se llega desde el mapa).
 
 :::nota
-Todavía **no validamos** nada: si cargás el asiento `99Z`, se guarda. Eso es el desafío 5. Hoy el foco es que los
-datos lleguen a cada vista con la forma justa.
+Todavía **no se valida** nada: si se carga el asiento `99Z`, se guarda. Eso corresponde al desafío 5. En este desafío
+el foco está en que los datos lleguen a cada vista con la forma justa.
 :::
 
 ## 📚 Repaso
 
 Un **ViewModel** es el objeto que se le pasa a una vista, con solo los datos que esa vista necesita, listos para mostrar.
-En el tema 12 vimos tres escenarios, y en AeroTaller aparecen los tres:
+En el tema 12 se presentaron tres escenarios, y en AeroTaller aparecen los tres:
 
 | Escenario del tema 12 | En la clínica | En AeroTaller |
 |---|---|---|
@@ -32,12 +33,12 @@ En el tema 12 vimos tres escenarios, y en AeroTaller aparecen los tres:
 | 2 · Dos modelos, una vista | `PacienteDetalleViewModel` (paciente + turnos) | `PasajeroDetalleViewModel`, `VueloDetalleViewModel` (vuelo + asientos ocupados) |
 | 3 · La vista necesita más | `TurnoCrearViewModel` (campos + listas para los `<select>`) | `ReservaCrearViewModel`, `VueloIndexViewModel` |
 
-Tres ideas que **caen en el parcial**:
+Tres ideas que **se evalúan en el parcial**:
 
-- **Las listas no vuelven en el POST.** Un `<select>` manda solo el valor elegido. Si hay que volver a mostrar el
+- **Las listas no vuelven en el POST.** Un `<select>` envía solo el valor elegido. Si hay que volver a mostrar el
   formulario, las listas se cargan de nuevo: por eso existe `CargarListas(modelo)`.
-- **Overposting.** Si la acción recibe la entidad, el binding llena cualquier propiedad que venga en el request, aunque no
-  esté en tu formulario. Con un ViewModel, lo que no está declarado no tiene dónde caer.
+- **Overposting.** Si la acción recibe la entidad, el binding completa cualquier propiedad que venga en el request,
+  aunque no esté en el formulario. Con un ViewModel, lo que no está declarado no tiene dónde asignarse.
 - **El repositorio no conoce los ViewModels.** El controlador traduce: ViewModel → entidad → repositorio.
 
 ```text
@@ -50,8 +51,8 @@ Lo que vimos en clase: [Tema 12 — ViewModels](https://taller-de-lenguajes-2.gi
 
 ### Paso 1 · La carpeta y el primer ViewModel
 
-Creá la carpeta `AeroTaller/ViewModels/` (al lado de `Models/`). El primero es una **fila del listado de vuelos**
-(escenario 1): tiene textos ya armados, nada de lógica de negocio.
+Crear la carpeta `AeroTaller/ViewModels/` (junto a `Models/`). El primero es una **fila del listado de vuelos**
+(escenario 1): contiene textos ya armados, sin lógica de negocio.
 
 ```csharp
 // ViewModels/VueloListadoViewModel.cs
@@ -70,23 +71,24 @@ public class VueloListadoViewModel(Vuelo vuelo, int ocupados)
 }
 ```
 
-¿Por qué recibe `ocupados` aparte? Porque un `Vuelo` no sabe cuántas reservas tiene: eso sale de otra consulta
-(`ListarOcupacion`, la del `LEFT JOIN + GROUP BY` que escribiste en el desafío 2 y usaste en el tablero del 3). El ViewModel **junta** las dos cosas.
+¿Por qué recibe `ocupados` aparte? Porque un `Vuelo` no sabe cuántas reservas tiene: eso surge de otra consulta
+(`ListarOcupacion`, la del `LEFT JOIN + GROUP BY` escrita en el desafío 2 y usada en el tablero del 3). El ViewModel
+**reúne** los dos datos.
 
 :::catedra
 En la diapositiva, `TurnoListadoViewModel` asigna las propiedades **en un constructor común**
-(`public TurnoListadoViewModel(Turno turno) { Dia = …; }`). Acá usamos un **constructor primario** (C# 12) e
-inicializamos cada propiedad con `= vuelo.X`. Es lo mismo, más corto. Cualquiera de las dos formas vale en el parcial.
+(`public TurnoListadoViewModel(Turno turno) { Dia = …; }`). Aquí se usa un **constructor primario** (C# 12) y cada
+propiedad se inicializa con `= vuelo.X`. Es equivalente, más breve. Cualquiera de las dos formas es válida en el parcial.
 :::
 
 :::nota
-¿Un archivo por clase o uno por entidad (`VueloViewModels.cs` con todos los de vuelos)? Las dos sirven. En la clínica
-hay uno por clase; si agrupás, que el nombre del archivo lo diga.
+¿Un archivo por clase o uno por entidad (`VueloViewModels.cs` con todos los de vuelos)? Ambas opciones sirven. En la
+clínica hay uno por clase; si se agrupan, el nombre del archivo debe indicarlo.
 :::
 
 ### Paso 2 · Buscar vuelos: filtro + resultados
 
-`/Vuelos` pasa a tener un buscador por destino y fecha. La pantalla necesita **lo que manda el usuario** (el filtro),
+`/Vuelos` pasa a tener un buscador por destino y fecha. La pantalla necesita **lo que envía el usuario** (el filtro),
 **la lista de destinos** para el `<select>` y **los resultados**: todo en un solo objeto.
 
 ```csharp
@@ -110,8 +112,8 @@ public class VueloIndexViewModel
 }
 ```
 
-En el controlador, el **mismo** ViewModel entra como parámetro (el model binding lo llena desde el query string) y sale
-hacia la vista con los resultados:
+En el controlador, el **mismo** ViewModel entra como parámetro (el model binding lo completa desde el query string) y
+sale hacia la vista con los resultados:
 
 ```csharp
 // Controllers/VuelosController.cs
@@ -142,12 +144,13 @@ public class VuelosController(
 
 :::nota
 El constructor de `VuelosController` ahora pide tres repositorios. Los cuatro ya están registrados en `Program.cs`
-desde el desafío 3 (`AddScoped(_ => new AeropuertoRepository(cadenaConexion))`, etc.), así que ASP.NET los crea y se
-los pasa. Si alguno faltara, al abrir `/Vuelos` verías *Unable to resolve service for type 'AeropuertoRepository'
+desde el desafío 3 (`AddScoped(_ => new AeropuertoRepository(cadenaConexion))`, etc.), de modo que ASP.NET los crea y
+se los pasa. Si alguno faltara, al abrir `/Vuelos` aparecería *Unable to resolve service for type 'AeropuertoRepository'
 while attempting to activate 'VuelosController'*.
 :::
 
-En la vista cambia el `@model` y aparece un formulario **GET** (el filtro viaja en la URL, se puede compartir el link):
+En la vista cambia el `@model` y aparece un formulario **GET** (el filtro viaja en la URL, por lo que el enlace se
+puede compartir):
 
 ```cshtml
 @model VueloIndexViewModel
@@ -191,13 +194,14 @@ En la vista cambia el `@model` y aparece un formulario **GET** (el filtro viaja 
 </table>
 ```
 
-Fijate que la vista **no formatea nada**: solo muestra. Si mañana el precio va con decimales, se cambia en un lugar.
+Notar que la vista **no formatea nada**: solo muestra. Si en el futuro el precio debe llevar decimales, se cambia en un
+único lugar.
 
 ### Paso 3 · El mapa de asientos (la matriz)
 
-Este es el corazón del desafío. La vista tiene que dibujar una **grilla**: una fila del avión por renglón, seis asientos
-por fila. La forma más cómoda para dibujarla es que el ViewModel ya la traiga armada como una **lista de filas**, donde
-cada fila es una **lista de asientos**: `List<List<AsientoViewModel>>`.
+Esta es la parte central del desafío. La vista tiene que dibujar una **grilla**: una fila del avión por renglón, seis
+asientos por fila. La forma más cómoda de dibujarla es que el ViewModel ya la traiga armada como una **lista de filas**,
+donde cada fila es una **lista de asientos**: `List<List<AsientoViewModel>>`.
 
 ```text
 Mapa[0]  →  [1A] [1B] [1C] | [1D] [1E] [1F]
@@ -207,7 +211,7 @@ Mapa[2]  →  [3A]█ [3B]█ [3C] | [3D] [3E] [3F]      █ = ocupado
 Mapa[19] →  [20A] …                      [20F]
 ```
 
-Primero, un asiento. Es un dato chiquito e inmutable: un `record` le queda perfecto.
+Primero, un asiento. Es un dato pequeño e inmutable: un `record` resulta adecuado.
 
 ```csharp
 // ViewModels/AsientoViewModel.cs
@@ -215,10 +219,10 @@ public record AsientoViewModel(string Codigo, bool Ocupado);
 ```
 
 Después, el detalle del vuelo. Es el escenario 2 (dos modelos, una vista): el `Vuelo` y la lista de asientos ocupados
-que trae `ReservaRepository.AsientosOcupados(vueloId)`.
+que devuelve `ReservaRepository.AsientosOcupados(vueloId)`.
 
-Intentalo vos primero: un `for` de filas (de 1 a `vuelo.Filas`) y, adentro, un `foreach` por cada letra de
-`Vuelo.LetrasAsiento` (`"ABCDEF"`). El código del asiento es `$"{fila}{letra}"`.
+Se recomienda intentarlo antes de consultar la solución: un `for` de filas (de 1 a `vuelo.Filas`) y, dentro, un
+`foreach` por cada letra de `Vuelo.LetrasAsiento` (`"ABCDEF"`). El código del asiento es `$"{fila}{letra}"`.
 
 :::solucion Ver VueloDetalleViewModel completo
 ```csharp
@@ -280,16 +284,16 @@ public IActionResult Detalle(int id)
 }
 ```
 
-¿Por qué armar la matriz en C# y no en la vista? Porque en C# la podés **depurar** (breakpoint y mirás `Mapa`), y
-la vista queda con un solo trabajo: dibujar. `PuedeReservar` es un dato **para mostrar** (si se ofrecen links o no):
-la regla de verdad ("no se reserva un vuelo que ya salió") la vas a controlar en el servidor en el desafío 5.
+¿Por qué armar la matriz en C# y no en la vista? Porque en C# se puede **depurar** (con un breakpoint se inspecciona
+`Mapa`), y la vista queda con una sola tarea: dibujar. `PuedeReservar` es un dato **para mostrar** (si se ofrecen
+enlaces o no): la regla de negocio ("no se reserva un vuelo que ya salió") se controla en el servidor en el desafío 5.
 
 ### Paso 4 · Dibujar el mapa
 
-En `Views/Vuelos/Detalle.cshtml` cambiá el `@model` a `VueloDetalleViewModel`. El CSS ya está en `sitio.css`:
+En `Views/Vuelos/Detalle.cshtml`, cambiar el `@model` a `VueloDetalleViewModel`. El CSS ya está en `sitio.css`:
 `.avion`, `.fila`, `.numero-fila`, `.pasillo`, `.asiento`, `.asiento.libre` y `.asiento.ocupado`.
 
-Dos `for` anidados: el de afuera recorre filas (`Model.Mapa[i]`), el de adentro los asientos (`Model.Mapa[i][j]`).
+Dos `for` anidados: el exterior recorre filas (`Model.Mapa[i]`), el interior los asientos (`Model.Mapa[i][j]`).
 Antes del cuarto asiento (`j == 3`, la D) va el pasillo.
 
 ```cshtml
@@ -341,17 +345,17 @@ Antes del cuarto asiento (`j == 3`, la D) va el pasillo.
 ```
 
 `asp-route-vueloId` y `asp-route-asiento` no son parte de la ruta (`{controller}/{action}/{id?}`), así que el tag
-helper los agrega al query string: `/Reservas/Crear?vueloId=2&asiento=5C`. Ese link es parte del **contrato**: el
+helper los agrega al query string: `/Reservas/Crear?vueloId=2&asiento=5C`. Ese enlace es parte del **contrato**: el
 verificador lo busca tal cual.
 
 :::nota
-`asiento.Codigo[^1]` es el último carácter del código (la letra): en el cuadradito se ve "A", y el número de fila
-queda a la izquierda. Pasá el mouse para ver el código completo (`title`).
+`asiento.Codigo[^1]` es el último carácter del código (la letra): en el cuadrado se ve "A", y el número de fila
+queda a la izquierda. Al pasar el mouse se ve el código completo (`title`).
 :::
 
 ### Paso 5 · Reservas y pasajeros con su ViewModel
 
-Una fila del listado de reservas junta datos de tres entidades (reserva, vuelo con sus aeropuertos, pasajero):
+Una fila del listado de reservas reúne datos de tres entidades (reserva, vuelo con sus aeropuertos, pasajero):
 
 ```csharp
 // ViewModels/ReservaListadoViewModel.cs
@@ -377,7 +381,7 @@ public class ReservaIndexViewModel
 }
 ```
 
-Creá `Controllers/ReservasController.cs` con el `Index`:
+Crear `Controllers/ReservasController.cs` con el `Index`:
 
 ```csharp
 using Microsoft.AspNetCore.Mvc;
@@ -421,8 +425,8 @@ public class PasajeroDetalleViewModel(Pasajero pasajero, List<Reserva> reservas)
 }
 ```
 
-En el desafío 3 las reservas del pasajero viajaban aparte, en `ViewData["Reservas"]`, y la vista las tenía que
-convertir (`as List<Reserva>`). Ahora van juntas, con tipo, en un solo objeto:
+En el desafío 3 las reservas del pasajero viajaban aparte, en `ViewData["Reservas"]`, y la vista debía convertirlas
+(`as List<Reserva>`). Ahora van juntas, con tipo, en un solo objeto:
 
 ```csharp
 // PasajerosController.Detalle
@@ -430,12 +434,12 @@ Pasajero? pasajero = pasajeros.Obtener(id);
 if (pasajero is null) return NotFound();
 
 var modelo = new PasajeroDetalleViewModel(pasajero, reservas.ListarPorPasajero(id));
-return View(modelo);              // chau ViewData["Reservas"]
+return View(modelo);              // ViewData["Reservas"] ya no es necesario
 ```
 
-Actualizá `Views/Pasajeros/Detalle.cshtml` a `@model PasajeroDetalleViewModel`, borrá la conversión de `ViewData` y
-recorré `Model.Reservas`. Fijate que **reusás** `ReservaListadoViewModel` para esa tabla: ya trae la ruta y la
-salida formateadas.
+Actualizar `Views/Pasajeros/Detalle.cshtml` a `@model PasajeroDetalleViewModel`, eliminar la conversión de `ViewData`
+y recorrer `Model.Reservas`. Notar que se **reutiliza** `ReservaListadoViewModel` para esa tabla: ya incluye la ruta y
+la salida formateadas.
 
 ### Paso 6 · El formulario de reserva (GET)
 
@@ -465,12 +469,12 @@ public class ReservaCrearViewModel
 ```
 
 :::catedra
-En la diapositiva, `TurnoCrearViewModel` usa `int PacienteId`. Acá ya usamos **`int?`**: así, cuando el usuario no
-elige nada, llega `null` (y no un `0` que parece un Id). En el desafío 5 le sumamos `[Required]` y vas a ver por qué
+En la diapositiva, `TurnoCrearViewModel` usa `int PacienteId`. Aquí ya se usa **`int?`**: así, cuando el usuario no
+elige nada, llega `null` (y no un `0` que parece un Id). En el desafío 5 se agrega `[Required]` y allí se verá por qué
 importa: es exactamente lo que muestra la diapositiva "Validar los desplegables" del tema 13.
 :::
 
-El GET recibe `vueloId` y `asiento` del query string (los manda el mapa) y los **precarga**:
+El GET recibe `vueloId` y `asiento` del query string (los envía el mapa) y los **precarga**:
 
 ```csharp
 // GET /Reservas/Crear  ·  GET /Reservas/Crear?vueloId=2&asiento=5C
@@ -522,14 +526,14 @@ La vista `Views/Reservas/Crear.cshtml`:
 </form>
 ```
 
-`asp-for="VueloId"` hace dos cosas: le pone `name="VueloId"` al `<select>` (así se llama el campo en el POST) y marca
-como elegida la opción cuyo `value` coincide con `Model.VueloId`. Por eso, si venís del mapa, el vuelo aparece
-seleccionado solo.
+`asp-for="VueloId"` hace dos cosas: le asigna `name="VueloId"` al `<select>` (así se llama el campo en el POST) y marca
+como elegida la opción cuyo `value` coincide con `Model.VueloId`. Por eso, cuando se llega desde el mapa, el vuelo
+aparece seleccionado automáticamente.
 
 ### Paso 7 · El POST (simple) y por qué un ViewModel
 
 Por ahora el POST hace lo mínimo, igual que el `TurnosController` del tema 12: busca el vuelo y el pasajero, y si
-algo no cierra vuelve a mostrar el formulario **recargando las listas**.
+algún dato no es válido vuelve a mostrar el formulario **recargando las listas**.
 
 ```csharp
 [HttpPost]
@@ -539,14 +543,14 @@ public IActionResult Crear(ReservaCrearViewModel modelo)
     Vuelo? vuelo = modelo.VueloId is null ? null : vuelos.Obtener(modelo.VueloId.Value);
     Pasajero? pasajero = modelo.PasajeroId is null ? null : pasajeros.Obtener(modelo.PasajeroId.Value);
 
-    // La validación en serio es el desafío 5
+    // La validación completa corresponde al desafío 5
     if (vuelo is null || pasajero is null || string.IsNullOrWhiteSpace(modelo.Asiento))
     {
         CargarListas(modelo);      // ← las listas no vuelven en el POST
         return View(modelo);
     }
 
-    // ViewModel → entidad: la Fecha y el Estado los pone el servidor, no el formulario
+    // ViewModel → entidad: la Fecha y el Estado los asigna el servidor, no el formulario
     var reserva = new Reserva
     {
         Vuelo = vuelo,
@@ -557,40 +561,45 @@ public IActionResult Crear(ReservaCrearViewModel modelo)
     };
     reservas.Insertar(reserva);
 
-    // POST → Redirect → GET: volvés al mapa y ves tu asiento ocupado
+    // POST → Redirect → GET: se vuelve al mapa y el asiento reservado aparece ocupado
     return RedirectToAction("Detalle", "Vuelos", new { id = vuelo.Id });
 }
 ```
 
 ¿Por qué no recibir directamente `Crear(Reserva reserva)`? Porque `Reserva` tiene `Estado` y `Fecha`. Con las
-herramientas del navegador (F12) cualquiera agrega `<input name="Estado" value="Cancelada">` al formulario y el binding
-lo carga. Eso es **overposting**. `ReservaCrearViewModel` solo tiene `VueloId`, `PasajeroId` y `Asiento`: lo demás no
-tiene dónde caer. Además, `Reserva` tiene un `Vuelo` completo, no un `VueloId`: el formulario ni siquiera encaja.
+herramientas del navegador (F12) cualquiera puede agregar `<input name="Estado" value="Cancelada">` al formulario y el
+binding lo carga. Eso es **overposting**. `ReservaCrearViewModel` solo tiene `VueloId`, `PasajeroId` y `Asiento`: lo
+demás no tiene dónde asignarse. Además, `Reserva` tiene un `Vuelo` completo, no un `VueloId`: el formulario ni siquiera
+encaja.
 
-Probalo de punta a punta: `/Vuelos` → AT1001 → tocá el 5C → el formulario aparece con el vuelo y el asiento
-cargados → elegí un pasajero → **Reservar** → volvés al mapa con el 5C en gris. Mirá la fila nueva en DB Browser.
+Probar el flujo de punta a punta: `/Vuelos` → AT1001 → clic en el 5C → el formulario aparece con el vuelo y el asiento
+cargados → seleccionar un pasajero → **Reservar** → se vuelve al mapa con el 5C en gris. Verificar la fila nueva en DB
+Browser.
 
 ## 🔴 Breakpoints
 
 :::breakpoint VueloDetalleViewModel.cs · constructor (la llave de cierre)
-Abrí `/Vuelos/Detalle/2`. En **Variables** desplegá `this` → `Mapa` → `[2]` → `[0]`: ¿qué código tiene y cuánto vale
-`Ocupado`? En **Inspección** agregá `Mapa.Count`, `Mapa[0].Count` y `ocupados.Count`. ¿Por qué el 1C aparece libre si
+Abrir `/Vuelos/Detalle/2`. En **Variables**, desplegar `this` → `Mapa` → `[2]` → `[0]`: ¿qué código tiene y cuánto vale
+`Ocupado`? En **Inspección**, agregar `Mapa.Count`, `Mapa[0].Count` y `ocupados.Count`. ¿Por qué el 1C aparece libre si
 en `datos.sql` tiene una reserva?
 :::
 
 :::breakpoint ReservasController.cs · Crear (GET)
-Tocá un asiento libre del mapa. Mirá `vueloId` y `asiento` en **Variables**, y `Request.QueryString` en **Inspección**.
-Ahora escribí a mano `/Reservas/Crear` (sin nada): ¿qué valen? ¿Y con `/Reservas/Crear?vueloId=abc`?
+Hacer clic en un asiento libre del mapa. Observar `vueloId` y `asiento` en **Variables**, y `Request.QueryString` en
+**Inspección**. Luego escribir a mano `/Reservas/Crear` (sin parámetros): ¿qué valores tienen? ¿Y con
+`/Reservas/Crear?vueloId=abc`?
 :::
 
 :::breakpoint ReservasController.cs · Crear (POST), primera línea
-Elegí todo y enviá. Antes de que se ejecute nada, mirá `modelo.Vuelos.Count` y `modelo.Pasajeros.Count`. ¿Cuánto
-valen, si en el GET tenían 8 vuelos y 8 pasajeros (con la base recién creada)? Esa es la razón de `CargarListas`.
+Completar todos los campos y enviar. Antes de que se ejecute nada, observar `modelo.Vuelos.Count` y
+`modelo.Pasajeros.Count`. ¿Cuánto valen, si en el GET tenían 8 vuelos y 8 pasajeros (con la base recién creada)? Esa es
+la razón de `CargarListas`.
 :::
 
-Preguntate:
+Preguntas para analizar:
 
-- ¿Quién creó el `ReservaCrearViewModel` que recibe el POST? (Pista: no fuiste vos; mirá la **Pila de llamadas**.)
+- ¿Quién creó el `ReservaCrearViewModel` que recibe el POST? (Pista: no fue el código del proyecto; revisar la **Pila de
+  llamadas**.)
 - Si el `VueloDetalleViewModel` armara mal un código (`"A3"` en vez de `"3A"`), ¿qué asientos aparecerían ocupados?
 
 ## 🔀 Alternativas
@@ -600,33 +609,32 @@ Preguntate:
 | Forma | Cómo | Ventaja | Desventaja | Cuándo |
 |---|---|---|---|---|
 | Matriz en el ViewModel | `List<List<AsientoViewModel>>` armada en C# | se depura con breakpoints; la vista solo dibuja | un poco más de código en el ViewModel | **la recomendada** (y la que pide el TP) |
-| Lista plana | `List<AsientoViewModel>` de 120 y la vista corta cada 6 (`j % 6 == 0`) | el ViewModel es más simple | la vista hace cuentas; un error de índice desordena todo | si la grilla no tiene filas "lógicas" |
-| Todo en la vista | `@model Vuelo` + los ocupados en `ViewData`, y los `for` en Razor | rápido de escribir | lógica en la vista, `ViewData` sin tipos (errores recién en ejecución) | prototipos; en el parcial resta |
+| Lista plana | `List<AsientoViewModel>` de 120 y la vista corta cada 6 (`j % 6 == 0`) | el ViewModel es más simple | la vista hace cálculos; un error de índice desordena todo | si la grilla no tiene filas "lógicas" |
+| Todo en la vista | `@model Vuelo` + los ocupados en `ViewData`, y los `for` en Razor | rápido de escribir | lógica en la vista, `ViewData` sin tipos (errores recién en ejecución) | prototipos; en el parcial resta puntos |
 
 **¿Entidad o ViewModel en la vista?**
 
 | Forma | Ventaja | Desventaja | Cuándo |
 |---|---|---|---|
-| `@model List<Pasajero>` (la entidad) | cero clases extra | la vista formatea; si cambia la pantalla, tocás la entidad o la vista | pantallas que muestran la entidad tal cual (`/Pasajeros` puede quedar así) |
-| `@model PasajeroDetalleViewModel` | la vista recibe todo listo; junta varios modelos | una clase más por pantalla | cuando la pantalla pide algo que la entidad no tiene |
+| `@model List<Pasajero>` (la entidad) | cero clases extra | la vista formatea; si cambia la pantalla, hay que tocar la entidad o la vista | pantallas que muestran la entidad tal cual (`/Pasajeros` puede quedar así) |
+| `@model PasajeroDetalleViewModel` | la vista recibe todo listo; reúne varios modelos | una clase más por pantalla | cuando la pantalla requiere algo que la entidad no tiene |
 | ViewModel para un **formulario** | evita overposting; lleva las listas de los `<select>` | hay que traducir ViewModel → entidad | **siempre** que haya un POST |
 
 :::catedra
-La diapositiva lo dice así: "Para pantallas simples alcanza [con la entidad]; cuando la pantalla pide algo distinto del
+La diapositiva lo plantea así: "Para pantallas simples alcanza [con la entidad]; cuando la pantalla pide algo distinto del
 modelo, va un ViewModel". Para formularios, el tema 12 muestra el overposting con `Crear(Paciente paciente)`.
 :::
 
 ## ⚠️ Errores típicos
 
 - ``The model item passed into the ViewDataDictionary is of type 'System.Collections.Generic.List`1[Vuelo]', but this ViewDataDictionary instance requires a model item of type 'VueloIndexViewModel'``:
-  cambiaste el `@model` de la vista pero no lo que devuelve el
-  controlador (o al revés). Los dos tienen que coincidir.
+  se cambió el `@model` de la vista pero no lo que devuelve el controlador (o al revés). Ambos tienen que coincidir.
 - **"The type or namespace name 'SelectListItem' could not be found"**: falta `using Microsoft.AspNetCore.Mvc.Rendering;`.
 - **Desplegables vacíos después de un POST fallido**: falta `CargarListas(modelo)` antes del `return View(modelo)`.
 - **El 1C aparece ocupado**: `AsientosOcupados` no filtra por `Estado = 'Confirmada'`, y las canceladas cuentan.
-- **Ningún asiento aparece ocupado**: el código del mapa no coincide con el de la base (`"A3"`, `"03A"`, `"3a"`). Mirá
-  en DB Browser cómo están guardados y armá el código igual.
-- **El formulario no precarga nada**: el link dice `asp-route-idVuelo` pero el parámetro de la acción es `vueloId`. Los
-  nombres tienen que coincidir (mayúsculas no importan).
+- **Ningún asiento aparece ocupado**: el código del mapa no coincide con el de la base (`"A3"`, `"03A"`, `"3a"`). Revisar
+  en DB Browser cómo están guardados y armar el código de la misma forma.
+- **El formulario no precarga nada**: el enlace dice `asp-route-idVuelo` pero el parámetro de la acción es `vueloId`. Los
+  nombres tienen que coincidir (las mayúsculas no importan).
 - **Recibir la entidad en el POST** (`Crear(Reserva reserva)`): además del overposting, `Reserva` tiene un `Vuelo`, no
-  un `VueloId`, así que el binding no lo puede llenar y te queda `null`.
+  un `VueloId`, así que el binding no puede completarlo y queda `null`.

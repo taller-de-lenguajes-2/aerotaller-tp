@@ -1,8 +1,8 @@
 ## 🛬 ¿Cómo vamos?
 
-Última escala antes del tramo final. Desde el checkpoint anterior, AeroTaller **ordenó la cabina**: las reglas se mudaron
+Última escala antes del tramo final. Desde el checkpoint anterior, AeroTaller **ordenó la cabina**: las reglas se trasladaron
 a una capa de servicios (desafío 6), cada pieza depende de contratos y no de clases concretas (desafío 7), y ahora hay
-**caja negra**: lo inesperado no le explota al usuario en la cara y todo queda registrado (desafío 8). Así está armado hoy:
+**caja negra**: lo inesperado no llega sin control al usuario y todo queda registrado (desafío 8). Así está organizado hoy:
 
 ```text
  Navegador
@@ -17,7 +17,7 @@ a una capa de servicios (desafío 6), cada pieza depende de contratos y no de cl
     │  (IReservaService)   lanzan ReglaDeNegocioException · registran con ILogger<T>
     │                      traducen SqliteException 19 (el choque de asientos) a ReglaDeNegocioException
     ▼
- Interfaces ───────────── IVueloRepository, IReservaRepository…  ← acá se "enchufa" la implementación
+ Interfaces ───────────── IVueloRepository, IReservaRepository…  ← aquí se "enchufa" la implementación
     │                                │
     ▼                                ▼
  Repositorios (SQLite)        Repositorios/Falsos (memoria)   ← lo elige Program.cs según OrigenDeDatos
@@ -26,7 +26,7 @@ a una capa de servicios (desafío 6), cada pieza depende de contratos y no de cl
  (índice único parcial)
 ```
 
-| Pieza | Qué tenés | Desafío |
+| Pieza | Qué debe estar implementado | Desafío |
 |---|---|---|
 | Servicios | `ReservaService`, `PasajeroService`, `VueloService` con las reglas; `ReglaDeNegocioException` con el campo | 6 |
 | Cancelar y editar | `POST /Reservas/Cancelar/{id}` (cambia el estado), editar y eliminar pasajeros, mensajes con `TempData` | 6 |
@@ -34,98 +34,98 @@ a una capa de servicios (desafío 6), cada pieza depende de contratos y no de cl
 | Contenedor | `ConexionDb` Singleton, repositorios y servicios Scoped, todo registrado en `Program.cs` | 7 |
 | Datos falsos | `BaseFalsa` + un `…RepositoryFalso` por interfaz; `OrigenDeDatos=Falso` sin tocar la base | 7 |
 | Base | índice único parcial `(VueloId, Asiento) WHERE Estado = 'Confirmada'` | 8 |
-| Excepciones | el servicio atrapa solo lo que sabe traducir (`catch … when`); el resto lo agarra `UseExceptionHandler` | 8 |
+| Excepciones | el servicio atrapa solo lo que sabe traducir (`catch … when`); el resto lo atrapa `UseExceptionHandler` | 8 |
 | Logs | Serilog a consola y `logs/aerotaller-AAAAMMDD.txt`; plantillas, sin datos personales | 8 |
 
-Fijate en la línea de las interfaces: **todo lo de arriba no sabe qué hay abajo**. Si mañana la base fuera otra, se
+Notar la línea de las interfaces: **todo lo que está por encima no sabe qué hay debajo**. Si mañana la base fuera otra, se
 escribe otra implementación y se cambia `Program.cs`. Esa es la idea más importante de esta mitad del TP.
 
 :::cuidado
-Antes de seguir: **commit, push y mirar GitHub**. Abrí tu repo en el navegador y confirmá que ves `Repositorios/Interfaces.cs`,
-la carpeta `Repositorios/Falsos/`, `Views/Home/Error.cshtml`, el paquete de Serilog en el `.csproj` y el último commit del
-desafío 8. Confirmá también lo que **no** tiene que estar: ni `aerotaller.db` ni la carpeta `logs/`. Lo que no está en GitHub,
-para la corrección no existe.
+Antes de seguir: **commit, push y verificación en GitHub**. Abrir el repositorio en el navegador y confirmar que están
+`Repositorios/Interfaces.cs`, la carpeta `Repositorios/Falsos/`, `Views/Home/Error.cshtml`, el paquete de Serilog en el `.csproj`
+y el último commit del desafío 8. Confirmar también lo que **no** debe estar: ni `aerotaller.db` ni la carpeta `logs/`. Lo que no
+está en GitHub no existe para la corrección.
 :::
 
-## ✅ Lo que ya sabés hacer
+## ✅ Lo que ya se sabe hacer
 
-Respondé con honestidad, sin mirar tu código. Lo que te cueste, anotalo en la bitácora para la consulta.
-Todo esto **cae en el parcial**.
+Responder con honestidad, sin consultar el código. Lo que resulte difícil, anotarlo en la bitácora para la consulta.
+Todo esto **se evalúa en el parcial**.
 
 **Capas y servicios**
 
-- ¿Podrías decir, para una regla nueva («no se reserva a menos de una hora de la salida»), en qué capa va y por qué no en el
+- ¿Se puede indicar, para una regla nueva («no se reserva a menos de una hora de la salida»), en qué capa va y por qué no en el
   controlador ni en el repositorio?
-- ¿Podrías escribir de memoria un controlador "flaco": `ModelState.IsValid` → servicio en un `try` → `RedirectToAction` /
+- ¿Se puede escribir de memoria un controlador "flaco": `ModelState.IsValid` → servicio en un `try` → `RedirectToAction` /
   `catch (ReglaDeNegocioException ex)` → `AddModelError(ex.Campo, ex.Message)` → recargar listas → misma vista?
-- ¿Podrías explicar por qué cancelar una reserva es un `UPDATE` del estado y no un `DELETE`, y por qué es un `POST` y no un link?
+- ¿Se puede explicar por qué cancelar una reserva es un `UPDATE` del estado y no un `DELETE`, y por qué es un `POST` y no un link?
 
 **Inyección de dependencias**
 
-- ¿Podrías escribir una interfaz a partir de un repositorio que ya existe, y hacer que la clase la implemente?
-- ¿Podrías escribir de memoria los registros de `Program.cs`: `AddSingleton(new ConexionDb(cadena))` y
+- ¿Se puede escribir una interfaz a partir de un repositorio existente, y hacer que la clase la implemente?
+- ¿Se pueden escribir de memoria los registros de `Program.cs`: `AddSingleton(new ConexionDb(cadena))` y
   `AddScoped<IVueloRepository, VueloRepository>()`, y explicar qué significa cada parte?
-- ¿Podrías explicar Transient, Scoped y Singleton con un ejemplo de AeroTaller cada uno, y por qué `BaseFalsa` **tiene** que
+- ¿Se puede explicar Transient, Scoped y Singleton con un ejemplo de AeroTaller cada uno, y por qué `BaseFalsa` **debe**
   ser Singleton?
-- ¿Podrías leer `Unable to resolve service for type 'X' while attempting to activate 'Y'` y decir exactamente qué falta y dónde?
-- ¿Podrías explicar qué es una dependencia cautiva y por qué la app no arranca en Development?
-- ¿Podrías agregar una implementación nueva de una interfaz y usarla **cambiando solo `Program.cs`**?
+- ¿Se puede leer `Unable to resolve service for type 'X' while attempting to activate 'Y'` e indicar exactamente qué falta y dónde?
+- ¿Se puede explicar qué es una dependencia cautiva y por qué la app no arranca en Development?
+- ¿Se puede agregar una implementación nueva de una interfaz y usarla **cambiando solo `Program.cs`**?
 
 **Excepciones**
 
-- ¿Podrías decidir, capa por capa, dónde va un `try/catch` y dónde no?
-- ¿Podrías escribir un `catch` con filtro `when` y explicar qué pasa cuando la condición da `false`?
-- ¿Podrías crear una excepción propia con un dato extra (como `Campo`) y lanzarla envolviendo la original?
-- ¿Podrías explicar la diferencia entre `throw;` y `throw ex;`, y por qué un catch vacío es peor que no tener catch?
-- ¿Podrías explicar por qué la regla «asiento libre» del servicio no alcanza y hace falta el índice único?
+- ¿Se puede decidir, capa por capa, dónde va un `try/catch` y dónde no?
+- ¿Se puede escribir un `catch` con filtro `when` y explicar qué ocurre cuando la condición da `false`?
+- ¿Se puede crear una excepción propia con un dato extra (como `Campo`) y lanzarla envolviendo la original?
+- ¿Se puede explicar la diferencia entre `throw;` y `throw ex;`, y por qué un catch vacío es peor que no tener catch?
+- ¿Se puede explicar por qué la regla «asiento libre» del servicio no alcanza y hace falta el índice único?
 
 **Logs**
 
-- ¿Podrías configurar Serilog desde cero: paquete, sección en `appsettings.json`, `AddSerilog`, y el orden del pipeline?
-- ¿Podrías escribir un log con plantilla (`{ReservaId}`) y explicar qué se pierde con `$"…"`?
-- ¿Podrías elegir el nivel justo (`Information`, `Warning`, `Error`) para tres eventos distintos?
-- ¿Podrías encontrar en `logs/` el error que vio un usuario, a partir del código que le mostró la página?
+- ¿Se puede configurar Serilog desde cero: paquete, sección en `appsettings.json`, `AddSerilog`, y el orden del pipeline?
+- ¿Se puede escribir un log con plantilla (`{ReservaId}`) y explicar qué se pierde con `$"…"`?
+- ¿Se puede elegir el nivel adecuado (`Information`, `Warning`, `Error`) para tres eventos distintos?
+- ¿Se puede encontrar en `logs/` el error que vio un usuario, a partir del código que le mostró la página?
 
 **Depurador**
 
-- ¿Podrías usar la **Pila de llamadas** para mostrar quién llama al constructor de un repositorio, y por qué no sos vos?
-- ¿Podrías activar «All Exceptions» y encontrar en qué línea nace una excepción que termina en la página de error?
+- ¿Se puede usar la **Pila de llamadas** para mostrar quién llama al constructor de un repositorio, y por qué no es código propio?
+- ¿Se puede activar «All Exceptions» y encontrar en qué línea nace una excepción que termina en la página de error?
 
-**Lo de antes, que sigue cayendo**
+**Contenidos anteriores, que siguen siendo evaluados**
 
-- ¿Podrías escribir un `SELECT` con JOIN doble (origen y destino) y un `LEFT JOIN` + `GROUP BY`?
-- ¿Podrías armar un ViewModel de formulario con `int?` + `[Required]` en los combos, y su `CargarListas(modelo)`?
+- ¿Se puede escribir un `SELECT` con JOIN doble (origen y destino) y un `LEFT JOIN` + `GROUP BY`?
+- ¿Se puede armar un ViewModel de formulario con `int?` + `[Required]` en los combos, y su `CargarListas(modelo)`?
 
-Si contestaste "no" a más de cuatro, antes de seguir hacé el repaso de abajo. Lo que viene (login y simulacro) usa **todo**
-esto a la vez.
+Si la respuesta fue "no" en más de cuatro preguntas, conviene hacer el repaso de abajo antes de seguir. Lo que viene (login y
+simulacro) usa **todo** esto a la vez.
 
 ## 🧭 Lo que viene
 
 | Desafío | Qué cambia | La idea |
 |---|---|---|
-| 9 · Autenticación | tabla `Usuario`, login con sesión, `[RequiereLogin]` y `[RequiereRol]`, vista `SinPermiso` | autenticación (¿quién sos?) y autorización (¿qué podés hacer?). Es el tema 15: **lo ven esta semana** |
-| 10 · Simulacro de parcial | agregar **Equipaje** de punta a punta en **120 minutos**, sin paso a paso | probarte en condiciones de parcial: base, repositorio, servicio, formulario, vistas y logs |
+| 9 · Autenticación | tabla `Usuario`, login con sesión, `[RequiereLogin]` y `[RequiereRol]`, vista `SinPermiso` | autenticación (¿quién es el usuario?) y autorización (¿qué puede hacer?). Es el tema 15: **se ve en clase esta semana** |
+| 10 · Simulacro de parcial | agregar **Equipaje** de punta a punta en **120 minutos**, sin paso a paso | práctica en condiciones de parcial: base, repositorio, servicio, formulario, vistas y logs |
 
-Para el simulacro, un consejo desde ahora: el tiempo se va en lo que no tenés automatizado. Si todavía dudás cómo se escribe
-un repositorio con `AddWithValue`, un ViewModel con validaciones o un POST con PRG, **practicalo antes**: en el simulacro no
-hay paso a paso.
+Para el simulacro, una recomendación anticipada: el tiempo se consume en lo que no está automatizado. Si todavía hay dudas
+sobre cómo se escribe un repositorio con `AddWithValue`, un ViewModel con validaciones o un POST con PRG, **conviene practicarlo
+antes**: en el simulacro no hay paso a paso.
 
 ## 🔎 Repaso sugerido
 
-| Si te costó… | Releé | Y probá |
+| Si resultó difícil… | Releer | Y probar |
 |---|---|---|
-| tiempos de vida, dependencia cautiva | [tema 14](https://taller-de-lenguajes-2.github.io/clases/tema-14-inyeccion-de-dependencias/index.html), diapositivas de Transient, Scoped y Singleton | corré `/TiemposDeVida` del proyecto de ejemplo del tema 14 y recargá |
-| interfaces, por qué depender de una abstracción | [tema 04](https://taller-de-lenguajes-2.github.io/clases/tema-04-interfaces-y-clases-abstractas/index.html) y la impresora del tema 14 | arrancá con «AeroTaller (datos falsos)» y frená en un controlador: ¿qué clase recibió? |
-| dónde va cada `try/catch`, `when`, `throw;` | [tema 16](https://taller-de-lenguajes-2.github.io/clases/tema-16-excepciones/index.html), «Reglas de oro» | base en solo lectura + «All Exceptions» y seguí la excepción por la pila |
-| Serilog, plantillas, qué no loguear | [tema 17](https://taller-de-lenguajes-2.github.io/clases/tema-17-logs/index.html) | hacé una reserva y buscá la línea en `logs/`; buscá un `$"` en tus `Log…` |
+| tiempos de vida, dependencia cautiva | [tema 14](https://taller-de-lenguajes-2.github.io/clases/tema-14-inyeccion-de-dependencias/index.html), diapositivas de Transient, Scoped y Singleton | ejecutar `/TiemposDeVida` del proyecto de ejemplo del tema 14 y recargar |
+| interfaces, por qué depender de una abstracción | [tema 04](https://taller-de-lenguajes-2.github.io/clases/tema-04-interfaces-y-clases-abstractas/index.html) y la impresora del tema 14 | arrancar con «AeroTaller (datos falsos)» y detenerse en un controlador: ¿qué clase recibió? |
+| dónde va cada `try/catch`, `when`, `throw;` | [tema 16](https://taller-de-lenguajes-2.github.io/clases/tema-16-excepciones/index.html), «Reglas de oro» | base en solo lectura + «All Exceptions», y seguir la excepción por la pila |
+| Serilog, plantillas, qué no registrar | [tema 17](https://taller-de-lenguajes-2.github.io/clases/tema-17-logs/index.html) | hacer una reserva y buscar la línea en `logs/`; buscar un `$"` en las llamadas `Log…` del proyecto |
 | reglas en el servicio, `ReglaDeNegocioException` | el desafío 6 de este TP y la diapositiva de capas del [tema 09](https://taller-de-lenguajes-2.github.io/clases/tema-09-repositorios/index.html) | breakpoint en el controlador y F11 hasta el repositorio |
 
-Un ejercicio de repaso que se parece mucho a un punto de parcial: **sin mirar tu código**, escribí en un archivo aparte
+Un ejercicio de repaso muy similar a un punto de parcial: **sin consultar el código**, escribir en un archivo aparte
 el bloque de registros de `Program.cs` para las dos ramas (`Sqlite` y `Falso`) y `ReservaService.Reservar` con el `try/catch`
-del choque. Después comparalo con lo que tenés.
+del choque. Después, compararlo con lo implementado.
 
 :::nota
-Abajo está la bitácora: **qué hice / qué me falta / dudas**. Listá tus dudas concretas ("no entiendo por qué el repositorio
-falso puede ser Scoped si la base es Singleton", "no sé si el `LogWarning` del choque lleva la excepción") y llevalas a la
-consulta. Antes del simulacro es el mejor momento para sacarse las dudas.
+Abajo está la bitácora: **qué se hizo / qué falta / dudas**. Conviene registrar dudas concretas ("por qué el repositorio
+falso puede ser Scoped si la base es Singleton", "si el `LogWarning` del choque lleva la excepción") y llevarlas a la
+consulta. Antes del simulacro es el mejor momento para resolverlas.
 :::

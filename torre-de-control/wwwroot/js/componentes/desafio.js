@@ -1,4 +1,4 @@
-import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { api } from '../api.js';
 import { estado, avisar, festejarInsignias, mostrarError, despegar, refrescarResumen } from '../estado.js';
 import { secciones as partirSecciones } from '../markdown.js';
@@ -25,6 +25,7 @@ export default {
     const ahora = ref(Date.now());
     let reloj = null;
 
+    const INTERVALO_COMMIT = 20 * 60;   // segundos
     const clavePasos = () => `torre.pasos.${estado.alumnoId}.${props.id}`;
 
     async function cargar() {
@@ -86,7 +87,7 @@ export default {
       if (!marcada) lista.splice(lista.indexOf(tarea.id), 1);
       try {
         await api.marcarTarea(estado.alumnoId, props.id, tarea.id, marcada);
-        if (marcada && tareasHechas.value === d.value.tareas.length) avisar('Checklist completa. ¡Muy bien!', { icono: '✅' });
+        if (marcada && tareasHechas.value === d.value.tareas.length) avisar('Checklist completa.', { icono: '✅' });
       } catch (e) {
         d.value.progreso.tareasMarcadas = anterior;
         mostrarError(e);
@@ -116,7 +117,7 @@ export default {
           d.value.progreso.quizAprobado = true;
           avisar(`Cuestionario aprobado (${r.correctas}/${r.total}) en el intento ${r.intento}.`, { icono: '🎯' });
         } else {
-          avisar(`${r.correctas}/${r.total}. Leé las pistas y probá de nuevo.`, { icono: '🔁' });
+          avisar(`${r.correctas}/${r.total}. Revisar las pistas y volver a intentar.`, { icono: '🔁' });
         }
         festejarInsignias(r.nuevasInsignias);
       } catch (e) { mostrarError(e); } finally { enviandoQuiz.value = false; }
@@ -132,7 +133,7 @@ export default {
         if (r.repo) repo.value = r.repo;
         if (r.ejecutado) {
           d.value.progreso.verificacion = { aprobado: r.aprobado, fecha: new Date().toISOString() };
-          avisar(r.aprobado ? '¡Todo en verde! La torre aprueba este desafío.' : 'Hay chequeos en rojo: mirá el detalle.', { icono: r.aprobado ? '🟢' : '🔴' });
+          avisar(r.aprobado ? 'Todos los chequeos aprobados.' : 'Hay chequeos en rojo: ver el detalle.', { icono: r.aprobado ? '🟢' : '🔴' });
         }
         festejarInsignias(r.nuevasInsignias);
       } catch (e) { mostrarError(e); } finally { verificando.value = false; }
@@ -183,11 +184,24 @@ export default {
       const inicio = new Date(d.value.progreso.iniciado).getTime();
       const fin = d.value.progreso.completado ? new Date(d.value.progreso.completado).getTime() : ahora.value;
       const usados = Math.max(0, Math.floor((fin - inicio) / 1000));
-      const limite = (d.value.minutosLimite || 120) * 60;
+      const limite = (d.value.minutosLimite || 150) * 60;
       const resto = limite - usados;
       const fmt = s => `${String(Math.floor(Math.abs(s) / 3600)).padStart(2, '0')}:${String(Math.floor(Math.abs(s) % 3600 / 60)).padStart(2, '0')}:${String(Math.abs(s) % 60).padStart(2, '0')}`;
-      return { usados: fmt(usados), resto: (resto < 0 ? '−' : '') + fmt(resto), porcentaje: Math.min(100, usados * 100 / limite), excedido: resto < 0 };
+      // Regla del simulacro: commit y push cada 20 minutos
+      const proximoCommit = INTERVALO_COMMIT - (usados % INTERVALO_COMMIT);
+      return {
+        usados: fmt(usados), resto: (resto < 0 ? '−' : '') + fmt(resto), porcentaje: Math.min(100, usados * 100 / limite), excedido: resto < 0,
+        proximoCommit: fmt(proximoCommit).slice(3), tramo: Math.floor(usados / INTERVALO_COMMIT)
+      };
     });
+
+    // Aviso cada vez que se cumple un tramo de 20 minutos (mientras la página está abierta y el simulacro sigue en curso)
+    watch(() => cronometro.value?.tramo, (tramo, anterior) => {
+      if (anterior === undefined || tramo === undefined || tramo <= anterior || completado.value) return;
+      avisar(`Se cumplieron ${tramo * 20} minutos: commit y push.`, { icono: '🌿', titulo: 'Commit del simulacro', duracion: 15000 });
+    });
+
+    const completitud = computed(() => d.value && d.value.tareas.length ? Math.round(tareasHechas.value * 100 / d.value.tareas.length) : 0);
 
     const comandos = computed(() => d.value?.commit
       ? `git status\ngit add -A\ngit commit -m "${d.value.commit.mensaje}"\ngit push`
@@ -203,7 +217,7 @@ export default {
       d, error, secciones, revelados, totalPasos, indice, completado, tareasHechas, quizAprobado, puedeDespegar,
       revelar, marcar, abrirLectura, respuestas, respondidas, devolucion, enviarQuiz, enviandoQuiz, correccion,
       verificar, verificando, verificacion, repo, revisarRepo, completar, completando, faltantes,
-      cp, enviarCheckpoint, hechos, pendientes, sinVerificar, cronometro, comandos, copiar, ir
+      cp, enviarCheckpoint, hechos, pendientes, sinVerificar, cronometro, completitud, comandos, copiar, ir
     };
   },
   template: `
@@ -242,14 +256,23 @@ export default {
         </header>
 
         <section class="seccion" v-if="cronometro">
-          <h2>⏱️ Cronómetro</h2>
+          <h2>⏱️ Cronómetro y completitud</h2>
           <div class="fila" style="justify-content:space-between">
             <div><div class="suave">Tiempo usado</div><div class="cronometro">{{ cronometro.usados }}</div></div>
-            <div style="text-align:right"><div class="suave">{{ cronometro.excedido ? 'Te pasaste por' : 'Te queda' }}</div>
+            <div style="text-align:right"><div class="suave">{{ cronometro.excedido ? 'Tiempo excedido' : 'Tiempo restante' }}</div>
               <div class="cronometro" :style="{ color: cronometro.excedido ? 'var(--rojo)' : 'var(--verde)' }">{{ cronometro.resto }}</div></div>
           </div>
           <div class="progreso"><span :style="{ width: cronometro.porcentaje + '%', background: cronometro.excedido ? 'var(--rojo)' : 'var(--ambar)' }"></span></div>
-          <p class="suave" style="margin-bottom:0">Corre desde que abriste el simulacro por primera vez. Como en el parcial: sin mirar la solución.</p>
+          <div class="fila" style="justify-content:space-between;margin-top:1rem" v-if="!d.progreso.completado">
+            <div><div class="suave">Próximo commit y push (cada 20 minutos)</div><div class="cronometro" style="color:var(--azul)">{{ cronometro.proximoCommit }}</div></div>
+            <div class="suave" style="text-align:right">commits sugeridos hasta ahora: {{ cronometro.tramo }}</div>
+          </div>
+          <div class="fila" style="justify-content:space-between;margin-top:1rem">
+            <div><div class="suave">Completitud (tareas cumplidas)</div><div class="cronometro">{{ completitud }}%</div></div>
+            <div class="suave" style="text-align:right">{{ tareasHechas }} de {{ d.tareas.length }} tareas</div>
+          </div>
+          <div class="progreso"><span :style="{ width: completitud + '%', background: 'var(--verde)' }"></span></div>
+          <p class="suave" style="margin-bottom:0">Se cuenta desde la primera apertura del simulacro. Como en el parcial, sin consultar la solución.</p>
         </section>
 
         <section class="seccion" v-for="s in secciones" :key="s.id" :id="s.id">
@@ -271,31 +294,31 @@ export default {
         <!-- ───── Checkpoint ───── -->
         <template v-if="d.tipo === 'checkpoint'">
           <section class="seccion" id="resumen">
-            <h2>📊 Tu progreso hasta acá</h2>
+            <h2>📊 Progreso hasta este punto</h2>
             <div class="fila" style="align-items:flex-start;gap:2rem">
               <div style="flex:1;min-width:220px">
-                <strong>Lo que ya hiciste</strong>
+                <strong>Desafíos completados</strong>
                 <ul><li v-for="e in hechos" :key="e.id">{{ e.codigo }} · {{ e.titulo }}
                   <span v-if="e.verificado === true" class="chip verde">verificador ✔</span>
                   <span v-else class="chip ambar">sin verificar</span></li></ul>
               </div>
               <div style="flex:1;min-width:220px">
-                <strong>Lo que viene</strong>
+                <strong>Próximos desafíos</strong>
                 <ul><li v-for="e in pendientes" :key="e.id">{{ e.codigo }} · {{ e.titulo }}</li></ul>
               </div>
             </div>
             <p v-if="sinVerificar.length" class="caja cuidado" style="margin-bottom:0">
-              Tenés {{ sinVerificar.length }} desafío(s) completados sin el verificador en verde. Antes de seguir, corré
+              Hay {{ sinVerificar.length }} desafío(s) completados sin el verificador aprobado. Antes de continuar, ejecutar
               <code>dotnet run --project verificador -- 0-{{ hechos.length ? hechos[hechos.length - 1].numero : 0 }}</code>
             </p>
-            <p v-if="repo && repo.esRepo" style="margin-bottom:0">Tu repo: <strong>{{ repo.mensaje }}</strong></p>
+            <p v-if="repo && repo.esRepo" style="margin-bottom:0">Repositorio: <strong>{{ repo.mensaje }}</strong></p>
           </section>
         </template>
 
         <!-- ───── Para investigar ───── -->
         <section class="seccion" id="investigar" v-if="d.lecturas.length">
           <h2>🔎 Para investigar</h2>
-          <p class="suave">Lecturas cortas para profundizar. Leelas con la pregunta en mente.</p>
+          <p class="suave">Lecturas breves para profundizar, cada una con una pregunta guía.</p>
           <div class="lecturas">
             <div class="lectura" v-for="l in d.lecturas" :key="l.id">
               <span class="icono">{{ d.progreso.lecturasAbiertas.includes(l.id) ? '✅' : '📖' }}</span>
@@ -322,20 +345,20 @@ export default {
         <!-- ───── Verificación ───── -->
         <section class="seccion" id="verificacion" v-if="d.tipo !== 'checkpoint' && d.numero !== null && d.numero !== undefined">
           <h2>🛠️ Verificación</h2>
-          <p>La torre compila tu proyecto, lo levanta con una base <strong>temporal</strong> (tu <code>aerotaller.db</code> no se toca)
-            y lo prueba como lo haría una persona. Es el mismo verificador que corre GitHub Classroom en cada push.</p>
+          <p>El verificador compila el proyecto, lo ejecuta con una base <strong>temporal</strong> (el archivo <code>aerotaller.db</code> no se modifica)
+            y lo prueba como lo haría una persona. Es el mismo verificador que ejecuta GitHub Classroom en cada push.</p>
           <div class="fila">
             <button class="boton" type="button" @click="verificar" :disabled="verificando">
               <span v-if="verificando" class="spinner"></span>{{ verificando ? 'Verificando…' : 'Verificar desafío ' + d.numero }}
             </button>
             <span class="suave mono" style="font-size:.85rem">dotnet run --project verificador -- {{ d.numero }}</span>
           </div>
-          <p class="suave" v-if="verificando">Puede tardar un minuto: compila, arranca tu app y le hace pedidos de prueba.</p>
+          <p class="suave" v-if="verificando">Puede demorar un minuto: compila, inicia la aplicación y le envía pedidos de prueba.</p>
           <div v-if="verificacion">
             <div v-if="!verificacion.ejecutado" class="error-caja" style="margin-top:.8rem;white-space:pre-wrap">{{ verificacion.error }}</div>
             <template v-else>
               <p style="margin:.8rem 0 0"><strong :style="{ color: verificacion.aprobado ? 'var(--verde)' : 'var(--rojo)' }">
-                {{ verificacion.aprobado ? '🟢 Todo en verde' : '🔴 ' + verificacion.chequeos.filter(c => !c.ok).length + ' chequeo(s) en rojo' }}</strong></p>
+                {{ verificacion.aprobado ? '🟢 Todos los chequeos aprobados' : '🔴 ' + verificacion.chequeos.filter(c => !c.ok).length + ' chequeo(s) en rojo' }}</strong></p>
               <ul class="chequeos">
                 <li v-for="(c, i) in verificacion.chequeos" :key="i">
                   {{ c.ok ? '✔' : '✘' }} {{ c.nombre }}
@@ -349,21 +372,21 @@ export default {
         <!-- ───── Commit y push ───── -->
         <section class="seccion" id="commit" v-if="d.commit">
           <h2>📝 Commit y push</h2>
-          <p>Antes de despegar, guardá tu trabajo <strong>y subilo</strong>. Mirá el diff antes de commitear: ¿está todo lo que querés y nada más?</p>
+          <p>Antes de completar la escala, registrar el trabajo <strong>y subirlo</strong>. Revisar el diff antes del commit: debe incluir todo lo necesario y nada más.</p>
           <pre><button class="copiar" type="button">copiar</button><code class="hljs">{{ comandos }}</code></pre>
           <p v-if="d.commit.detalle" class="suave">{{ d.commit.detalle }}</p>
           <div class="fila">
             <button class="boton secundario chico" type="button" @click="revisarRepo">Revisar mi repo</button>
             <span v-if="repo">{{ repo.esRepo ? (repo.sinCommitear || repo.sinPushear ? '⚠️ ' : '✅ ') : '' }}{{ repo.mensaje }}</span>
           </div>
-          <p class="suave" style="margin-bottom:0">Después entrá a tu repo en GitHub y fijate que el commit esté (y que la corrección automática haya corrido).</p>
+          <p class="suave" style="margin-bottom:0">Luego, comprobar en GitHub que el commit esté publicado y que la corrección automática se haya ejecutado.</p>
         </section>
 
         <!-- ───── Cuestionario ───── -->
         <section class="seccion" id="cuestionario" v-if="d.quiz.length">
           <h2>❓ Cuestionario</h2>
-          <p class="suave">Para aprobar hay que responder todo bien. Intentos ilimitados: si le errás, te damos una pista (no la respuesta).
-            Las preguntas marcadas con 🔴 se responden mirando el depurador.</p>
+          <p class="suave">Se aprueba con todas las respuestas correctas. Los intentos son ilimitados: ante una respuesta incorrecta se muestra una pista (no la respuesta).
+            Las preguntas marcadas con 🔴 se responden observando el depurador.</p>
           <p v-if="quizAprobado" class="chip verde" style="font-size:.9rem">✔ Aprobado</p>
           <div class="pregunta" v-for="(p, n) in d.quiz" :key="p.id">
             <div class="enunciado">{{ n + 1 }}. {{ p.texto }}<span class="etiqueta-depurador" v-if="p.etiquetas.includes('depurador')">🔴 depurador</span></div>
@@ -386,18 +409,18 @@ export default {
         <!-- ───── Bitácora del checkpoint ───── -->
         <section class="seccion" id="bitacora" v-if="d.tipo === 'checkpoint'">
           <h2>📓 Bitácora</h2>
-          <p class="suave">Escribilo para vos (y para la consulta). Queda guardado en tu bitácora.</p>
+          <p class="suave">Registro personal y para la consulta. Queda guardado en la bitácora.</p>
           <form @submit.prevent="enviarCheckpoint" v-if="!completado">
-            <label class="campo" for="hice">¿Qué hiciste hasta acá? ¿Qué te salió bien?</label>
+            <label class="campo" for="hice">Trabajo realizado hasta este punto y resultados obtenidos</label>
             <textarea id="hice" v-model="cp.hice"></textarea>
-            <label class="campo" for="falta">¿Qué te falta o querés repasar antes del parcial?</label>
+            <label class="campo" for="falta">Pendientes y temas para repasar antes del parcial</label>
             <textarea id="falta" v-model="cp.falta"></textarea>
             <label class="campo" for="dudas">Dudas para llevar a la consulta (opcional)</label>
             <textarea id="dudas" v-model="cp.dudas"></textarea>
             <div class="error-caja" v-if="faltantes" style="margin-top:.8rem">{{ faltantes.mensaje }}<ul><li v-for="f in faltantes.lista" :key="f">{{ f }}</li></ul></div>
-            <p><button class="boton ambar" type="submit" :disabled="completando">Guardar y seguir viaje ✈</button></p>
+            <p><button class="boton ambar" type="submit" :disabled="completando">Guardar y continuar ✈</button></p>
           </form>
-          <p v-else>✔ Checkpoint completado. Tus notas están en la <a href="#/bitacora">bitácora</a>.</p>
+          <p v-else>✔ Checkpoint completado. Las notas quedaron en la <a href="#/bitacora">bitácora</a>.</p>
         </section>
 
         <!-- ───── Despegar ───── -->
@@ -412,7 +435,7 @@ export default {
               {{ puedeDespegar ? 'Marcar como completado y despegar ✈' : 'Marcar como completado' }}</button>
             <div class="error-caja" v-if="faltantes" style="margin-top:1rem;text-align:left">{{ faltantes.mensaje }}<ul><li v-for="f in faltantes.lista" :key="f">{{ f }}</li></ul></div>
           </template>
-          <p v-else>✔ Escala completada. <a v-if="d.siguiente" :href="'#/desafio/' + d.siguiente">Ir a la siguiente ▸</a></p>
+          <p v-else>✔ Escala completada. <a v-if="d.siguiente" :href="'#/desafio/' + d.siguiente">Siguiente escala ▸</a></p>
         </section>
 
         <p class="fila no-imprimir" style="justify-content:space-between">

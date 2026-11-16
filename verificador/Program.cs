@@ -7,7 +7,7 @@ using System.Text.Json;
 //   dotnet run --project verificador -- todos      revisa todo
 //   opciones: --json (salida para la Torre de Control)  --proyecto <carpeta AeroTaller>  --sin-git
 //
-// Compila tu proyecto, lo levanta con una base TEMPORAL (tu aerotaller.db no se toca) y prueba cada desafío
+// Compila el proyecto, lo ejecuta con una base TEMPORAL (el aerotaller.db del proyecto no se modifica) y prueba cada desafío
 // como lo haría una persona: navegando, enviando formularios y mirando qué quedó en la base y en el log.
 
 Desafio[] todos =
@@ -34,7 +34,7 @@ catch (FormatException)
 
 if (carpetaProyecto is null || !File.Exists(Path.Combine(carpetaProyecto, "AeroTaller.csproj")))
 {
-    Salir(json, "No encontré AeroTaller/AeroTaller.csproj. Corré el verificador desde la carpeta de tu repo.");
+    Salir(json, "No se encontró AeroTaller/AeroTaller.csproj. El verificador debe ejecutarse desde la carpeta del repositorio.");
     return 2;
 }
 

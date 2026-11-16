@@ -10,7 +10,7 @@ public class Desafio0 : Desafio
     {
         var p = ctx.Proyecto;
         informe.Probar("Program.cs registra MVC (AddControllersWithViews)", () =>
-            Resultado(p.Leer("Program.cs").Contains("AddControllersWithViews"), "No encontré builder.Services.AddControllersWithViews() en Program.cs."));
+            Resultado(p.Leer("Program.cs").Contains("AddControllersWithViews"), "No se encontró builder.Services.AddControllersWithViews() en Program.cs."));
 
         using (Servidor s = ctx.Arrancar())
         using (Navegador nav = s.NuevoNavegador())
@@ -24,12 +24,12 @@ public class Desafio0 : Desafio
 
         if (ctx.RevisarGit)
         {
-            informe.Probar("Hiciste al menos un commit propio", () =>
+            informe.Probar("Hay al menos un commit propio", () =>
             {
                 (int codigo, string salida) = Comando.Correr("git", p.CarpetaRepo, TimeSpan.FromSeconds(10), "rev-list", "--count", "HEAD");
-                if (codigo != 0) return (false, "La carpeta no es un repositorio git (¿clonaste tu repo de Classroom?).");
+                if (codigo != 0) return (false, "La carpeta no es un repositorio git (el repositorio de Classroom debe clonarse).");
                 int commits = int.Parse(salida.Trim());
-                return Resultado(commits >= 2, "Solo está el commit inicial de la plantilla: hacé tu primer commit y push.", $"{commits} commits");
+                return Resultado(commits >= 2, "Solo está el commit inicial de la plantilla: falta el primer commit y push propio.", $"{commits} commits");
             });
         }
     }
@@ -65,7 +65,7 @@ public class Desafio1 : Desafio
         {
             using var json = JsonDocument.Parse(p.Leer("appsettings.json"), new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true });
             bool ok = json.RootElement.TryGetProperty("ConnectionStrings", out var cs) && cs.TryGetProperty("AeroTaller", out _);
-            return Resultado(ok, "Agregá \"ConnectionStrings\": { \"AeroTaller\": \"Data Source=aerotaller.db;Foreign Keys=True\" }");
+            return Resultado(ok, "Falta \"ConnectionStrings\": { \"AeroTaller\": \"Data Source=aerotaller.db;Foreign Keys=True\" }");
         });
         informe.Probar("Program.cs lee la cadena con GetConnectionString(\"AeroTaller\")", () =>
             Resultado(p.Leer("Program.cs").Contains("GetConnectionString(\"AeroTaller\")"), "La cadena tiene que salir de la configuración, no estar escrita a mano."));
@@ -74,7 +74,7 @@ public class Desafio1 : Desafio
         var db = new BaseDatos(s.RutaBase);
 
         informe.Probar("Al arrancar con una base nueva, la app la crea", () =>
-            Resultado(db.Existe, "Arranqué la app con otra cadena de conexión y no se creó la base. ¿Usás la cadena de la configuración en CrearBaseSiNoExiste?"));
+            Resultado(db.Existe, "Con otra cadena de conexión la aplicación no creó la base. CrearBaseSiNoExiste debe usar la cadena de la configuración."));
         if (!db.Existe) return;
 
         foreach ((string tabla, string[] columnas) in ColumnasEsperadas)
@@ -107,7 +107,7 @@ public class Desafio1 : Desafio
         {
             long vuelos = db.Contar("SELECT COUNT(*) FROM Vuelo"), reservas = db.TotalReservas(), pasajeros = db.Contar("SELECT COUNT(*) FROM Pasajero");
             return Resultado(vuelos == 9 && reservas == 15 && pasajeros == 8,
-                $"Esperaba 9 vuelos, 8 pasajeros y 15 reservas; hay {vuelos}, {pasajeros} y {reservas}. ¿Pegaste datos.sql al final de aerotaller.sql?");
+                $"Se esperaban 9 vuelos, 8 pasajeros y 15 reservas; hay {vuelos}, {pasajeros} y {reservas}. material/datos.sql debe estar al final de aerotaller.sql.");
         });
     }
 }
@@ -144,7 +144,7 @@ public class Desafio2 : Desafio
             return Resultado(faltan.Count == 0, "Falta: " + string.Join(", ", faltan));
         });
         informe.Probar("Las consultas usan parámetros (AddWithValue)", () =>
-            Resultado(p.Coincidencias(@"Parameters\.Add(WithValue)?\(").Count > 0, "No encontré ningún comando.Parameters.AddWithValue(...)."));
+            Resultado(p.Coincidencias(@"Parameters\.Add(WithValue)?\(").Count > 0, "No se encontró ningún comando.Parameters.AddWithValue(...)."));
         informe.Probar("Ningún SQL armado con interpolación ($\"... {variable}\")", () =>
         {
             var hallazgos = SqlInterpolado(p);
@@ -159,7 +159,7 @@ public class Desafio2 : Desafio
                 .ToList();
             bool hayUsing = p.Coincidencias(@"using\s*(var\s+\w+\s*=\s*)?\(?\s*(new\s+SqliteConnection|\w+\(\))").Count > 0;
             return Resultado(hayUsing && sinUsing.Count == 0,
-                sinUsing.Count > 0 ? "Conexión sin using en " + string.Join(", ", sinUsing) : "Usá: using var conexion = new SqliteConnection(cadenaConexion);");
+                sinUsing.Count > 0 ? "Conexión sin using en " + string.Join(", ", sinUsing) : "Forma esperada: using var conexion = new SqliteConnection(cadenaConexion);");
         });
     }
 }
@@ -187,13 +187,13 @@ public class Desafio3 : Desafio
         {
             Respuesta r = nav.Get("/");
             return Resultado(r.Codigo == 200 && Contiene(r, "AT1001") && !Contiene(r, "AT0999"),
-                $"GET / tendría que listar los vuelos futuros (AT1001 sí, AT0999 que ya salió no). {Describir(r)}");
+                $"GET / debe listar los vuelos futuros (AT1001 sí; AT0999, que ya salió, no). {Describir(r)}");
         });
         informe.Probar("GET /Vuelos lista los vuelos", () =>
         {
             Respuesta r = nav.Get("/Vuelos");
             bool ok = r.Codigo == 200 && new[] { "AT1001", "AT2020", "AT3005", "AT0500" }.All(n => Contiene(r, n));
-            return Resultado(ok, $"Esperaba ver AT1001, AT2020, AT3005 y AT0500. {Describir(r)}");
+            return Resultado(ok, $"Se esperaban AT1001, AT2020, AT3005 y AT0500. {Describir(r)}");
         });
         informe.Probar("GET /Vuelos/Detalle/{id} muestra el vuelo con su origen y destino", () =>
         {
@@ -205,7 +205,7 @@ public class Desafio3 : Desafio
         informe.Probar("Un vuelo que no existe da 404", () =>
         {
             Respuesta r = nav.Get("/Vuelos/Detalle/987654");
-            return Resultado(r.Codigo == 404, $"Esperaba 404 (return NotFound()); {Describir(r)}");
+            return Resultado(r.Codigo == 404, $"Se esperaba 404 (return NotFound()); {Describir(r)}");
         });
 
         using Navegador mostrador = Mostrador(s, "/Pasajeros");
@@ -231,7 +231,7 @@ public class Desafio3 : Desafio
             int ana = db.IdPasajero(DniAna);
             Respuesta r = mostrador.Get($"/Pasajeros/Detalle/{ana}");
             return Resultado(r.Codigo == 200 && Contiene(r, "Ana Gómez") && Contiene(r, "AT1001") && Contiene(r, "AT1002"),
-                $"/Pasajeros/Detalle/{ana} tendría que mostrar a Ana Gómez con sus vuelos AT1001 y AT1002. {Describir(r)}");
+                $"/Pasajeros/Detalle/{ana} debe mostrar a Ana Gómez con sus vuelos AT1001 y AT1002. {Describir(r)}");
         });
     }
 }

@@ -18,8 +18,8 @@ public class ManejadorGlobal(IProblemDetailsService problemDetails, ILogger<Mane
 
         var detalle = new Microsoft.AspNetCore.Mvc.ProblemDetails
         {
-            Title = http.Response.StatusCode >= 500 ? "Algo falló en la torre de control" : ex.Message,
-            Detail = http.Response.StatusCode >= 500 ? "Revisá la consola donde corre dotnet run." : null
+            Title = http.Response.StatusCode >= 500 ? "Error interno en la Torre de Control" : ex.Message,
+            Detail = http.Response.StatusCode >= 500 ? "El detalle está en la consola donde se ejecuta dotnet run." : null
         };
         if (ex is SolicitudInvalidaException invalida && invalida.Faltantes.Count > 0)
             detalle.Extensions["faltantes"] = invalida.Faltantes;

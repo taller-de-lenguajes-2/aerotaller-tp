@@ -1,5 +1,5 @@
 // Corrige el cuestionario EN EL SERVIDOR: el navegador nunca recibe la respuesta correcta.
-// Si contestás mal, te devuelve una pista (no la respuesta). Se aprueba con todo bien, sin límite de intentos.
+// Ante una respuesta incorrecta devuelve una pista (no la respuesta). Se aprueba con todo correcto, sin límite de intentos.
 public class QuizService(
     IContenidoRepository contenido,
     IProgresoService progreso,
@@ -25,7 +25,7 @@ public class QuizService(
             bool correcta = elegida == pregunta.Correcta;
 
             string mensaje = correcta ? pregunta.Explicacion
-                : elegida is null ? "Te faltó responder esta."
+                : elegida is null ? "Pregunta sin responder."
                 : pregunta.Pista;
 
             detalle.Add(new CorreccionPregunta(pregunta.Id, correcta, mensaje));

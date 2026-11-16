@@ -12,7 +12,7 @@ public class Desafio4 : Desafio
         {
             int cantidad = p.Cs.Where(f => f.Ruta.StartsWith("ViewModels/"))
                 .Sum(f => Regex.Matches(f.Texto, @"\b(class|record)\s+\w+ViewModel\b").Count);
-            return Resultado(cantidad >= 3, $"Encontré {cantidad} clases …ViewModel en ViewModels/.", $"{cantidad} ViewModels");
+            return Resultado(cantidad >= 3, $"Se encontraron {cantidad} clases …ViewModel en ViewModels/.", $"{cantidad} ViewModels");
         });
         informe.Probar("Existen VueloDetalleViewModel y ReservaCrearViewModel", () =>
         {
@@ -24,7 +24,7 @@ public class Desafio4 : Desafio
             var mal = new List<string>();
             if (!Regex.IsMatch(p.Leer("Views/Vuelos/Detalle.cshtml"), @"@model\s+\w*ViewModel")) mal.Add("Views/Vuelos/Detalle.cshtml");
             if (!Regex.IsMatch(p.Leer("Views/Reservas/Crear.cshtml"), @"@model\s+ReservaCrearViewModel")) mal.Add("Views/Reservas/Crear.cshtml");
-            return Resultado(mal.Count == 0, "Revisá el @model de: " + string.Join(", ", mal));
+            return Resultado(mal.Count == 0, "Revisar el @model de: " + string.Join(", ", mal));
         });
 
         using Servidor s = ctx.Arrancar();
@@ -48,13 +48,13 @@ public class Desafio4 : Desafio
             var sobran = new[] { "3A", "3B", "10F" }.Where(libres.Contains).ToList();
             if (faltan.Count > 0) return (false, $"Sin link a /Reservas/Crear?vueloId={at1001}&asiento=… para los libres: {string.Join(", ", faltan)}");
             if (sobran.Count > 0) return (false, $"Los ocupados no tienen que ser link: {string.Join(", ", sobran)}");
-            return Resultado(libres.Count == 117, $"Esperaba 117 asientos libres en AT1001 (120 − 3 ocupados); hay {libres.Count} links.", "117 libres");
+            return Resultado(libres.Count == 117, $"Se esperaban 117 asientos libres en AT1001 (120 − 3 ocupados); hay {libres.Count} enlaces.", "117 libres");
         });
         informe.Probar("Mapa de asientos: los ocupados llevan la clase ocupado", () =>
         {
             Respuesta r = anonimo.Get($"/Vuelos/Detalle/{at1001}");
             int ocupados = Regex.Matches(r.Html, @"class=""[^""]*\bocupado\b").Count;
-            return Resultado(ocupados == 3, $"Esperaba 3 asientos con class=\"… ocupado\" (3A, 3B, 10F); hay {ocupados}.");
+            return Resultado(ocupados == 3, $"Se esperaban 3 asientos con class=\"… ocupado\" (3A, 3B, 10F); hay {ocupados}.");
         });
 
         using Navegador nav = Mostrador(s);
@@ -82,7 +82,7 @@ public class Desafio4 : Desafio
             int elena = db.IdPasajero(DniElena);
             Respuesta r = nav.EnviarFormulario("/Reservas/Crear", "/Reservas/Crear", Reserva(at1001, elena, "4C"));
             bool guardada = db.ReservasConfirmadas(at1001, "4C") == 1;
-            return Resultado(r.EsRedireccion && guardada, $"Reservé AT1001 4C para Elena Paz: {Describir(r)}; en la base {(guardada ? "está" : "no está")}.");
+            return Resultado(r.EsRedireccion && guardada, $"Reserva de AT1001 4C para Elena Paz: {Describir(r)}; en la base {(guardada ? "está" : "no está")}.");
         });
     }
 
@@ -121,7 +121,7 @@ public class Desafio5 : Desafio
                 if (r.EsRedireccion) return (false, $"Se aceptó (redirigió a {r.Ubicacion}).");
                 if (contar() != antes) return (false, "Mostró la vista pero igual guardó en la base.");
                 return Resultado(r.Codigo == 200 && r.TieneErrorEn(campoError),
-                    $"Esperaba la vista con el error junto al campo {campoError} (asp-validation-for). {Describir(r)}");
+                    $"Se esperaba la vista con el error junto al campo {campoError} (asp-validation-for). {Describir(r)}");
             });
         }
 
@@ -140,7 +140,7 @@ public class Desafio5 : Desafio
             Respuesta r = nav.EnviarFormulario("/Reservas/Crear", "/Reservas/Crear", Reserva(at1001, elena, "5b"));
             bool guardada = db.ReservasConfirmadas(at1001, "5B") == 1;
             return Resultado(r.EsRedireccion && guardada,
-                $"AT1001 5b para Elena Paz: {Describir(r)}; en la base {(guardada ? "está" : "no está")} como '5B' (¿pasás a mayúsculas?).");
+                $"AT1001 5b para Elena Paz: {Describir(r)}; en la base {(guardada ? "está" : "no está")} como '5B' (el asiento debe pasarse a mayúsculas).");
         });
         informe.Probar("Un POST sin token antiforgery se rechaza", () =>
         {
@@ -210,7 +210,7 @@ public class Desafio6 : Desafio
         informe.Probar("ReservasController usa el servicio y no tiene las reglas", () =>
         {
             var controlador = p.DondeSeDeclara("ReservasController");
-            if (controlador is null) return (false, "No encontré ReservasController.");
+            if (controlador is null) return (false, "No se encontró ReservasController.");
             string codigo = Proyecto.SinComentarios(controlador.Value.Texto);
             if (!codigo.Contains("IReservaService")) return (false, "El controlador tiene que recibir IReservaService.");
             var reglas = new[] { "AsientosOcupados(", "ContarConfirmadas(", "PasajeroTieneReserva(", "TieneAsiento(" }.Where(codigo.Contains).ToList();
@@ -238,7 +238,7 @@ public class Desafio6 : Desafio
         informe.Probar("Sin overbooking: la avioneta AT0500 (6 asientos) se llena y no acepta más", () =>
         {
             Respuesta ultima = nav.EnviarFormulario("/Reservas/Crear", "/Reservas/Crear", Reserva(at0500, db.IdPasajero(DniGabriela), "1F"));
-            if (!ultima.EsRedireccion) return (false, $"El último asiento libre (1F) tendría que poder reservarse: {Describir(ultima)}");
+            if (!ultima.EsRedireccion) return (false, $"El último asiento libre (1F) debe poder reservarse: {Describir(ultima)}");
             Respuesta otra = nav.EnviarFormulario("/Reservas/Crear", "/Reservas/Crear", Reserva(at0500, db.IdPasajero(DniHernan), "1A"));
             long confirmadas = db.Contar("SELECT COUNT(*) FROM Reserva WHERE VueloId = @v AND Estado = 'Confirmada'", ("@v", at0500));
             return Resultado(!otra.EsRedireccion && confirmadas == 6, $"Con el vuelo lleno: {Describir(otra)}; confirmadas = {confirmadas}.");
@@ -252,7 +252,7 @@ public class Desafio6 : Desafio
             if (!r.EsRedireccion || estado != "Cancelada")
                 return (false, $"POST /Reservas/Cancelar/{idBruno}: {Describir(r)}; Estado en la base: {estado ?? "(borrada)"}");
             Respuesta nueva = nav.EnviarFormulario("/Reservas/Crear", "/Reservas/Crear", Reserva(at1001, db.IdPasajero(DniFacundo), "3B"));
-            return Resultado(nueva.EsRedireccion, $"Después de cancelar, el 3B tendría que estar libre: {Describir(nueva)}");
+            return Resultado(nueva.EsRedireccion, $"Después de cancelar, el 3B debe quedar libre: {Describir(nueva)}");
         });
     }
 }

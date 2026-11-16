@@ -40,7 +40,7 @@ public class Desafio7 : Desafio
         informe.Probar("Hay repositorios falsos (en memoria)", () =>
         {
             int cantidad = p.Cs.Sum(f => Regex.Matches(f.Texto, @"class\s+\w+RepositoryFalso\b[^{]*:\s*I\w+Repository").Count);
-            return Resultado(cantidad >= 4, $"Encontré {cantidad} clases …RepositoryFalso : I…Repository (esperaba al menos 4).", $"{cantidad} falsos");
+            return Resultado(cantidad >= 4, $"Se encontraron {cantidad} clases …RepositoryFalso : I…Repository (se esperaban al menos 4).", $"{cantidad} falsos");
         });
 
         informe.Probar("Con OrigenDeDatos=Falso la app anda sin tocar la base", () =>
@@ -82,7 +82,7 @@ public class Desafio8 : Desafio
         informe.Probar("Página de error: app.UseExceptionHandler(...)", () =>
             Resultado(program.Contains("UseExceptionHandler"), "app.UseExceptionHandler(\"/Home/Error\");"));
         informe.Probar("Los servicios registran lo que pasa con ILogger<T>", () =>
-            Resultado(p.Coincidencias(@"ILogger<\w+Service>", r => r.StartsWith("Servicios/")).Count > 0, "Pedí ILogger<ReservaService> por el constructor."));
+            Resultado(p.Coincidencias(@"ILogger<\w+Service>", r => r.StartsWith("Servicios/")).Count > 0, "ILogger<ReservaService> debe recibirse por el constructor."));
         informe.Probar("Los logs usan plantillas, no $\"...\"", () =>
         {
             var archivos = p.Coincidencias(@"\.Log(Trace|Debug|Information|Warning|Error|Critical)\(\s*(\w+\s*,\s*)?\$""");
@@ -106,17 +106,17 @@ public class Desafio8 : Desafio
             {
                 var indices = db.IndicesUnicosParciales("Reserva");
                 bool ok = indices.Any(sql => Regex.IsMatch(sql, @"VueloId", RegexOptions.IgnoreCase) && Regex.IsMatch(sql, @"Asiento", RegexOptions.IgnoreCase) && sql.Contains("Confirmada"));
-                return Resultado(ok, "CREATE UNIQUE INDEX … ON Reserva (VueloId, Asiento) WHERE Estado = 'Confirmada' (y borrá aerotaller.db para recrearla)");
+                return Resultado(ok, "CREATE UNIQUE INDEX … ON Reserva (VueloId, Asiento) WHERE Estado = 'Confirmada' (y borrar aerotaller.db para recrearla)");
             });
 
             informe.Probar("Una reserva queda registrada en logs/", () =>
             {
                 using Navegador nav = Mostrador(s);
                 Respuesta r = nav.EnviarFormulario("/Reservas/Crear", "/Reservas/Crear", Reserva(at2020, db.IdPasajero(DniDiego), "17D"));
-                if (!r.EsRedireccion) return (false, "No pude reservar AT2020 17D: " + Describir(r));
+                if (!r.EsRedireccion) return (false, "No fue posible reservar AT2020 17D: " + Describir(r));
                 Thread.Sleep(1500);   // Serilog escribe el archivo cada tanto
                 return Resultado(Logs(p, s.Inicio).Any(l => l.Contains("17D") && !l.Contains("HTTP ")),
-                    "No encontré en AeroTaller/logs/*.txt una línea de tu servicio con el asiento 17D (ej.: \"Reserva {ReservaId} confirmada… asiento {Asiento}\").");
+                    "No se encontró en AeroTaller/logs/*.txt una línea del servicio con el asiento 17D (ej.: \"Reserva {ReservaId} confirmada… asiento {Asiento}\").");
             });
 
             informe.Probar("8 reservas simultáneas del mismo asiento → queda una sola", () =>
@@ -139,12 +139,12 @@ public class Desafio8 : Desafio
             var db = new BaseDatos(rutaBase);
             using Navegador nav = Mostrador(s);
             Respuesta r = nav.EnviarFormulario("/Reservas/Crear", "/Reservas/Crear", Reserva(db.IdVuelo("AT3110"), db.IdPasajero(DniHernan), "4A"));
-            if (r.Codigo != 500) return (false, $"Esperaba 500: {Describir(r)}");
+            if (r.Codigo != 500) return (false, $"Se esperaba 500: {Describir(r)}");
             if (Contiene(r, "SqliteException") || r.Texto.Contains("   at ") || Contiene(r, "StackTrace"))
                 return (false, "La página de error muestra detalles técnicos (excepción/stack trace): el usuario no tiene que verlos.");
             Thread.Sleep(1500);
             return Resultado(Logs(p, s.Inicio).Any(l => l.Contains("SqliteException") || l.Contains("readonly", StringComparison.OrdinalIgnoreCase)),
-                "La página de error salió bien, pero no encontré el SqliteException en AeroTaller/logs/*.txt.");
+                "La página de error es correcta, pero el SqliteException no aparece en AeroTaller/logs/*.txt.");
         });
     }
 
@@ -190,9 +190,9 @@ public class Desafio9 : Desafio
 
         informe.Probar("Tabla Usuario con admin y mostrador", () =>
         {
-            if (!db.TieneTabla("Usuario")) return (false, "No existe la tabla Usuario (y borrá aerotaller.db para recrearla).");
+            if (!db.TieneTabla("Usuario")) return (false, "No existe la tabla Usuario (borrar aerotaller.db para recrearla).");
             long cantidad = db.Contar("SELECT COUNT(*) FROM Usuario WHERE NombreUsuario IN ('admin', 'mostrador')");
-            return Resultado(cantidad == 2, "Pegá material/datos-usuarios.sql al final de aerotaller.sql.");
+            return Resultado(cantidad == 2, "material/datos-usuarios.sql debe estar al final de aerotaller.sql.");
         });
 
         using (Navegador anonimo = s.NuevoNavegador())
@@ -239,7 +239,7 @@ public class Desafio9 : Desafio
             {
                 Respuesta r = mostrador.Get("/Vuelos/Crear");
                 return Resultado(r.Codigo is 200 or 403 && Contiene(r, "permiso") && !Regex.IsMatch(r.Html, @"name=""Numero"""),
-                    $"Esperaba la vista SinPermiso. {Describir(r)}");
+                    $"Se esperaba la vista SinPermiso. {Describir(r)}");
             });
             informe.Probar("Salir cierra la sesión", () =>
             {
@@ -283,7 +283,7 @@ public class Desafio10 : Desafio
 
         informe.Probar("Tabla Equipaje (Id, ReservaId, Tipo, PesoKg) con FK a Reserva", () =>
         {
-            if (!db.TieneTabla("Equipaje")) return (false, "No existe la tabla Equipaje (y borrá aerotaller.db para recrearla).");
+            if (!db.TieneTabla("Equipaje")) return (false, "No existe la tabla Equipaje (borrar aerotaller.db para recrearla).");
             var faltan = new[] { "Id", "ReservaId", "Tipo", "PesoKg" }.Except(db.Columnas("Equipaje"), StringComparer.OrdinalIgnoreCase).ToList();
             bool fk = db.ClavesForaneas("Equipaje").Any(f => f.Desde == "ReservaId" && f.Tabla == "Reserva");
             return Resultado(faltan.Count == 0 && fk, $"Faltan columnas: {string.Join(", ", faltan)} · FK a Reserva: {(fk ? "sí" : "no")}");

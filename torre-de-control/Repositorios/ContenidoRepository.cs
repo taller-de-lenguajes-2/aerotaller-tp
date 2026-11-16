@@ -2,7 +2,7 @@ using System.Text.Json;
 
 // Lee los desafíos desde archivos (no desde la base).
 // Cada desafío es una carpeta en Contenido/desafios/ con desafio.json y contenido.md.
-// Se lee en cada pedido: si el profe edita un .md, alcanza con recargar la página.
+// Se lee en cada pedido: al editar un .md, basta con recargar la página.
 public class ContenidoRepository(IWebHostEnvironment entorno, ILogger<ContenidoRepository> logger) : IContenidoRepository
 {
     private static readonly JsonSerializerOptions OpcionesJson = new()

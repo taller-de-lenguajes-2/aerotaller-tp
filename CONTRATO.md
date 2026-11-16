@@ -1,8 +1,8 @@
 # Contrato de AeroTaller
 
 Como en un parcial, algunos nombres **son obligatorios**: el verificador (`dotnet run --project verificador`) y la
-corrección automática de GitHub Classroom los buscan tal cual. Todo lo demás (cómo lo resolvés por dentro, nombres de
-variables, métodos privados, estilos) es decisión tuya.
+corrección automática de GitHub Classroom los buscan tal cual. El resto (la implementación interna, los nombres de
+variables, los métodos privados, los estilos) queda a criterio de quien resuelve el TP.
 
 ## Proyecto y configuración
 
@@ -15,8 +15,8 @@ variables, métodos privados, estilos) es decisión tuya.
 | Origen de datos (desafío 7) | clave `OrigenDeDatos`: `Sqlite` (por defecto) o `Falso` (repositorios en memoria, **sin tocar la base**) |
 | Logs (desafío 8) | Serilog a archivo en `logs/` (dentro de `AeroTaller/`), un archivo `.txt` por día |
 
-> El verificador levanta tu app con **su propia base temporal**: le pasa otra cadena por variable de entorno
-> (`ConnectionStrings__AeroTaller`). Por eso es importante leer la cadena de la configuración y no escribirla a mano en el código.
+> El verificador ejecuta la aplicación con **una base temporal propia**: le pasa otra cadena por variable de entorno
+> (`ConnectionStrings__AeroTaller`). Por eso la cadena debe leerse de la configuración y no escribirse en el código.
 
 ## Base de datos (desafío 1)
 

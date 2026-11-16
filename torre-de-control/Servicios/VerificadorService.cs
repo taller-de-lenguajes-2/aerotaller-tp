@@ -34,15 +34,15 @@ public class VerificadorService(
         string carpetaAeroTaller = Path.Combine(repo, "AeroTaller");
         if (!File.Exists(Path.Combine(carpetaAeroTaller, "AeroTaller.csproj")))
             return new ResultadoVerificacion(false, false,
-                $"No encontré AeroTaller/AeroTaller.csproj en {repo}. Revisá la carpeta de tu repo en la tarjeta de embarque.", [], null, []);
+                $"No se encontró AeroTaller/AeroTaller.csproj en {repo}. Revisar la carpeta del repositorio en la tarjeta de embarque.", [], null, []);
 
         string verificador = Path.Combine(RutaPorDefecto, "verificador");
         if (!File.Exists(Path.Combine(verificador, "Verificador.csproj")))
-            return new ResultadoVerificacion(false, false, $"No encontré el verificador en {verificador}.", [], null, []);
+            return new ResultadoVerificacion(false, false, $"No se encontró el verificador en {verificador}.", [], null, []);
 
         SemaphoreSlim candado = Candados.GetOrAdd(carpetaAeroTaller, _ => new SemaphoreSlim(1, 1));
         if (!candado.Wait(TimeSpan.FromSeconds(1)))
-            throw new SolicitudInvalidaException("Ya hay una verificación corriendo sobre tu proyecto. Esperá a que termine.");
+            throw new SolicitudInvalidaException("Ya hay una verificación en curso sobre este proyecto. Debe esperarse a que termine.");
 
         try
         {
@@ -54,7 +54,7 @@ public class VerificadorService(
             if (json is null)
             {
                 logger.LogWarning("El verificador no devolvió JSON: {Salida}", salida);
-                return new ResultadoVerificacion(false, false, "El verificador no pudo correr:\n" + Ultimas(salida), [], EstadoRepo(repo), []);
+                return new ResultadoVerificacion(false, false, "El verificador no pudo ejecutarse:\n" + Ultimas(salida), [], EstadoRepo(repo), []);
             }
 
             var resultado = JsonSerializer.Deserialize<SalidaVerificador>(json, OpcionesJson)!;
@@ -89,7 +89,7 @@ public class VerificadorService(
         (bool ok, string salida) = Correr("git", ruta, TimeSpan.FromSeconds(10), "-C", ruta, "status", "--porcelain=v1", "--branch");
         if (!ok)
             return new EstadoRepoGit(false, null, false, 0, 0, [], salida.Contains("not a git repository")
-                ? "Esa carpeta no es un repositorio git (¿clonaste tu repo de Classroom?)."
+                ? "La carpeta no es un repositorio git (el repositorio de Classroom debe clonarse)."
                 : salida.Trim());
 
         string[] lineas = salida.Split('\n', StringSplitOptions.RemoveEmptyEntries);
@@ -106,11 +106,11 @@ public class VerificadorService(
 
         string mensaje = (cambios, sinPushear, tieneRemoto) switch
         {
-            (_, _, false) when commits.Count == 0 => "Todavía no hiciste ningún commit.",
-            (_, _, false) => $"Tu rama no tiene remoto: git push -u origin {rama}",
-            (0, 0, _) => "Todo commiteado y pusheado ✈",
-            ( > 0, _, _) => $"Tenés {cambios} archivo(s) con cambios sin commitear.",
-            _ => $"Tenés {sinPushear} commit(s) sin pushear."
+            (_, _, false) when commits.Count == 0 => "Todavía no hay commits.",
+            (_, _, false) => $"La rama no tiene remoto: git push -u origin {rama}",
+            (0, 0, _) => "Todo registrado en commits y subido con push.",
+            ( > 0, _, _) => $"Hay {cambios} archivo(s) con cambios sin commit.",
+            _ => $"Hay {sinPushear} commit(s) sin push."
         };
         if (!tieneRemoto && commits.Count > 0) sinPushear = Math.Max(sinPushear, 1);
 
@@ -141,12 +141,12 @@ public class VerificadorService(
                 proceso.Kill(entireProcessTree: true);
                 return (false, $"{programa} tardó más de {limite.TotalMinutes:0.#} minutos.");
             }
-            // El verificador devuelve 1 si algún chequeo falla: igual nos sirve su salida
+            // El verificador devuelve 1 si algún chequeo falla: su salida se usa igual
             return (programa == "dotnet" || proceso.ExitCode == 0, salida.Result + error.Result);
         }
         catch (Win32Exception)
         {
-            return (false, $"No encontré el comando {programa} en esta computadora.");
+            return (false, $"No se encontró el comando {programa} en esta computadora.");
         }
     }
 

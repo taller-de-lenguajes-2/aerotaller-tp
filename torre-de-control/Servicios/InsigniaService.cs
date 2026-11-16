@@ -1,5 +1,5 @@
-// Las insignias se definen en Contenido/insignias.json; acá se evalúa cada TIPO de regla.
-// Para agregar una insignia nueva con un tipo que ya existe, alcanza con editar el JSON.
+// Las insignias se definen en Contenido/insignias.json; aquí se evalúa cada TIPO de regla.
+// Para agregar una insignia nueva con un tipo que ya existe, basta con editar el JSON.
 public class InsigniaService(
     IContenidoRepository contenido,
     IInsigniaRepository repositorio,

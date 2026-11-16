@@ -1,7 +1,7 @@
 // Lo que la API recibe y devuelve (DTOs). Separado del modelo para no mandar al navegador,
 // por ejemplo, la respuesta correcta de cada pregunta.
 
-public record AlumnoEntrada(string Nombre, string? Legajo, string? RutaProyecto, bool ModoLibre);
+public record AlumnoEntrada(string Nombre, string? RutaProyecto, bool ModoLibre);
 
 public record EtapaMapa(
     string Id, int Orden, string Codigo, int? Numero, string Titulo, string Subtitulo, string Tipo,

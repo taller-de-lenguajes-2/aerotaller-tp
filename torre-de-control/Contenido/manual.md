@@ -102,7 +102,7 @@ public class VueloRepository(ConexionDb conexionDb) : IVueloRepository
 - `null` de C# → `(object?)valor ?? DBNull.Value`
 - `LIKE`: los `%` van en el **valor**: `AddWithValue("@texto", $"%{texto}%")`
 
-## 🧾 SQL que cae siempre
+## 🧾 SQL de uso frecuente
 
 ```sql
 SELECT v.Numero, o.Codigo AS Origen, d.Codigo AS Destino          -- JOIN doble con alias
@@ -180,15 +180,15 @@ try
 catch (SqliteException ex) when (ex.SqliteErrorCode == 19)    // SQLITE_CONSTRAINT
 {
     logger.LogWarning("Choque de reservas en {Asiento}", asiento);
-    throw new ReglaDeNegocioException("Asiento", "Alguien acaba de reservar ese asiento.", ex);
+    throw new ReglaDeNegocioException("Asiento", $"El asiento {asiento} acaba de reservarse en otra operación. Debe elegirse otro asiento.", ex);
 }
 logger.LogInformation("Reserva {ReservaId} confirmada", reserva.Id);   // plantilla, no $"…"
 ```
 
-- Nunca `catch { }` vacío. Atrapá lo **específico** y solo donde sabés qué hacer.
+- Nunca `catch { }` vacío. Atrapar lo **específico** y solo donde se sabe qué hacer.
 - `throw;` conserva el stack trace; `throw ex;` lo pisa.
 - Log **una** vez. Nunca claves, cadenas de conexión ni datos personales.
-- El usuario ve un mensaje digno + un código; el detalle técnico va al log.
+- El usuario ve un mensaje adecuado + un código; el detalle técnico va al log.
 
 ## 🔐 Login con sesión y filtros
 
@@ -209,9 +209,9 @@ public class RequiereLoginAttribute : ActionFilterAttribute
 
 | | |
 |---|---|
-| Autenticación | ¿quién sos? → login |
-| Autorización | ¿qué podés hacer? → roles |
-| Cookie | la guarda el navegador (no pongas datos sensibles) |
+| Autenticación | ¿quién es el usuario? → login |
+| Autorización | ¿qué puede hacer? → roles |
+| Cookie | la guarda el navegador (no guardar datos sensibles en ella) |
 | Sesión | la guarda el servidor; el navegador solo tiene el Id |
 
 ## 🔴 Depurador
@@ -231,11 +231,11 @@ Paneles: **Variables**, **Inspección (Watch)**, **Pila de llamadas (Call Stack)
 ```bash
 git status
 git add -A
-git commit -m "Desafío N: qué hice"
+git commit -m "Desafío N: descripción del cambio"
 git push
 ```
 
-Un commit por paso lógico. Después del push, **mirá GitHub**.
+Un commit por paso lógico. Después del push, **revisar GitHub**.
 
 ## ✅ Checklist antes de entregar el parcial
 
@@ -246,4 +246,4 @@ Un commit por paso lógico. Después del push, **mirá GitHub**.
 - [ ] Controladores flacos: las reglas en servicios, el SQL en repositorios.
 - [ ] Todo registrado en `Program.cs`; nada de `new XRepository(` en controladores.
 - [ ] Errores: mensaje para el usuario + log.
-- [ ] Commit y push. Mirar GitHub.
+- [ ] Commit y push. Revisar GitHub.

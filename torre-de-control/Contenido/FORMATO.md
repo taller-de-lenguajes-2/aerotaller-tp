@@ -8,8 +8,8 @@ Contenido/desafios/05-validacion/
 └── contenido.md    ← el texto (Markdown)
 ```
 
-Se leen en cada pedido: editás, recargás la página y listo (no hace falta reiniciar).
-Para agregar un desafío nuevo, creá la carpeta y poné un `orden` que lo ubique en el mapa.
+Se leen en cada pedido: basta con editar el archivo y recargar la página (no hace falta reiniciar).
+Para agregar un desafío nuevo, crear la carpeta y asignar un `orden` que lo ubique en el mapa.
 
 ## desafio.json
 
@@ -33,8 +33,8 @@ Para agregar un desafío nuevo, creá la carpeta y poné un `orden` que lo ubiqu
       "codigo": "opcional: un fragmento de código que se muestra con la pregunta",
       "opciones": [ { "id": "a", "texto": "…" }, { "id": "b", "texto": "…" } ],
       "correcta": "b",                // NUNCA llega al navegador: corrige el servidor
-      "pista": "Se muestra si contesta mal (orienta, no da la respuesta)",
-      "explicacion": "Se muestra si contesta bien (refuerza el porqué)",
+      "pista": "Se muestra ante una respuesta incorrecta (orienta, no da la respuesta)",
+      "explicacion": "Se muestra ante una respuesta correcta (refuerza el porqué)",
       "etiquetas": ["depurador"]      // "depurador" = se responde mirando el debugger
     }
   ],
@@ -52,14 +52,14 @@ Secciones `##` con estos títulos exactos (el tutorial arma el índice lateral c
 
 | Sección | Para qué |
 |---|---|
-| `## 🎯 Misión` | el problema de AeroTaller y qué tiene que quedar andando |
-| `## 📚 Repaso` | el concepto en criollo + "lo que vimos en clase" (link a la diapositiva) |
+| `## 🎯 Misión` | el problema de AeroTaller y qué debe quedar funcionando |
+| `## 📚 Repaso` | el concepto explicado en términos simples + "lo que vimos en clase" (enlace a la diapositiva) |
 | `## 💻 Paso a paso` | pasos `### Paso N · Título`, que se revelan de a uno |
-| `## 🔴 Breakpoints` | dónde frenar, qué mirar, qué preguntarse |
+| `## 🔴 Breakpoints` | dónde detenerse, qué observar, qué preguntas analizar |
 | `## 🔀 Alternativas` | al menos 2 formas, con tabla de pros y contras |
 | `## ⚠️ Errores típicos` | lo que más se ve en los parciales |
 
-Checkpoints: `## 🛬 ¿Cómo vamos?`, `## ✅ Lo que ya sabés hacer`, `## 🧭 Lo que viene`, `## 🔎 Repaso sugerido`.
+Checkpoints: `## 🛬 ¿Cómo vamos?`, `## ✅ Lo que ya se sabe hacer`, `## 🧭 Lo que viene`, `## 🔎 Repaso sugerido`.
 Simulacro: `## ✈️ Consigna`, `## 📋 Requisitos`, `## ⏱️ Reglas del simulacro`, `## 🧪 Cómo se corrige`.
 
 Lo que NO va en el `.md` porque lo arma el tutorial desde el JSON: checklist, cuestionario, lecturas ("Para investigar"),
@@ -69,7 +69,7 @@ commit y push, y verificación.
 
 ```
 :::pista Título opcional
-Se muestra plegada: el alumno la abre si la necesita.
+Se muestra plegada: se abre solo si hace falta.
 :::
 
 :::solucion Ver el código completo
@@ -77,7 +77,7 @@ Plegada también. Para el código "de referencia" de un paso.
 :::
 
 :::catedra
-"Lo que vimos en clase": cómo lo muestra la diapositiva, con link.
+"Lo que vimos en clase": cómo lo muestra la diapositiva, con enlace.
 :::
 
 :::cuidado
@@ -89,7 +89,7 @@ Comentario al margen.
 :::
 
 :::breakpoint Archivo.cs · método
-Un punto de interrupción sugerido: dónde, qué mirar.
+Un punto de interrupción sugerido: dónde colocarlo y qué observar.
 :::
 ```
 

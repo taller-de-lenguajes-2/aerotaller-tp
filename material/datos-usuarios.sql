@@ -1,6 +1,6 @@
 -- ============================================================
 -- datos-usuarios.sql — usuarios de prueba (desafío 9)
--- Pegalo al final de aerotaller.sql, después del CREATE TABLE Usuario.
+-- Se agrega al final de aerotaller.sql, después del CREATE TABLE Usuario.
 -- ⚠ Claves en texto plano SOLO para el TP (igual que en el tema 15).
 -- ============================================================
 

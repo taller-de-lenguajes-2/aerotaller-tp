@@ -3,60 +3,128 @@
   "codigo": "SIM",
   "numero": 10,
   "titulo": "Simulacro de parcial",
-  "subtitulo": "Equipaje de punta a punta en 120 minutos, sin paso a paso",
+  "subtitulo": "Equipaje de punta a punta en 2 h 30 min, sin paso a paso",
   "tipo": "simulacro",
-  "minutosEstimados": 120,
-  "minutosLimite": 120,
+  "minutosEstimados": 150,
+  "minutosLimite": 150,
   "temas": [
-    { "numero": "07", "titulo": "Bases de datos", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-07-bases-de-datos/index.html" },
-    { "numero": "08", "titulo": "ADO.NET", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-08-ado-net/index.html" },
-    { "numero": "09", "titulo": "Repositorios", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-09-repositorios/index.html" },
-    { "numero": "10", "titulo": "MVC", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-10-mvc/index.html" },
-    { "numero": "11", "titulo": "Layout y vistas", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-11-layout-y-vistas/index.html" },
-    { "numero": "12", "titulo": "ViewModels", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-12-viewmodels/index.html" },
-    { "numero": "13", "titulo": "Validación", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-13-validacion/index.html" },
-    { "numero": "14", "titulo": "Inyección de dependencias", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-14-inyeccion-de-dependencias/index.html" },
-    { "numero": "15", "titulo": "Cookies y sesión", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-15-cookies-y-sesion/index.html" },
-    { "numero": "16", "titulo": "Excepciones", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-16-excepciones/index.html" },
-    { "numero": "17", "titulo": "Logs", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-17-logs/index.html" }
+    {
+      "numero": "07",
+      "titulo": "Bases de datos",
+      "url": "https://taller-de-lenguajes-2.github.io/clases/tema-07-bases-de-datos/index.html"
+    },
+    {
+      "numero": "08",
+      "titulo": "ADO.NET",
+      "url": "https://taller-de-lenguajes-2.github.io/clases/tema-08-ado-net/index.html"
+    },
+    {
+      "numero": "09",
+      "titulo": "Repositorios",
+      "url": "https://taller-de-lenguajes-2.github.io/clases/tema-09-repositorios/index.html"
+    },
+    {
+      "numero": "10",
+      "titulo": "MVC",
+      "url": "https://taller-de-lenguajes-2.github.io/clases/tema-10-mvc/index.html"
+    },
+    {
+      "numero": "11",
+      "titulo": "Layout y vistas",
+      "url": "https://taller-de-lenguajes-2.github.io/clases/tema-11-layout-y-vistas/index.html"
+    },
+    {
+      "numero": "12",
+      "titulo": "ViewModels",
+      "url": "https://taller-de-lenguajes-2.github.io/clases/tema-12-viewmodels/index.html"
+    },
+    {
+      "numero": "13",
+      "titulo": "Validación",
+      "url": "https://taller-de-lenguajes-2.github.io/clases/tema-13-validacion/index.html"
+    },
+    {
+      "numero": "14",
+      "titulo": "Inyección de dependencias",
+      "url": "https://taller-de-lenguajes-2.github.io/clases/tema-14-inyeccion-de-dependencias/index.html"
+    },
+    {
+      "numero": "15",
+      "titulo": "Cookies y sesión",
+      "url": "https://taller-de-lenguajes-2.github.io/clases/tema-15-cookies-y-sesion/index.html"
+    },
+    {
+      "numero": "16",
+      "titulo": "Excepciones",
+      "url": "https://taller-de-lenguajes-2.github.io/clases/tema-16-excepciones/index.html"
+    },
+    {
+      "numero": "17",
+      "titulo": "Logs",
+      "url": "https://taller-de-lenguajes-2.github.io/clases/tema-17-logs/index.html"
+    }
   ],
   "insignia": "simulacro",
   "tareas": [
     {
       "id": "r1-base",
-      "texto": "R1 · Base (10 pts): tabla Equipaje con FK a Reserva y los CHECK de Tipo y PesoKg, datos de material/datos-equipaje.sql, aerotaller.db recreada"
+      "texto": "R1 · Base: tabla Equipaje con FK a Reserva y los CHECK de Tipo y PesoKg, datos de material/datos-equipaje.sql, aerotaller.db recreada"
     },
     {
       "id": "r2-repositorio",
-      "texto": "R2 · Modelo y repositorio (15 pts): TipoEquipaje, Equipaje, IEquipajeRepository con EquipajeRepository (ADO.NET con parámetros) y EquipajeRepositoryFalso, registrados en las dos ramas de Program.cs"
+      "texto": "R2 · Modelo y repositorio: TipoEquipaje, Equipaje, IEquipajeRepository con EquipajeRepository (ADO.NET con parámetros) y EquipajeRepositoryFalso, registrados en las dos ramas de Program.cs"
     },
     {
       "id": "r3-servicio",
-      "texto": "R3 · Reglas en el servicio (25 pts): EquipajeService aplica las cuatro reglas, lanza ReglaDeNegocioException en el campo que corresponde y registra cada pieza en el log con una plantilla"
+      "texto": "R3 · Reglas en el servicio: EquipajeService aplica las cuatro reglas, lanza ReglaDeNegocioException en el campo que corresponde y registra cada pieza en el log con una plantilla"
     },
     {
       "id": "r4-formulario",
-      "texto": "R4 · Formulario (20 pts): GET/POST /Equipaje/Crear?reservaId={id} con EquipajeCrearViewModel (Tipo, PesoKg), validaciones, antiforgery, PRG y [RequiereLogin]; 25 kg en bodega muestra el error al lado del peso"
+      "texto": "R4 · Formulario: GET/POST /Equipaje/Crear?reservaId={id} con EquipajeCrearViewModel (Tipo, PesoKg), validaciones, antiforgery, PRG y [RequiereLogin]; 25 kg en bodega muestra el error al lado del peso"
     },
     {
       "id": "r5-detalle",
-      "texto": "R5 · Detalle de la reserva (15 pts): /Reservas/Detalle/{id} muestra la reserva, sus piezas y el total de kilos, con un link para agregar equipaje"
+      "texto": "R5 · Detalle de la reserva: /Reservas/Detalle/{id} muestra la reserva, sus piezas y el total de kilos, con un link para agregar equipaje"
     },
     {
       "id": "r6-bodega",
-      "texto": "R6 · Kilos en bodega (15 pts): /Vuelos/Detalle/{id} muestra los kg despachados en bodega del vuelo, calculados con SUM + JOIN + COALESCE (solo reservas confirmadas)"
+      "texto": "R6 · Kilos en bodega: /Vuelos/Detalle/{id} muestra los kg despachados en bodega del vuelo, calculados con SUM + JOIN + COALESCE (solo reservas confirmadas)"
     },
-    { "id": "push", "texto": "Hice commit y push dentro de los 120 minutos y lo veo en GitHub" },
-    { "id": "verificador", "texto": "El verificador da todo en verde para el desafío 10 (botón Verificar o dotnet run --project verificador -- 10)" }
+    {
+      "id": "push",
+      "texto": "Commit y push cada 20 minutos (al menos 7 commits en las 2 h 30 min); el último commit se ve en GitHub"
+    },
+    {
+      "id": "verificador",
+      "texto": "El verificador da todo en verde para el desafío 10 (botón Verificar o dotnet run --project verificador -- 10)"
+    }
   ],
   "quiz": [],
   "lecturas": [
-    { "id": "sqlite-lang", "titulo": "SQL As Understood By SQLite", "url": "https://www.sqlite.org/lang.html", "fuente": "SQLite", "pregunta": "Buscá las funciones de agregación: ¿qué devuelve SUM() cuando no hay ninguna fila? ¿Y total()? ¿Para qué sirve coalesce()?" },
-    { "id": "validacion", "titulo": "Validación de modelos en ASP.NET Core MVC", "url": "https://learn.microsoft.com/es-es/aspnet/core/mvc/models/validation", "fuente": "Microsoft Learn", "pregunta": "¿Qué pasa con una propiedad decimal (no nullable) que llega vacía en un formulario? ¿Por qué usamos decimal? con [Required]?" },
-    { "id": "tema12", "titulo": "Tema 12 — ViewModels", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-12-viewmodels/index.html", "fuente": "Diapositivas de la cátedra", "pregunta": "¿Por qué el formulario de equipaje no recibe directamente la entidad Equipaje? ¿Qué campo podría «colar» un usuario malintencionado?" }
+    {
+      "id": "sqlite-lang",
+      "titulo": "SQL As Understood By SQLite",
+      "url": "https://www.sqlite.org/lang.html",
+      "fuente": "SQLite",
+      "pregunta": "En las funciones de agregación: ¿qué devuelve SUM() cuando no hay ninguna fila? ¿Y total()? ¿Para qué sirve coalesce()?"
+    },
+    {
+      "id": "validacion",
+      "titulo": "Validación de modelos en ASP.NET Core MVC",
+      "url": "https://learn.microsoft.com/es-es/aspnet/core/mvc/models/validation",
+      "fuente": "Microsoft Learn",
+      "pregunta": "¿Qué ocurre con una propiedad decimal (no nullable) que llega vacía en un formulario? ¿Por qué se usa decimal? con [Required]?"
+    },
+    {
+      "id": "tema12",
+      "titulo": "Tema 12 — ViewModels",
+      "url": "https://taller-de-lenguajes-2.github.io/clases/tema-12-viewmodels/index.html",
+      "fuente": "Diapositivas de la cátedra",
+      "pregunta": "¿Por qué el formulario de equipaje no recibe directamente la entidad Equipaje? ¿Qué campo podría «colar» un usuario malintencionado?"
+    }
   ],
   "commit": {
     "mensaje": "Desafío 10: simulacro de parcial — equipaje",
-    "detalle": "Hacé un commit por requisito (R1, R2…) a medida que avanzás: si se termina el tiempo, lo pusheado es lo que cuenta."
+    "detalle": "Hacer un commit por requisito (R1, R2…) a medida que se avanza: si se termina el tiempo, lo que se subió con push es lo que cuenta."
   }
 }

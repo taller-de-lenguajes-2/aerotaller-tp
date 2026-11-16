@@ -17,7 +17,7 @@
   "lecturas": [
     { "id": "formularios", "titulo": "Tag helpers en formularios", "url": "https://learn.microsoft.com/es-es/aspnet/core/mvc/views/working-with-forms", "fuente": "Microsoft Learn", "pregunta": "¿Qué HTML genera asp-for para una propiedad int, una DateTime y un string con [EmailAddress]?" },
     { "id": "validation-tag-helpers", "titulo": "Tag helpers de validación", "url": "https://learn.microsoft.com/es-es/aspnet/core/mvc/views/working-with-forms#the-validation-tag-helpers", "fuente": "Microsoft Learn", "pregunta": "¿Qué diferencia hay entre asp-validation-summary=\"All\" y \"ModelOnly\"?" },
-    { "id": "arquitecturas", "titulo": "Arquitecturas comunes de aplicaciones web", "url": "https://learn.microsoft.com/es-es/dotnet/architecture/modern-web-apps-azure/common-web-application-architectures", "fuente": "Microsoft Learn", "pregunta": "En el diagrama de capas, ¿dónde ubicarías hoy tus reglas de reserva? ¿Dónde deberían estar?" }
+    { "id": "arquitecturas", "titulo": "Arquitecturas comunes de aplicaciones web", "url": "https://learn.microsoft.com/es-es/dotnet/architecture/modern-web-apps-azure/common-web-application-architectures", "fuente": "Microsoft Learn", "pregunta": "En el diagrama de capas, ¿dónde se ubican por ahora las reglas de reserva de AeroTaller? ¿Dónde deberían estar?" }
   ],
   "commit": null
 }

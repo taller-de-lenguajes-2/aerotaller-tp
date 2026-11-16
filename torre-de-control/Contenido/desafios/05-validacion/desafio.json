@@ -13,60 +13,60 @@
   "insignia": "validacion",
   "tareas": [
     { "id": "atributos", "texto": "Con JavaScript desactivado, enviar vacío /Reservas/Crear muestra un error al lado de cada campo (3 errores) y no se guarda nada", "ayuda": "ReservaCrearViewModel con [Required] (int? en los combos), [RegularExpression] para el asiento y [ValidateNever] en las listas; en la acción, if (!ModelState.IsValid)" },
-    { "id": "reglas-reserva", "texto": "Reservas: 25A en el AT1001 (no existe), 3A en el AT1001 (ocupado), Ana Gómez otra vez en el AT1001, el AT0999 (ya salió) y una reserva de más en el AT0500 (lleno) dan cada una su error y no tocan la base", "ayuda": "Si los vuelos de ejemplo ya salieron, borrá aerotaller.db y arrancá de nuevo: las fechas se calculan desde el día en que se creó la base" },
+    { "id": "reglas-reserva", "texto": "Reservas: 25A en el AT1001 (no existe), 3A en el AT1001 (ocupado), Ana Gómez otra vez en el AT1001, el AT0999 (ya salió) y una reserva de más en el AT0500 (lleno) dan cada una su error y no tocan la base", "ayuda": "Si los vuelos de ejemplo ya salieron, borrar aerotaller.db y volver a iniciar la aplicación: las fechas se calculan desde el día en que se creó la base" },
     { "id": "pasajeros", "texto": "/Pasajeros/Crear rechaza un DNI con puntos (30.111.222) y uno repetido (30111222); con datos válidos redirige al detalle del pasajero nuevo" },
     { "id": "vuelos", "texto": "/Vuelos/Crear rechaza una salida pasada ([FechaFutura]), origen igual a destino y un número repetido (AT1001); con datos válidos crea el vuelo" },
-    { "id": "push", "texto": "Hice commit y push con el mensaje del desafío y lo veo en GitHub" },
+    { "id": "push", "texto": "Commit y push realizados con el mensaje del desafío; el commit se ve en GitHub" },
     { "id": "verificador", "texto": "El verificador da todo en verde para el desafío 5 (botón Verificar o dotnet run --project verificador -- 5)" }
   ],
   "quiz": [
     {
       "id": "p1",
-      "texto": "En /Reservas/Crear elegís el AT1001 (20 filas), a Bruno Díaz y escribís el asiento 25A. Con un breakpoint en la línea if (!ModelState.IsValid) del POST, ¿cuánto vale ModelState.IsValid?",
+      "texto": "En /Reservas/Crear se elige el AT1001 (20 filas), a Bruno Díaz y se escribe el asiento 25A. Con un breakpoint en la línea if (!ModelState.IsValid) del POST, ¿cuánto vale ModelState.IsValid?",
       "opciones": [
         { "id": "a", "texto": "false, porque la fila 25 no existe en ese avión" },
         { "id": "b", "texto": "true: \"25A\" cumple el patrón del [RegularExpression]; que la fila exista lo decide después el controlador consultando el vuelo" },
         { "id": "c", "texto": "false, porque jQuery Validation ya marcó el error en el navegador" },
-        { "id": "d", "texto": "No frena: el navegador no deja enviar el formulario" }
+        { "id": "d", "texto": "No se detiene: el navegador no permite enviar el formulario" }
       ],
       "correcta": "b",
-      "pista": "Agregá ModelState.IsValid al panel Inspección. Pensá qué sabe un atributo: ¿conoce cuántas filas tiene el AT1001?",
-      "explicacion": "Un atributo mira un valor suelto: \"25A\" tiene la forma fila + letra A–F, así que pasa. Que esa fila exista en ESE avión necesita consultar la base, y por eso va después, con ModelState.AddModelError(nameof(modelo.Asiento), …). Es la división del tema 13: forma del campo en atributos, reglas con datos a mano.",
+      "pista": "Agregar ModelState.IsValid al panel Inspección y analizar qué información tiene un atributo: ¿conoce cuántas filas tiene el AT1001?",
+      "explicacion": "Un atributo evalúa un valor aislado: \"25A\" tiene la forma fila + letra A–F, así que es válido. Que esa fila exista en ESE avión necesita consultar la base, y por eso va después, con ModelState.AddModelError(nameof(modelo.Asiento), …). Es la división del tema 13: forma del campo en atributos, reglas con datos a mano.",
       "etiquetas": ["depurador"]
     },
     {
       "id": "p2",
       "texto": "¿Por qué VueloId es int? (y no int) en ReservaCrearViewModel?",
-      "codigo": "[Display(Name = \"Vuelo\")]\n[Required(ErrorMessage = \"Elegí un vuelo.\")]\npublic int? VueloId { get; set; }",
+      "codigo": "[Display(Name = \"Vuelo\")]\n[Required(ErrorMessage = \"El vuelo es obligatorio.\")]\npublic int? VueloId { get; set; }",
       "opciones": [
         { "id": "a", "texto": "Porque los Id de SQLite pueden ser null" },
         { "id": "b", "texto": "Porque asp-for no sabe dibujar un <select> para un int" },
-        { "id": "c", "texto": "Para que \"no eligió nada\" llegue como null y lo frene [Required]; un int siempre tiene valor (0) y [Required] lo daría por bueno" },
+        { "id": "c", "texto": "Para que la ausencia de selección llegue como null y la detecte [Required]; un int siempre tiene valor (0) y [Required] lo daría por válido" },
         { "id": "d", "texto": "Para poder usar [Range] en vez de [Required]" }
       ],
       "correcta": "c",
       "pista": "¿Qué valor tiene un int que nadie cargó? ¿Y [Required] qué controla exactamente?",
-      "explicacion": "[Required] controla que el valor no sea null (ni texto vacío). Un int nunca es null: si no llega, queda en 0 y el atributo no se entera. Con int? la opción \"— Elegir —\" (value=\"\") llega como null y aparece tu mensaje \"Elegí un vuelo.\""
+      "explicacion": "[Required] controla que el valor no sea null (ni texto vacío). Un int nunca es null: si no llega, queda en 0 y el atributo no se entera. Con int? la opción \"— Elegir —\" (value=\"\") llega como null y aparece el mensaje \"El vuelo es obligatorio.\""
     },
     {
       "id": "p3",
-      "texto": "Un compañero puso todos los atributos en el ViewModel pero su POST no tiene el if (!ModelState.IsValid). Con JavaScript desactivado envía el formulario vacío. ¿Qué pasa?",
+      "texto": "Un ViewModel tiene todos los atributos, pero el POST que lo recibe no tiene el if (!ModelState.IsValid). Con JavaScript desactivado se envía el formulario vacío. ¿Qué ocurre?",
       "opciones": [
         { "id": "a", "texto": "ASP.NET corta el request con un 400 Bad Request, como en la Web API" },
         { "id": "b", "texto": "Los atributos no se ejecutan si no hay if" },
         { "id": "c", "texto": "Se muestra el formulario con los errores, porque asp-validation-for los encuentra solo" },
-        { "id": "d", "texto": "Los atributos corren y anotan los errores en ModelState, pero nadie pregunta: la acción sigue y trata de guardar igual" }
+        { "id": "d", "texto": "Los atributos corren y anotan los errores en ModelState, pero nada los consulta: la acción continúa e intenta guardar igual" }
       ],
       "correcta": "d",
       "pista": "Los atributos llenan ModelState durante el binding. ¿Quién decide qué hacer con eso en un controlador MVC?",
-      "explicacion": "En MVC la validación solo anota: el que decide es la acción. Sin el if, sigue de largo (y acá termina en una excepción o, peor, en una fila basura). La respuesta automática 400 es de la Web API con [ApiController], no de un Controller MVC."
+      "explicacion": "En MVC la validación solo anota: quien decide es la acción. Sin el if, la ejecución continúa (y en este caso termina en una excepción o, peor, en una fila con datos inválidos). La respuesta automática 400 es de la Web API con [ApiController], no de un Controller MVC."
     }
   ],
   "lecturas": [
     { "id": "tema13", "titulo": "Tema 13 — Validación", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-13-validacion/index.html", "fuente": "Diapositivas de la cátedra", "pregunta": "En la tabla \"¿Dónde va cada validación?\", ¿en qué fila cae cada regla de las reservas de AeroTaller?" },
     { "id": "validacion-ms", "titulo": "Validación de modelos en ASP.NET Core MVC", "url": "https://learn.microsoft.com/es-es/aspnet/core/mvc/models/validation", "fuente": "Microsoft Learn", "pregunta": "¿Qué dice sobre los tipos de referencia no anulables (string sin ?) y el [Required] implícito?" },
-    { "id": "antiforgery", "titulo": "Prevenir ataques de falsificación de solicitudes (XSRF/CSRF)", "url": "https://learn.microsoft.com/es-es/aspnet/core/security/anti-request-forgery", "fuente": "Microsoft Learn", "pregunta": "¿Quién agrega el campo oculto __RequestVerificationToken a tu formulario y qué pasa si falta?" },
-    { "id": "owasp", "titulo": "Input Validation Cheat Sheet", "url": "https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html", "fuente": "OWASP", "pregunta": "¿Qué es una lista blanca (allowlist) y cuál de tus [RegularExpression] funciona así?" }
+    { "id": "antiforgery", "titulo": "Prevenir ataques de falsificación de solicitudes (XSRF/CSRF)", "url": "https://learn.microsoft.com/es-es/aspnet/core/security/anti-request-forgery", "fuente": "Microsoft Learn", "pregunta": "¿Quién agrega el campo oculto __RequestVerificationToken al formulario y qué ocurre si falta?" },
+    { "id": "owasp", "titulo": "Input Validation Cheat Sheet", "url": "https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html", "fuente": "OWASP", "pregunta": "¿Qué es una lista blanca (allowlist) y cuál de los [RegularExpression] del desafío funciona así?" }
   ],
-  "commit": { "mensaje": "Desafío 5: validación de reservas, pasajeros y vuelos", "detalle": "Si querés, hacé un commit por formulario (reservas, pasajeros, vuelos): si algo se rompe, es más fácil volver atrás." }
+  "commit": { "mensaje": "Desafío 5: validación de reservas, pasajeros y vuelos", "detalle": "Opcionalmente, puede hacerse un commit por formulario (reservas, pasajeros, vuelos): si algo se rompe, resulta más fácil volver atrás." }
 }

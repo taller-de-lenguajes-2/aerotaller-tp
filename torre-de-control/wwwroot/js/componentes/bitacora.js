@@ -37,7 +37,7 @@ export default {
     }
     async function copiarDudas() {
       const texto = dudasAbiertas.value.map((n, i) => `${i + 1}. ${n.texto}${n.desafioId ? ` (${n.desafioId})` : ''}`).join('\n');
-      try { await navigator.clipboard.writeText(texto); avisar('Dudas copiadas: pegalas en el canal de consultas.', { icono: '📋' }); } catch { /* nada */ }
+      try { await navigator.clipboard.writeText(texto); avisar('Dudas copiadas al portapapeles para el canal de consultas.', { icono: '📋' }); } catch { /* nada */ }
     }
     const fecha = f => new Date(f).toLocaleString('es-AR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
@@ -45,14 +45,14 @@ export default {
   },
   template: `
     <h1>Bitácora</h1>
-    <p class="suave">Qué hiciste, qué te falta y qué dudas tenés. Antes de la consulta, copiá tus dudas abiertas.</p>
+    <p class="suave">Registro de lo realizado, lo pendiente y las dudas. Antes de la consulta, las dudas abiertas pueden copiarse con un botón.</p>
 
     <form class="tarjeta" @submit.prevent="agregar" style="margin-bottom:1.2rem">
       <div class="fila">
         <select v-model="nueva.tipo" style="padding:.5rem;border-radius:8px;border:1px solid var(--linea);background:var(--papel);color:var(--tinta)">
           <option>Duda</option><option>Hice</option><option>Falta</option><option>Nota</option>
         </select>
-        <input type="text" v-model="nueva.texto" placeholder="Ej.: no entiendo por qué las listas no vuelven en el POST" style="flex:1;min-width:240px">
+        <input type="text" v-model="nueva.texto" placeholder="Ej.: por qué las listas no vuelven en el POST" style="flex:1;min-width:240px">
         <button class="boton" type="submit">Anotar</button>
       </div>
     </form>

@@ -1,7 +1,7 @@
 // Las reglas del avance:
 //  · un desafío se desbloquea cuando el anterior está completo (salvo en modo libre),
 //  · se completa con todas las tareas marcadas y el cuestionario aprobado,
-//  · un checkpoint se completa escribiendo qué hiciste y qué te falta.
+//  · un checkpoint se completa registrando lo realizado y lo pendiente.
 public class ProgresoService(
     IContenidoRepository contenido,
     IAlumnoRepository alumnos,
@@ -55,7 +55,7 @@ public class ProgresoService(
         Dictionary<string, EstadoDesafio> estados = progreso.Estados(alumnoId);
         string estado = Estado(alumno, desafios, estados, desafioId);
         if (estado == Bloqueado)
-            throw new SolicitudInvalidaException("Este desafío está bloqueado: completá el anterior para despegar.");
+            throw new SolicitudInvalidaException("Este desafío está bloqueado: primero debe completarse el anterior.");
 
         progreso.Iniciar(alumnoId, desafioId);
         estados = progreso.Estados(alumnoId);
@@ -107,14 +107,14 @@ public class ProgresoService(
             faltantes.Add($"Tarea sin marcar: {tarea.Texto}");
 
         if (desafio.Quiz.Count > 0 && !intentos.Listar(alumnoId, desafioId).Any(i => i.Aprobado))
-            faltantes.Add("Aprobar el cuestionario del checkpoint.");
+            faltantes.Add("Cuestionario sin aprobar.");
 
         if (faltantes.Count > 0)
-            throw new SolicitudInvalidaException("Todavía no podés despegar: revisá la lista.", faltantes);
+            throw new SolicitudInvalidaException("No es posible completar la escala: quedan requisitos pendientes.", faltantes);
 
         progreso.Completar(alumnoId, desafioId);
         logger.LogInformation("Alumno {AlumnoId} completó {DesafioId}", alumnoId, desafioId);
-        return new ResultadoAccion(true, $"¡{desafio.Titulo} completado!", insignias.Evaluar(alumnoId));
+        return new ResultadoAccion(true, $"{desafio.Titulo}: completado.", insignias.Evaluar(alumnoId));
     }
 
     public ResultadoAccion CompletarCheckpoint(int alumnoId, string desafioId, CheckpointEntrada entrada)
@@ -124,8 +124,8 @@ public class ProgresoService(
             throw new SolicitudInvalidaException("Esto no es un checkpoint.");
 
         var faltantes = new List<string>();
-        if (string.IsNullOrWhiteSpace(entrada.Hice)) faltantes.Add("Contá qué hiciste hasta acá.");
-        if (string.IsNullOrWhiteSpace(entrada.Falta)) faltantes.Add("Contá qué te falta o qué querés repasar.");
+        if (string.IsNullOrWhiteSpace(entrada.Hice)) faltantes.Add("Falta describir el trabajo realizado.");
+        if (string.IsNullOrWhiteSpace(entrada.Falta)) faltantes.Add("Falta describir lo pendiente o los temas para repasar.");
         if (faltantes.Count > 0)
             throw new SolicitudInvalidaException("La bitácora está incompleta.", faltantes);
 
@@ -136,7 +136,7 @@ public class ProgresoService(
             bitacora.Insertar(new NotaBitacora { AlumnoId = alumnoId, DesafioId = desafioId, Tipo = TiposNota.Duda, Texto = entrada.Dudas.Trim(), Fecha = ahora });
 
         progreso.Completar(alumnoId, desafioId);
-        return new ResultadoAccion(true, "Bitácora guardada. ¡Seguimos viaje!", insignias.Evaluar(alumnoId));
+        return new ResultadoAccion(true, "Bitácora guardada.", insignias.Evaluar(alumnoId));
     }
 
     public ResultadoAccion AbrirLectura(int alumnoId, string desafioId, string lecturaId)

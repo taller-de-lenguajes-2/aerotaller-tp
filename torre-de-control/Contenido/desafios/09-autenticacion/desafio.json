@@ -3,7 +3,7 @@
   "codigo": "AUT",
   "numero": 9,
   "titulo": "Autenticación",
-  "subtitulo": "Login, sesión y roles: cada uno entra donde le toca",
+  "subtitulo": "Login, sesión y roles: cada usuario accede solo a lo que le corresponde",
   "tipo": "desafio",
   "minutosEstimados": 120,
   "minutosLimite": null,
@@ -14,28 +14,28 @@
   "tareas": [
     {
       "id": "usuarios",
-      "texto": "Existe la tabla Usuario con los datos de material/datos-usuarios.sql (borré aerotaller.db), y UsuarioRepository y UsuarioRepositoryFalso están registrados en las dos ramas de Program.cs",
-      "ayuda": "En DB Browser: SELECT * FROM Usuario; tiene que devolver admin y mostrador"
+      "texto": "Tabla Usuario creada con los datos de material/datos-usuarios.sql (aerotaller.db borrada y recreada); UsuarioRepository y UsuarioRepositoryFalso registrados en las dos ramas de Program.cs",
+      "ayuda": "En DB Browser, SELECT * FROM Usuario; debe devolver admin y mostrador"
     },
     {
       "id": "login",
-      "texto": "Ingreso con admin / aero2026 y con mostrador / vuelos2026; con una clave mala veo «Usuario o contraseña incorrectos.»; Salir cierra la sesión"
+      "texto": "Ingreso correcto con admin / aero2026 y con mostrador / vuelos2026; con una clave incorrecta se muestra «Usuario o contraseña incorrectos.»; Salir cierra la sesión"
     },
     {
       "id": "filtros",
-      "texto": "Sin sesión, /Reservas me manda a /Login y, después de ingresar, vuelvo a /Reservas; /, /Vuelos y /Vuelos/Detalle/{id} se ven sin sesión"
+      "texto": "Sin sesión, /Reservas redirige a /Login y, después de ingresar, se vuelve a /Reservas; /, /Vuelos y /Vuelos/Detalle/{id} se ven sin sesión"
     },
     {
       "id": "roles",
       "texto": "Con mostrador, /Vuelos/Crear muestra la vista SinPermiso; con admin muestra el formulario"
     },
-    { "id": "push", "texto": "Hice commit y push con el mensaje del desafío y lo veo en GitHub" },
+    { "id": "push", "texto": "Commit y push realizados con el mensaje del desafío; el commit se ve en GitHub" },
     { "id": "verificador", "texto": "El verificador da todo en verde para el desafío 9 (botón Verificar o dotnet run --project verificador -- 9)" }
   ],
   "quiz": [
     {
       "id": "p1",
-      "texto": "Sin iniciar sesión, ponés un breakpoint en RequiereLoginAttribute.OnActionExecuting y abrís /Reservas?estado=Cancelada. Con F10 pasás la línea de var pedido y en Variables lo desplegás para mirar Path y QueryString. ¿Qué valor va a viajar como returnUrl?",
+      "texto": "Sin sesión iniciada, con un breakpoint en RequiereLoginAttribute.OnActionExecuting, se abre /Reservas?estado=Cancelada. Con F10 se pasa la línea de var pedido y en Variables se despliega para observar Path y QueryString. ¿Qué valor viaja como returnUrl?",
       "codigo": "var pedido = context.HttpContext.Request;\ncontext.Result = new RedirectToActionResult(\"Index\", \"Login\",\n    new { returnUrl = pedido.Path + pedido.QueryString });",
       "opciones": [
         { "id": "a", "texto": "\"/Reservas?estado=Cancelada\"" },
@@ -44,8 +44,8 @@
         { "id": "d", "texto": "\"/Login?returnUrl=%2FReservas\"" }
       ],
       "correcta": "a",
-      "pista": "Path es la ruta sin el dominio; QueryString es lo que viene desde el signo de pregunta. Todavía no se redirigió a ningún lado: estás ANTES de que corra la acción.",
-      "explicacion": "Path es \"/Reservas\" y QueryString es \"?estado=Cancelada\": juntos, la dirección relativa a la que quería ir. Ese valor viaja como returnUrl al login, y después de ingresar el LoginController vuelve ahí (si Url.IsLocalUrl lo aprueba). La acción ReservasController.Index nunca llegó a ejecutarse: el filtro puso un Result y cortó.",
+      "pista": "Path es la ruta sin el dominio; QueryString es lo que viene desde el signo de pregunta. Todavía no hubo ninguna redirección: la ejecución está ANTES de que corra la acción.",
+      "explicacion": "Path es \"/Reservas\" y QueryString es \"?estado=Cancelada\": juntos forman la dirección relativa solicitada. Ese valor viaja como returnUrl al login y, después de ingresar, el LoginController vuelve ahí (si Url.IsLocalUrl lo aprueba). La acción ReservasController.Index nunca llegó a ejecutarse: el filtro asignó un Result y cortó el flujo.",
       "etiquetas": ["depurador"]
     },
     {
@@ -58,31 +58,31 @@
         { "id": "d", "texto": "Porque la sesión no usa cookies, así funciona aunque el navegador las bloquee" }
       ],
       "correcta": "c",
-      "pista": "Pensá dónde está guardado cada dato y quién lo puede tocar. Abrí las herramientas del navegador (Aplicación → Cookies): ¿qué ves en .AspNetCore.Session?",
+      "pista": "Analizar dónde está guardado cada dato y quién lo puede modificar. En las herramientas del navegador (Aplicación → Cookies), ¿qué contiene .AspNetCore.Session?",
       "explicacion": "Todo lo que está en el navegador, el usuario lo puede leer y cambiar. La sesión deja Usuario, Nombre y Rol en el servidor, y en el navegador solo queda la cookie .AspNetCore.Session con un identificador. La sesión sí usa una cookie (para ese Id), y no dura para siempre: se pierde con IdleTimeout o al reiniciar la app."
     },
     {
       "id": "p3",
-      "texto": "Iniciaste sesión como mostrador y entrás a /Vuelos/Crear. ¿Qué pasa, y qué código HTTP sería el «de manual» para esta situación?",
+      "texto": "Con una sesión iniciada como mostrador, se accede a /Vuelos/Crear. ¿Qué ocurre, y qué código HTTP sería el «de manual» para esta situación?",
       "opciones": [
-        { "id": "a", "texto": "Te redirige al login: 401 Unauthorized, porque no estás autenticado" },
+        { "id": "a", "texto": "Se redirige al login: 401 Unauthorized, porque el usuario no está autenticado" },
         { "id": "b", "texto": "404 Not Found, porque para el mostrador esa página no existe" },
-        { "id": "c", "texto": "Ves el formulario, pero el POST falla con 400 Bad Request" },
-        { "id": "d", "texto": "Ves la vista SinPermiso: estás autenticado pero no autorizado, que en HTTP es 403 Forbidden" }
+        { "id": "c", "texto": "Se muestra el formulario, pero el POST falla con 400 Bad Request" },
+        { "id": "d", "texto": "Se muestra la vista SinPermiso: el usuario está autenticado pero no autorizado, que en HTTP es 403 Forbidden" }
       ],
       "correcta": "d",
-      "pista": "Separá las dos preguntas: ¿la app sabe quién sos? ¿Te deja hacer eso? Cada «no» tiene su código.",
-      "explicacion": "Autenticación (¿quién sos?) ya pasó: hay sesión. Falla la autorización (¿qué podés hacer?): eso es 403 Forbidden. 401 es para cuando no se sabe quién sos (por eso sin sesión se manda al login). Ojo: nuestro filtro devuelve la vista SinPermiso con código 200; con [Authorize] y autenticación por cookie de ASP.NET Core sería un 403 (o una redirección a una página de acceso denegado)."
+      "pista": "Separar las dos preguntas: ¿la app sabe quién es el usuario? ¿Le permite hacer eso? Cada «no» tiene su código.",
+      "explicacion": "La autenticación (¿quién es?) ya se superó: hay sesión. Falla la autorización (¿qué puede hacer?): eso es 403 Forbidden. 401 corresponde a cuando no se sabe quién es el usuario (por eso, sin sesión, se redirige al login). Importante: el filtro del TP devuelve la vista SinPermiso con código 200; con [Authorize] y autenticación por cookie de ASP.NET Core sería un 403 (o una redirección a una página de acceso denegado)."
     }
   ],
   "lecturas": [
-    { "id": "tema15", "titulo": "Tema 15 — Cookies y sesión", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-15-cookies-y-sesion/index.html", "fuente": "Diapositivas de la cátedra", "pregunta": "En «¿Qué es un filtro?»: ¿qué diferencia hay entre un middleware y un filtro, y cuál de los dos ya venías usando sin saberlo?" },
-    { "id": "sesion", "titulo": "Administración de sesiones y estado en ASP.NET Core", "url": "https://learn.microsoft.com/es-es/aspnet/core/fundamentals/app-state", "fuente": "Microsoft Learn", "pregunta": "¿Dónde se guardan los datos de la sesión con AddDistributedMemoryCache, y qué les pasa si reiniciás la app o si la corrés en dos servidores?" },
-    { "id": "cookie-auth", "titulo": "Autenticación con cookies sin ASP.NET Core Identity", "url": "https://learn.microsoft.com/es-es/aspnet/core/security/authentication/cookie", "fuente": "Microsoft Learn", "pregunta": "Para investigar: ¿cómo reemplazarías [RequiereLogin] por [Authorize]? ¿Qué es un claim y dónde quedaría el rol?" },
+    { "id": "tema15", "titulo": "Tema 15 — Cookies y sesión", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-15-cookies-y-sesion/index.html", "fuente": "Diapositivas de la cátedra", "pregunta": "En «¿Qué es un filtro?»: ¿qué diferencia hay entre un middleware y un filtro, y cuál de los dos ya se venía usando de forma implícita?" },
+    { "id": "sesion", "titulo": "Administración de sesiones y estado en ASP.NET Core", "url": "https://learn.microsoft.com/es-es/aspnet/core/fundamentals/app-state", "fuente": "Microsoft Learn", "pregunta": "¿Dónde se guardan los datos de la sesión con AddDistributedMemoryCache, y qué les ocurre si se reinicia la app o si se ejecuta en dos servidores?" },
+    { "id": "cookie-auth", "titulo": "Autenticación con cookies sin ASP.NET Core Identity", "url": "https://learn.microsoft.com/es-es/aspnet/core/security/authentication/cookie", "fuente": "Microsoft Learn", "pregunta": "Para investigar: ¿cómo se reemplazaría [RequiereLogin] por [Authorize]? ¿Qué es un claim y dónde quedaría el rol?" },
     { "id": "owasp-claves", "titulo": "Password Storage Cheat Sheet", "url": "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html", "fuente": "OWASP", "pregunta": "¿Por qué no alcanza con un hash rápido (como SHA-256) para guardar contraseñas? ¿Qué agrega una «sal»?" }
   ],
   "commit": {
     "mensaje": "Desafío 9: login, sesión y roles",
-    "detalle": "Revisá el diff: aerotaller.sql (tabla Usuario + datos), Models/Usuario.cs, el repositorio y su falso, AutenticacionService, LoginController, Filtros/, SinPermiso y el layout."
+    "detalle": "Revisar el diff: aerotaller.sql (tabla Usuario + datos), Models/Usuario.cs, el repositorio y su falso, AutenticacionService, LoginController, Filtros/, SinPermiso y el layout."
   }
 }

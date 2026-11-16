@@ -1,7 +1,7 @@
 ## 🎯 Misión
 
-Hoy cualquiera que abra AeroTaller puede reservar, cancelar, borrar pasajeros y crear vuelos. Un aeropuerto sin control
-de acceso. En este desafío construimos la **torre de control**: quién entra y hasta dónde.
+En el estado actual, cualquiera que abra AeroTaller puede reservar, cancelar, borrar pasajeros y crear vuelos: un
+aeropuerto sin control de acceso. En este desafío se construye la **torre de control**: quién entra y hasta dónde.
 
 | Pantalla | Sin sesión | Mostrador | Admin |
 |---|---|---|---|
@@ -9,18 +9,18 @@ de acceso. En este desafío construimos la **torre de control**: quién entra y 
 | `/Pasajeros…`, `/Reservas…` | → al login | ✔ | ✔ |
 | `/Vuelos/Crear`, `POST /Pasajeros/Eliminar/{id}` | → al login | **Sin permiso** | ✔ |
 
-Lo que tiene que quedar andando:
+Lo que debe quedar funcionando:
 
 1. La tabla `Usuario` con los dos usuarios de prueba (`admin` / `aero2026` y `mostrador` / `vuelos2026`).
-2. `UsuarioRepository` (y su falso, para que el desafío 7 siga andando).
-3. `AutenticacionService`: comprueba la clave y guarda quién es en la **sesión**.
-4. `LoginController` con el formulario, `Salir`, y la vuelta a donde querías ir (`returnUrl`).
+2. `UsuarioRepository` (y su falso, para que el desafío 7 siga funcionando).
+3. `AutenticacionService`: comprueba la clave y guarda en la **sesión** quién es el usuario.
+4. `LoginController` con el formulario, `Salir`, y el regreso a la dirección solicitada originalmente (`returnUrl`).
 5. Dos **filtros**: `[RequiereLogin]` y `[RequiereRol(...)]`, y la vista `SinPermiso`.
-6. El layout que muestra quién está conectado y solo los links que le corresponden.
+6. El layout que muestra quién está conectado y solo los enlaces que le corresponden.
 
-Un detalle lindo: el mapa de asientos (`/Vuelos/Detalle/{id}`) es público, pero cada asiento libre lleva a `/Reservas/Crear`,
-que pide sesión. Si hacés clic sin estar logueado, vas al login… y al ingresar volvés **al formulario con el vuelo y el
-asiento ya elegidos**. Eso es el `returnUrl`.
+Un detalle a destacar: el mapa de asientos (`/Vuelos/Detalle/{id}`) es público, pero cada asiento libre lleva a
+`/Reservas/Crear`, que requiere sesión. Al hacer clic sin haber iniciado sesión se llega al login… y al ingresar se vuelve
+**al formulario con el vuelo y el asiento ya elegidos**. Eso es el `returnUrl`.
 
 ## 📚 Repaso
 
@@ -28,12 +28,12 @@ Dos preguntas distintas, en este orden:
 
 | | Pregunta | Si falla |
 |---|---|---|
-| **Autenticación** | ¿Sos quien decís ser? (usuario y clave) | 401 Unauthorized, o se lo manda al login |
-| **Autorización** | ¿Qué podés hacer? (tu rol) | 403 Forbidden, o una página «sin permiso» |
+| **Autenticación** | ¿El usuario es quien dice ser? (usuario y clave) | 401 Unauthorized, o se lo redirige al login |
+| **Autorización** | ¿Qué puede hacer? (su rol) | 403 Forbidden, o una página «sin permiso» |
 
-El problema: **HTTP no tiene estado**. Cada request llega sin saber nada del anterior: el servidor no recuerda que hace un
-minuto te logueaste. Para recordar algo entre requests hacen falta cookies, y para que el usuario no pueda tocar lo que
-recordamos, la **sesión**:
+El problema: **HTTP no tiene estado**. Cada request llega sin información del anterior: el servidor no recuerda que hace
+un minuto el usuario inició sesión. Para recordar algo entre requests hacen falta cookies, y para que el usuario no pueda
+modificar lo que se recuerda, la **sesión**:
 
 | | Cookie propia | Sesión |
 |---|---|---|
@@ -42,26 +42,28 @@ recordamos, la **sesión**:
 | Para | preferencias inofensivas | quién inició sesión y su rol |
 
 Y para no repetir el mismo `if (no hay sesión) return RedirectToAction("Index", "Login");` en cada acción: un **filtro**,
-código que corre **antes** de la acción sin estar escrito adentro. Si el filtro pone un `context.Result`, la acción no se
-ejecuta. Ya venías usando uno: `[ValidateAntiForgeryToken]`.
+código que corre **antes** de la acción sin estar escrito dentro de ella. Si el filtro asigna un `context.Result`, la acción
+no se ejecuta. Ya se venía usando uno: `[ValidateAntiForgeryToken]`.
 
 :::catedra
-Esto es el [tema 15](https://taller-de-lenguajes-2.github.io/clases/tema-15-cookies-y-sesion/index.html), con el login de la
-clínica. Las diferencias con lo que vimos en clase:
+Esto corresponde al [tema 15](https://taller-de-lenguajes-2.github.io/clases/tema-15-cookies-y-sesion/index.html), con el
+login de la clínica. Las diferencias con lo visto en clase:
 
-- En clase los usuarios estaban **en una lista en memoria** (`UsuarioRepository` Singleton). Acá están en la **tabla `Usuario`**,
-  así que el repositorio es como los otros: recibe `ConexionDb` y es Scoped.
-- En clase `LoginController` recibía `AutenticacionService` (la clase). Acá recibe `IAutenticacionService`: es el desafío 7 aplicado.
-- En clase `[RequiereRol("Admin")]` recibía **un** rol y no miraba si había sesión. Acá recibe **varios** (`params string[] roles`)
-  y, si no hay sesión, manda al login (no tiene sentido decir «sin permiso» a alguien que no sabemos quién es).
-- Las claves siguen en **texto plano**, como en clase: solo para el TP. Cómo se hace bien queda en «Para investigar».
+- En clase los usuarios estaban **en una lista en memoria** (`UsuarioRepository` Singleton). En el TP están en la **tabla
+  `Usuario`**, por lo que el repositorio es como los otros: recibe `ConexionDb` y es Scoped.
+- En clase `LoginController` recibía `AutenticacionService` (la clase). En el TP recibe `IAutenticacionService`: es el
+  desafío 7 aplicado.
+- En clase `[RequiereRol("Admin")]` recibía **un** rol y no verificaba si había sesión. En el TP recibe **varios**
+  (`params string[] roles`) y, si no hay sesión, redirige al login (no tiene sentido responder «sin permiso» a alguien
+  cuya identidad se desconoce).
+- Las claves siguen en **texto plano**, como en clase: solo para el TP. La forma correcta de hacerlo queda en «Para investigar».
 :::
 
 ## 💻 Paso a paso
 
 ### Paso 1 · La tabla Usuario
 
-En `aerotaller.sql` agregá `DROP TABLE IF EXISTS Usuario;` junto a los otros `DROP` y la tabla (respetá el contrato):
+En `aerotaller.sql`, agregar `DROP TABLE IF EXISTS Usuario;` junto a los otros `DROP` y la tabla (respetando el contrato):
 
 ```sql
 -- Usuarios del sistema (no confundir con Pasajero: los pasajeros no inician sesión).
@@ -75,8 +77,8 @@ CREATE TABLE Usuario (
 );
 ```
 
-Pegá al final del script el contenido de `material/datos-usuarios.sql` (los dos `INSERT`). Apagá la app, **borrá
-`AeroTaller/aerotaller.db`** y arrancá: se crea de nuevo, con la tabla nueva. Comprobalo en DB Browser:
+Pegar al final del script el contenido de `material/datos-usuarios.sql` (los dos `INSERT`). Detener la app, **borrar
+`AeroTaller/aerotaller.db`** y volver a iniciarla: la base se crea de nuevo, con la tabla nueva. Comprobarlo en DB Browser:
 `SELECT * FROM Usuario;`.
 
 ### Paso 2 · El modelo y su repositorio
@@ -110,8 +112,8 @@ public interface IUsuarioRepository
 }
 ```
 
-Escribí `UsuarioRepository` vos: es un `SELECT … WHERE NombreUsuario = @usuario` con `AddWithValue`, igual que cualquier
-`Obtener` de los desafíos anteriores. Si no lo encuentra, devuelve `null`.
+`UsuarioRepository` se escribe sin ayuda: es un `SELECT … WHERE NombreUsuario = @usuario` con `AddWithValue`, igual que
+cualquier `Obtener` de los desafíos anteriores. Si no encuentra al usuario, devuelve `null`.
 
 :::solucion Ver UsuarioRepository y el falso
 ```csharp
@@ -164,7 +166,7 @@ Usuarios =
 ```
 :::
 
-Registralo en **las dos ramas** del `if` de `Program.cs`:
+Registrarlo en **las dos ramas** del `if` de `Program.cs`:
 
 ```csharp
 // rama Falso
@@ -184,7 +186,7 @@ builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(20);   // sin actividad por 20 minutos, la sesión se pierde
     options.Cookie.HttpOnly = true;                   // JavaScript no puede leer la cookie de sesión
-    options.Cookie.IsEssential = true;                // se manda aunque no se acepten cookies opcionales
+    options.Cookie.IsEssential = true;                // se envía aunque no se acepten cookies opcionales
 });
 builder.Services.AddHttpContextAccessor();            // para que un SERVICIO llegue a la sesión
 builder.Services.AddScoped<IAutenticacionService, AutenticacionService>();
@@ -205,7 +207,7 @@ app.MapControllerRoute(
 
 ### Paso 4 · El servicio de autenticación
 
-Un servicio no es un controlador: no tiene `HttpContext` a mano. `IHttpContextAccessor` le da el del request actual.
+Un servicio no es un controlador: no tiene `HttpContext` disponible. `IHttpContextAccessor` le provee el del request actual.
 
 ```csharp
 // Servicios/Interfaces.cs
@@ -239,7 +241,7 @@ public class AutenticacionService(
         Usuario? usuario = usuarios.Obtener(nombreUsuario);
         if (usuario is null || usuario.Clave != clave)
         {
-            // Se registra el intento (desafío 8), NUNCA la clave que escribió
+            // Se registra el intento (desafío 8), NUNCA la clave ingresada
             logger.LogWarning("Login fallido para el usuario {NombreUsuario}", nombreUsuario);
             return false;
         }
@@ -273,11 +275,11 @@ using System.ComponentModel.DataAnnotations;
 public class LoginViewModel
 {
     [Display(Name = "Usuario")]
-    [Required(ErrorMessage = "Ingresá tu usuario.")]
+    [Required(ErrorMessage = "El usuario es obligatorio.")]
     public string NombreUsuario { get; set; } = "";
 
     [Display(Name = "Contraseña")]
-    [Required(ErrorMessage = "Ingresá tu contraseña.")]
+    [Required(ErrorMessage = "La contraseña es obligatoria.")]
     [DataType(DataType.Password)]                       // asp-for genera type="password"
     public string Clave { get; set; } = "";
 
@@ -307,12 +309,12 @@ public class LoginController(IAutenticacionService autenticacion) : Controller
 
         if (!autenticacion.Login(modelo.NombreUsuario, modelo.Clave))
         {
-            // No decir cuál de los dos está mal: no le damos pistas a quien prueba usuarios
+            // No indicar cuál de los dos es incorrecto: no se dan pistas a quien prueba usuarios
             ModelState.AddModelError("", "Usuario o contraseña incorrectos.");
             return View(modelo);
         }
 
-        // Solo se vuelve a una dirección de NUESTRO sitio (evita redirecciones a otro sitio)
+        // Solo se vuelve a una dirección del PROPIO sitio (evita redirecciones a otro sitio)
         if (Url.IsLocalUrl(modelo.ReturnUrl)) return Redirect(modelo.ReturnUrl);
         return RedirectToAction("Index", "Home");
     }
@@ -328,9 +330,9 @@ public class LoginController(IAutenticacionService autenticacion) : Controller
 }
 ```
 
-La vista `Views/Login/Index.cshtml` es un formulario como los del desafío 5: `asp-validation-summary="ModelOnly"` (ahí
-aparece el error de clave, que va con clave `""`), los dos campos con su `asp-validation-for`, y el `ReturnUrl` **oculto**
-para que vuelva en el POST:
+La vista `Views/Login/Index.cshtml` es un formulario como los del desafío 5: `asp-validation-summary="ModelOnly"` (allí
+aparece el error de clave, que se agrega con clave `""`), los dos campos con su `asp-validation-for`, y el `ReturnUrl`
+**oculto** para que vuelva en el POST:
 
 ```cshtml
 <form asp-action="Index" method="post" class="formulario">
@@ -343,13 +345,13 @@ para que vuelva en el POST:
 
 ### Paso 6 · Los filtros: el control de pasaportes
 
-Creá `Filtros/RequiereLoginAttribute.cs` con los dos filtros:
+Crear `Filtros/RequiereLoginAttribute.cs` con los dos filtros:
 
 ```csharp
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-// Corre ANTES de la acción. Si no hay sesión, no deja pasar y manda al login, recordando a dónde quería ir.
+// Corre ANTES de la acción. Si no hay sesión, no deja pasar y redirige al login, recordando la dirección solicitada.
 public class RequiereLoginAttribute : ActionFilterAttribute
 {
     public override void OnActionExecuting(ActionExecutingContext context)
@@ -385,7 +387,7 @@ public class RequiereRolAttribute(params string[] roles) : ActionFilterAttribute
 }
 ```
 
-La vista `Views/Shared/SinPermiso.cshtml` (en `Shared` para que la encuentre desde cualquier controlador):
+La vista `Views/Shared/SinPermiso.cshtml` (en `Shared` para que se encuentre desde cualquier controlador):
 
 ```cshtml
 @{
@@ -393,14 +395,14 @@ La vista `Views/Shared/SinPermiso.cshtml` (en `Shared` para que la encuentre des
 }
 
 <h1>Sin permiso</h1>
-<p>Iniciaste sesión, pero tu usuario no tiene permiso para entrar acá.</p>
+<p>El usuario actual no tiene permiso para acceder a esta sección.</p>
 <p><a asp-controller="Home" asp-action="Index">← Volver al inicio</a></p>
 ```
 
-Y ahora, a **ponerlos**:
+A continuación, **aplicarlos**:
 
 ```csharp
-[RequiereLogin]   // todas las acciones piden sesión iniciada
+[RequiereLogin]   // todas las acciones requieren sesión iniciada
 public class ReservasController(...) : Controller { … }
 
 [RequiereLogin]
@@ -426,11 +428,11 @@ public IActionResult Crear(VueloCrearViewModel modelo) { … }
 ```
 
 :::cuidado
-Proteger solo el GET de `Crear` no sirve: cualquiera puede mandar el POST directo (con Postman, con `curl`, o copiando el
-formulario). **Cada acción que cambia datos lleva su filtro.**
+Proteger solo el GET de `Crear` no alcanza: cualquiera puede enviar el POST directamente (con Postman, con `curl`, o
+copiando el formulario). **Cada acción que cambia datos lleva su filtro.**
 :::
 
-### Paso 7 · El layout sabe quién está
+### Paso 7 · El layout sabe quién está conectado
 
 La vista también puede leer la sesión: `Context` es el `HttpContext` del request. En `_Layout.cshtml`:
 
@@ -468,57 +470,58 @@ La vista también puede leer la sesión: `Context` es el `HttpContext` del reque
 </div>
 ```
 
-`Salir` es un **formulario POST** (el tag helper agrega el token antiforgery solo), no un link: cerrar sesión cambia el estado.
-La clase `enlace` (ya está en `sitio.css`) hace que el botón parezca un link.
+`Salir` es un **formulario POST** (el tag helper agrega el token antiforgery automáticamente), no un enlace: cerrar sesión
+cambia el estado. La clase `enlace` (ya incluida en `sitio.css`) hace que el botón se vea como un enlace.
 
 :::nota
-Ocultar «Nuevo vuelo» al mostrador es **comodidad**, no seguridad. Lo que protege es el filtro en el servidor: probá escribir
-`/Vuelos/Crear` a mano con `mostrador` y tenés que ver «Sin permiso».
+Ocultar «Nuevo vuelo» al mostrador es **comodidad**, no seguridad. Lo que protege es el filtro en el servidor: al escribir
+`/Vuelos/Crear` a mano con `mostrador`, debe verse «Sin permiso».
 :::
 
-### Paso 8 · Probar todo, como lo va a probar el verificador
+### Paso 8 · Probar todo, como lo prueba el verificador
 
 | Prueba | Resultado esperado |
 |---|---|
 | Sin sesión, `/Reservas` | redirige a `/Login?returnUrl=%2FReservas` |
-| Ingresar como `mostrador` desde ahí | volvés a `/Reservas` |
-| Sin sesión, clic en un asiento libre del mapa, e ingresar | volvés a `/Reservas/Crear?vueloId=…&asiento=…` con todo precargado |
-| Clave mala | «Usuario o contraseña incorrectos.» y seguís en el login |
+| Ingresar como `mostrador` desde ahí | se vuelve a `/Reservas` |
+| Sin sesión, clic en un asiento libre del mapa, e ingresar | se vuelve a `/Reservas/Crear?vueloId=…&asiento=…` con todo precargado |
+| Clave incorrecta | «Usuario o contraseña incorrectos.» y se permanece en el login |
 | `mostrador` en `/Vuelos/Crear` | vista «Sin permiso» |
 | `admin` en `/Vuelos/Crear` | el formulario |
 | Salir, y después `/Reservas` | de nuevo al login |
-| `/Login?returnUrl=https://otro-sitio.com` e ingresar | terminás en el inicio de AeroTaller, no en el otro sitio |
-| «AeroTaller (datos falsos)» e ingresar como `admin` | arriba dice «Admin (memoria)» |
+| `/Login?returnUrl=https://otro-sitio.com` e ingresar | se termina en el inicio de AeroTaller, no en el otro sitio |
+| «AeroTaller (datos falsos)» e ingresar como `admin` | en la parte superior aparece «Admin (memoria)» |
 
-Abrí las herramientas del navegador (**F12 → Aplicación → Cookies**): vas a ver `.AspNetCore.Session` con un valor ilegible.
-Ese es todo lo que el navegador sabe de vos. El rol está en el servidor. Mirá también `logs/`: los logins (y los fallidos)
-quedaron registrados, sin ninguna clave.
+En las herramientas del navegador (**F12 → Aplicación → Cookies**) aparece `.AspNetCore.Session` con un valor ilegible.
+Eso es todo lo que el navegador sabe del usuario; el rol está en el servidor. Revisar también `logs/`: los inicios de
+sesión (y los fallidos) quedaron registrados, sin ninguna clave.
 
 ## 🔴 Breakpoints
 
 :::breakpoint RequiereLoginAttribute.cs · OnActionExecuting, primera línea
-Sin sesión, abrí `/Reservas?estado=Cancelada`. Con F10 mirá `pedido.Path` y `pedido.QueryString` en Variables. Poné otro
-breakpoint en `ReservasController.Index` y apretá F5: **nunca frena ahí**, porque el filtro puso un `Result` y cortó.
-Mirá la **Pila de llamadas** del filtro: quien lo llama es `ControllerActionInvoker`, la misma pieza que después llama a tu acción.
+Sin sesión, abrir `/Reservas?estado=Cancelada`. Con F10, observar `pedido.Path` y `pedido.QueryString` en Variables.
+Colocar otro breakpoint en `ReservasController.Index` y presionar F5: la ejecución **nunca se detiene ahí**, porque el
+filtro asignó un `Result` y cortó el flujo. Observar la **Pila de llamadas** del filtro: quien lo llama es
+`ControllerActionInvoker`, la misma pieza que después llama a la acción.
 :::
 
 :::breakpoint LoginController.cs · Index (POST), en el if (Url.IsLocalUrl(…))
-Llegá al login desde `/Reservas` y mirá `modelo.ReturnUrl` (`/Reservas`): `IsLocalUrl` da `true`. Ahora abrí a mano
-`/Login?returnUrl=https://otro-sitio.com` e ingresá: `IsLocalUrl` da `false` y terminás en el inicio. Sin ese `if`, un link
-trucho mandado por mail podría llevar al usuario, recién logueado, a un sitio que imita a AeroTaller.
+Llegar al login desde `/Reservas` y observar `modelo.ReturnUrl` (`/Reservas`): `IsLocalUrl` da `true`. Luego abrir a mano
+`/Login?returnUrl=https://otro-sitio.com` e ingresar: `IsLocalUrl` da `false` y se termina en el inicio. Sin ese `if`, un
+enlace malicioso enviado por correo podría llevar al usuario, recién autenticado, a un sitio que imita a AeroTaller.
 :::
 
 :::breakpoint AutenticacionService.cs · Login, en la línea del primer SetString
-Ingresá con `mostrador` desde una ventana normal y con `admin` desde una de incógnito. En Inspección (Watch) agregá
-`Sesion.Id`: es distinto en cada navegador. El mismo `AutenticacionService`, el mismo código, dos sesiones separadas. Probá
-también con una clave mala: ¿qué vale `usuario`? ¿Y si el usuario no existe?
+Ingresar con `mostrador` desde una ventana normal y con `admin` desde una de incógnito. En Inspección (Watch), agregar
+`Sesion.Id`: es distinto en cada navegador. El mismo `AutenticacionService`, el mismo código, dos sesiones separadas.
+Probar también con una clave incorrecta: ¿qué vale `usuario`? ¿Y si el usuario no existe?
 :::
 
-Preguntate:
+Preguntas para analizar:
 
-- Si `app.UseSession()` va **después** de `MapControllerRoute`, ¿qué pasa en el primer request?
-- Si reiniciás la app con alguien logueado, ¿sigue logueado? ¿Por qué? (Pista: `AddDistributedMemoryCache`.)
-- ¿Por qué el error del login no dice si falló el usuario o la clave?
+- Si `app.UseSession()` va **después** de `MapControllerRoute`, ¿qué ocurre en el primer request?
+- Si se reinicia la app con un usuario autenticado, ¿la sesión sigue activa? ¿Por qué? (Pista: `AddDistributedMemoryCache`.)
+- ¿Por qué el error del login no indica si falló el usuario o la clave?
 
 ## 🔀 Alternativas
 
@@ -526,15 +529,15 @@ Preguntate:
 
 | Forma | Cómo | A favor | En contra | Cuándo |
 |---|---|---|---|---|
-| **Sesión + filtros propios** (lo nuestro, tema 15) | `AutenticacionService` + `[RequiereLogin]` + `[RequiereRol]` | se entiende cada pieza; es lo que se evalúa | lo escribimos a mano (y lo podemos escribir mal) | el TP y el parcial |
-| Autenticación por cookie de ASP.NET Core | `AddAuthentication().AddCookie()`, `HttpContext.SignInAsync(...)` con *claims*, `[Authorize]`, `[Authorize(Roles = "Admin")]` | el framework hace el trabajo; responde 401/403 como corresponde | más conceptos nuevos (claims, esquemas) | un proyecto real chico o mediano |
-| ASP.NET Core Identity | registro, hash de claves, recuperar contraseña, bloqueo por intentos… | todo resuelto y probado | pesado; usa Entity Framework | un proyecto real con usuarios que se registran solos |
+| **Sesión + filtros propios** (la del TP, tema 15) | `AutenticacionService` + `[RequiereLogin]` + `[RequiereRol]` | se entiende cada pieza; es lo que se evalúa | se escribe a mano (y puede escribirse mal) | el TP y el parcial |
+| Autenticación por cookie de ASP.NET Core | `AddAuthentication().AddCookie()`, `HttpContext.SignInAsync(...)` con *claims*, `[Authorize]`, `[Authorize(Roles = "Admin")]` | el framework hace el trabajo; responde 401/403 como corresponde | más conceptos nuevos (claims, esquemas) | un proyecto real pequeño o mediano |
+| ASP.NET Core Identity | registro, hash de claves, recuperación de contraseña, bloqueo por intentos… | todo resuelto y probado | pesado; usa Entity Framework | un proyecto real con usuarios que se registran por su cuenta |
 
 **¿Cómo se guarda la clave?**
 
 | Forma | A favor | En contra |
 |---|---|---|
-| **Texto plano** (lo nuestro, solo para el TP) | se ve y se prueba fácil | si alguien se lleva la base, se lleva todas las claves |
+| **Texto plano** (la del TP, solo para el TP) | se ve y se prueba fácilmente | quien obtenga una copia de la base obtiene todas las claves |
 | Hash rápido (SHA-256) hecho a mano | no se guarda la clave | se puede atacar probando millones de claves por segundo; sin sal, dos claves iguales dan el mismo hash |
 | `PasswordHasher<T>` de ASP.NET Core | hash lento, con sal, y con versión (se puede mejorar después) | una línea más al registrar y al comprobar |
 
@@ -546,22 +549,22 @@ var hasher = new PasswordHasher<Usuario>();
 // al dar de alta: en la columna Clave se guarda el hash, nunca la clave
 usuario.Clave = hasher.HashPassword(usuario, "aero2026");
 
-// al hacer login: se compara el hash guardado con lo que escribió
+// al hacer login: se compara el hash guardado con la clave ingresada
 bool ok = hasher.VerifyHashedPassword(usuario, usuario.Clave, claveIngresada) != PasswordVerificationResult.Failed;
 ```
 
 ## ⚠️ Errores típicos
 
-- **`InvalidOperationException: Session has not been configured for this application or request.`**: falta `app.UseSession()`,
-  o está después de `MapControllerRoute`. Como el layout lee la sesión, explota **cualquier** página.
+- **`InvalidOperationException: Session has not been configured for this application or request.`**: falta
+  `app.UseSession()`, o está después de `MapControllerRoute`. Como el layout lee la sesión, falla **cualquier** página.
 - **Falta `AddDistributedMemoryCache()` o `AddHttpContextAccessor()`**: `Unable to resolve service for type
   '…IDistributedCache' while attempting to activate '…DistributedSessionStore'` (la sesión no tiene dónde guardar) o
-  `'…IHttpContextAccessor' while attempting to activate 'AutenticacionService'`. En Development, la app ni arranca.
-- **`SQLite Error 1: 'no such table: Usuario'`**: cambiaste `aerotaller.sql` pero no borraste `aerotaller.db`.
+  `'…IHttpContextAccessor' while attempting to activate 'AutenticacionService'`. En Development, la app ni siquiera arranca.
+- **`SQLite Error 1: 'no such table: Usuario'`**: se modificó `aerotaller.sql` pero no se borró `aerotaller.db`.
 - **`IUsuarioRepository` registrado solo en una rama**: con datos falsos (o con SQLite) la app no arranca. Las dos ramas
-  del `if` tienen que registrar las mismas interfaces.
-- **`"admin"` en un lado y `"Admin"` en otro**: el filtro compara textos exactos. Usá `Roles.Admin` siempre (y la tabla
+  del `if` deben registrar las mismas interfaces.
+- **`"admin"` en un lado y `"Admin"` en otro**: el filtro compara textos exactos. Usar siempre `Roles.Admin` (y la tabla
   tiene un `CHECK` que solo acepta `'Admin'` y `'Mostrador'`).
-- **Proteger solo el GET** (o solo esconder el link): el POST queda abierto para cualquiera.
-- **`return Redirect(modelo.ReturnUrl);` sin `Url.IsLocalUrl`**: redirección abierta. Y **Salir como link** (`<a href="/Login/Salir">`):
-  la acción es `[HttpPost]`, así que da 405, y aunque anduviera, cerrar sesión cambia el estado.
+- **Proteger solo el GET** (o solo ocultar el enlace): el POST queda abierto para cualquiera.
+- **`return Redirect(modelo.ReturnUrl);` sin `Url.IsLocalUrl`**: redirección abierta. Y **Salir como enlace**
+  (`<a href="/Login/Salir">`): la acción es `[HttpPost]`, por lo que da 405, y aunque funcionara, cerrar sesión cambia el estado.

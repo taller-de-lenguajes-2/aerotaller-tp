@@ -1,10 +1,10 @@
 using System.Globalization;
 
 // AeroTaller — proyecto base del TP integrador.
-// Lo vas a ir completando desafío por desafío: seguí la Torre de Control (dotnet run --project torre-de-control).
+// Se completa desafío por desafío siguiendo la Torre de Control (dotnet run --project torre-de-control).
 
 // Fechas y moneda en castellano, en cualquier máquina.
-// Ojo con los decimales: un <input type="number"> SIEMPRE manda "18.5" (con punto), y con es-AR puro
+// Decimales: un <input type="number"> SIEMPRE envía "18.5" (con punto), y con es-AR sin modificar
 // el model binding lo leería como 185. Por eso los números (no la moneda) usan punto decimal.
 var cultura = (CultureInfo)CultureInfo.GetCultureInfo("es-AR").Clone();
 cultura.NumberFormat.NumberDecimalSeparator = ".";

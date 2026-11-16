@@ -1,5 +1,5 @@
 {
-  // F5 en VS Code (con la extensión C# Dev Kit): elegí "AeroTaller" en el panel Ejecutar y depurar
+  // F5 en VS Code (con la extensión C# Dev Kit): elegir "AeroTaller" en el panel Ejecutar y depurar
   "version": "0.2.0",
   "configurations": [
     {

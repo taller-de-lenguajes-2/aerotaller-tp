@@ -3,7 +3,7 @@
   "codigo": "CHK",
   "numero": 0,
   "titulo": "Check-in",
-  "subtitulo": "Tu repo, el proyecto base corriendo y tu primer breakpoint",
+  "subtitulo": "Repositorio, proyecto base en ejecución y primer breakpoint",
   "tipo": "desafio",
   "minutosEstimados": 40,
   "temas": [
@@ -12,16 +12,16 @@
   ],
   "insignia": "check-in",
   "tareas": [
-    { "id": "clonar", "texto": "Acepté la tarea de GitHub Classroom y cloné mi repo", "ayuda": "git clone <url-de-tu-repo>" },
-    { "id": "correr", "texto": "AeroTaller corre en http://localhost:5210 y veo la página de bienvenida" },
-    { "id": "breakpoint", "texto": "Frené la ejecución en HomeController.Index con un punto de interrupción y miré Request.Path" },
-    { "id": "pasos", "texto": "Probé F10 (paso a paso), F11 (entrar) y F5 (continuar)" },
-    { "id": "push", "texto": "Hice mi primer commit y push, y lo veo en GitHub" }
+    { "id": "clonar", "texto": "Tarea de GitHub Classroom aceptada y repositorio clonado", "ayuda": "git clone <url-del-repositorio>" },
+    { "id": "correr", "texto": "AeroTaller corre en http://localhost:5210 y muestra la página de inicio" },
+    { "id": "breakpoint", "texto": "Ejecución detenida en HomeController.Index con un punto de interrupción y Request.Path inspeccionado" },
+    { "id": "pasos", "texto": "F10 (paso a paso), F11 (entrar) y F5 (continuar) probados" },
+    { "id": "push", "texto": "Primer commit y push realizados; el commit se ve en GitHub" }
   ],
   "quiz": [
     {
       "id": "p1",
-      "texto": "Con el depurador frenado en HomeController.Index después de abrir http://localhost:5210/ , ¿qué valor tiene Request.Path?",
+      "texto": "Con el depurador detenido en HomeController.Index después de abrir http://localhost:5210/ , ¿qué valor tiene Request.Path?",
       "opciones": [
         { "id": "a", "texto": "\"/Home/Index\"" },
         { "id": "b", "texto": "\"/\"" },
@@ -29,13 +29,13 @@
         { "id": "d", "texto": "null, porque no hay ruta" }
       ],
       "correcta": "b",
-      "pista": "Mirá el valor en el panel Variables (o agregá Request.Path al Watch). La URL que escribiste no tenía ni controlador ni acción: ¿quién los completó?",
+      "pista": "Revisar el valor en el panel Variables (o agregar Request.Path al Watch). La URL ingresada no tenía ni controlador ni acción: ¿quién los completó?",
       "explicacion": "Request.Path es exactamente lo que vino en la URL: \"/\". El ruteo convencional completa los valores por defecto (controller=Home, action=Index), pero el Path no cambia.",
       "etiquetas": ["depurador"]
     },
     {
       "id": "p2",
-      "texto": "Estás frenado en una línea que llama a un método tuyo. ¿Qué tecla te lleva ADENTRO de ese método?",
+      "texto": "Con la ejecución detenida en una línea que llama a un método propio del proyecto, ¿qué tecla permite entrar DENTRO de ese método?",
       "opciones": [
         { "id": "a", "texto": "F5 (Continuar)" },
         { "id": "b", "texto": "F10 (Paso a paso por procedimientos)" },
@@ -43,28 +43,28 @@
         { "id": "d", "texto": "Shift+F11 (Salir)" }
       ],
       "correcta": "c",
-      "pista": "Una tecla ejecuta la línea entera como si fuera una sola; otra se mete en lo que llama.",
-      "explicacion": "F11 entra al método (Step Into). F10 lo ejecuta entero y frena en la línea siguiente; Shift+F11 termina el método actual y vuelve a quien lo llamó.",
+      "pista": "Una tecla ejecuta la línea entera como si fuera una sola; otra entra en el método que se llama.",
+      "explicacion": "F11 entra al método (Step Into). F10 lo ejecuta entero y se detiene en la línea siguiente; Shift+F11 termina el método actual y vuelve a quien lo llamó.",
       "etiquetas": ["depurador"]
     },
     {
       "id": "p3",
-      "texto": "Hiciste git commit pero en la página de tu repo en GitHub no aparece nada. ¿Qué pasó?",
+      "texto": "Se ejecutó git commit, pero en la página del repositorio en GitHub no aparece nada. ¿Qué ocurrió?",
       "opciones": [
-        { "id": "a", "texto": "El commit quedó en tu computadora: falta git push" },
+        { "id": "a", "texto": "El commit quedó en la computadora local: falta git push" },
         { "id": "b", "texto": "Falta git add después del commit" },
         { "id": "c", "texto": "GitHub tarda unas horas en mostrar los commits" },
         { "id": "d", "texto": "Hay que hacer git pull para subirlo" }
       ],
       "correcta": "a",
-      "pista": "Pensá dónde vive cada cosa: el commit, ¿se guarda en tu máquina o en GitHub?",
-      "explicacion": "commit guarda una foto del proyecto en TU repositorio local; push manda esos commits al remoto (GitHub). Sin push, el profe no ve nada."
+      "pista": "Analizar dónde reside cada cosa: el commit, ¿se guarda en la máquina local o en GitHub?",
+      "explicacion": "commit guarda una instantánea del proyecto en el repositorio LOCAL; push envía esos commits al remoto (GitHub). Sin push, el docente no ve nada."
     }
   ],
   "lecturas": [
-    { "id": "debug-vscode", "titulo": "Depurar C# en Visual Studio Code", "url": "https://code.visualstudio.com/docs/csharp/debugging", "fuente": "VS Code", "pregunta": "¿Qué es un breakpoint condicional y cuándo te serviría?" },
+    { "id": "debug-vscode", "titulo": "Depurar C# en Visual Studio Code", "url": "https://code.visualstudio.com/docs/csharp/debugging", "fuente": "VS Code", "pregunta": "¿Qué es un breakpoint condicional y en qué casos resulta útil?" },
     { "id": "git-basico", "titulo": "Fundamentos de Git: guardar cambios en el repositorio", "url": "https://git-scm.com/book/es/v2/Fundamentos-de-Git-Guardando-cambios-en-el-Repositorio", "fuente": "Pro Git (en castellano)", "pregunta": "¿Qué diferencia hay entre un archivo modificado y uno preparado (staged)?" },
-    { "id": "tema10", "titulo": "Tema 10 — MVC: el viaje de un request", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-10-mvc/index.html", "fuente": "Diapositivas de la cátedra", "pregunta": "¿Qué pasa entre que escribís la URL y que se ejecuta HomeController.Index?" }
+    { "id": "tema10", "titulo": "Tema 10 — MVC: el viaje de un request", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-10-mvc/index.html", "fuente": "Diapositivas de la cátedra", "pregunta": "¿Qué ocurre entre que se escribe la URL y que se ejecuta HomeController.Index?" }
   ],
-  "commit": { "mensaje": "Desafío 0: check-in del proyecto base", "detalle": "Aunque no hayas cambiado código, commiteá algo (por ejemplo, tu nombre en el README) para probar el circuito completo." }
+  "commit": { "mensaje": "Desafío 0: check-in del proyecto base", "detalle": "Aunque no se haya cambiado código, conviene commitear algún cambio (por ejemplo, el nombre en el README) para probar el circuito completo." }
 }

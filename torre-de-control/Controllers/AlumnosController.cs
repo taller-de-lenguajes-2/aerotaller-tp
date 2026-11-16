@@ -20,7 +20,6 @@ public class AlumnosController(IAlumnoRepository alumnos, IProgresoService progr
         var alumno = new Alumno
         {
             Nombre = entrada.Nombre.Trim(),
-            Legajo = Limpiar(entrada.Legajo),
             RutaProyecto = Limpiar(entrada.RutaProyecto),
             ModoLibre = entrada.ModoLibre,
             Creado = DateTime.Now
@@ -37,7 +36,6 @@ public class AlumnosController(IAlumnoRepository alumnos, IProgresoService progr
 
         Alumno alumno = progreso.ObtenerAlumno(id);
         alumno.Nombre = entrada.Nombre.Trim();
-        alumno.Legajo = Limpiar(entrada.Legajo);
         alumno.RutaProyecto = Limpiar(entrada.RutaProyecto);
         alumno.ModoLibre = entrada.ModoLibre;
         alumnos.Actualizar(alumno);

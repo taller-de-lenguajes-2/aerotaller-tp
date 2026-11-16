@@ -1,7 +1,7 @@
 -- ============================================================
 -- progreso.sql — la base del tutorial "Torre de Control"
 -- Guarda el avance de cada alumno: tareas marcadas, cuestionarios,
--- lecturas, bitácora e insignias. El CONTENIDO de los desafíos no está acá:
+-- lecturas, bitácora e insignias. El CONTENIDO de los desafíos no está aquí:
 -- vive en la carpeta Contenido/ (Markdown + JSON) para poder editarlo sin tocar la base.
 -- ============================================================
 
@@ -10,7 +10,6 @@ PRAGMA foreign_keys = ON;
 CREATE TABLE IF NOT EXISTS Alumno (
     Id           INTEGER PRIMARY KEY AUTOINCREMENT,
     Nombre       TEXT NOT NULL,
-    Legajo       TEXT,
     RutaProyecto TEXT,                       -- carpeta del proyecto AeroTaller del alumno (opcional)
     ModoLibre    INTEGER NOT NULL DEFAULT 0, -- 1 = sin bloqueos entre desafíos (para repasar o para el profe)
     Creado       TEXT NOT NULL

@@ -1,39 +1,39 @@
 ## 🎯 Misión
 
-Mirá el POST de `Reservas/Crear` que escribiste en el desafío 5: recibe el formulario, consulta tres repositorios,
-decide cinco reglas del negocio, traduce el ViewModel a una entidad y elige la vista. Es el piloto atendiendo el
-check-in, cargando valijas y sirviendo café. Funciona, pero:
+Considerar el POST de `Reservas/Crear` escrito en el desafío 5: recibe el formulario, consulta tres repositorios,
+decide cinco reglas del negocio, traduce el ViewModel a una entidad y elige la vista. Es como un piloto que además
+atiende el check-in, carga valijas y sirve café. Funciona, pero:
 
-- Si mañana hay una Web API para reservar desde el celular, ¿copiás las cinco reglas?
-- Si cambia una regla, ¿en cuántos controladores la buscás?
+- Si mañana se agrega una Web API para reservar desde el celular, ¿habría que copiar las cinco reglas?
+- Si cambia una regla, ¿en cuántos controladores habría que buscarla?
 
 La solución es una **capa de servicios**: una clase cuyo trabajo es **decidir si algo se puede hacer**. El controlador
-queda "flaco" (recibe, llama, elige la vista) y el repositorio sigue hablando SQL.
+queda "delgado" (recibe, llama, elige la vista) y el repositorio sigue a cargo del SQL.
 
 Al terminar este desafío:
 
-1. `ReservaService`, `PasajeroService` y `VueloService` tienen **todas** las reglas del negocio, detrás de sus
+1. `ReservaService`, `PasajeroService` y `VueloService` contienen **todas** las reglas del negocio, detrás de sus
    interfaces (`IReservaService`…).
 2. Cuando una regla no se cumple, el servicio lanza `ReglaDeNegocioException` con el **campo** y el **mensaje**; el
-   controlador la atrapa y la muestra al lado del input.
+   controlador la captura y la muestra al lado del input.
 3. Se puede **cancelar** una reserva (`POST /Reservas/Cancelar/{id}`: cambia el estado, no borra).
 4. Los pasajeros se pueden **editar** y **eliminar** (si no tienen reservas).
 5. Los mensajes "Reserva cancelada." o "No se puede eliminar…" aparecen arriba de la página, después del redirect.
 
 :::nota
-Todo lo que funcionaba en el desafío 5 tiene que **seguir funcionando igual** después de mudar las reglas. Es un
-*refactor*: el comportamiento no cambia, cambia dónde vive el código. Tus pruebas del desafío 5 (25A, 3A, Ana Gómez
-repetida, AT0500 lleno, AT0999) son tu red: corrélas de nuevo al terminar el paso 4.
+Todo lo que funcionaba en el desafío 5 debe **seguir funcionando igual** después de trasladar las reglas. Es un
+*refactor*: el comportamiento no cambia, cambia dónde vive el código. Las pruebas del desafío 5 (25A, 3A, Ana Gómez
+repetida, AT0500 lleno, AT0999) funcionan como red de seguridad: deben ejecutarse de nuevo al terminar el paso 4.
 :::
 
 ## 📚 Repaso
 
-Tres temas se juntan en este desafío:
+Tres temas confluyen en este desafío:
 
-**Tema 09 · Arquitectura en capas.** La diapositiva dibuja Controladores → **Servicios** → Repositorios → Datos, con dos
-reglas: cada capa usa solo a la de abajo, y ninguna se saltea una capa. También dice que "en proyectos chicos, la capa de
-servicios puede no estar" (es lo que hiciste hasta ahora). La `Recepcion` del ejemplo del tema 09 **es** un servicio:
-recibe el repositorio por el constructor y decide la regla "no se da de alta un DNI que ya está cargado".
+**Tema 09 · Arquitectura en capas.** La diapositiva muestra Controladores → **Servicios** → Repositorios → Datos, con dos
+reglas: cada capa usa solo a la de abajo, y ninguna se saltea una capa. También indica que "en proyectos chicos, la capa
+de servicios puede no estar" (es lo que se hizo hasta ahora). La `Recepcion` del ejemplo del tema 09 **es** un
+servicio: recibe el repositorio por el constructor y decide la regla "no se da de alta un DNI que ya está cargado".
 
 | Capa | Su trabajo | En AeroTaller | Lo que NO hace |
 |---|---|---|---|
@@ -41,14 +41,14 @@ recibe el repositorio por el constructor y decide la regla "no se da de alta un 
 | Servicio | decidir si se puede, coordinar repositorios | `ReservaService` | HTML, `ModelState`, SQL |
 | Repositorio | guardar y traer, con SQL parametrizado | `ReservaRepository` | reglas, mensajes al usuario |
 
-**Tema 04 · Interfaces.** Una interfaz es un **contrato**: dice *qué* se puede hacer, no *cómo*. El controlador va a
-depender de `IReservaService`, no de `ReservaService`. Hoy hay una sola implementación; en el desafío 7 vas a ver
-para qué sirve tener el contrato separado (y lo mismo con los repositorios).
+**Tema 04 · Interfaces.** Una interfaz es un **contrato**: indica *qué* se puede hacer, no *cómo*. El controlador va a
+depender de `IReservaService`, no de `ReservaService`. Por ahora hay una sola implementación; en el desafío 7 se verá
+la utilidad de tener el contrato separado (y lo mismo con los repositorios).
 
 **Tema 16 · Excepciones propias.** Una excepción propia hereda de `Exception`, su nombre termina en `Exception`, puede
 llevar datos propios (como `Faltante` en `SaldoInsuficienteException`) y "tiene sentido cuando el error es del dominio y
-alguien lo va a capturar por su tipo". Es exactamente nuestro caso: "ese asiento ya está ocupado" es un error del
-dominio, y el controlador la va a atrapar por su tipo para mostrarla en el formulario.
+alguien lo va a capturar por su tipo". Es exactamente este caso: "ese asiento ya está ocupado" es un error del dominio,
+y el controlador la captura por su tipo para mostrarla en el formulario.
 
 Lo que vimos en clase: [tema 04](https://taller-de-lenguajes-2.github.io/clases/tema-04-interfaces-y-clases-abstractas/index.html),
 [tema 09](https://taller-de-lenguajes-2.github.io/clases/tema-09-repositorios/index.html) y
@@ -58,8 +58,8 @@ Lo que vimos en clase: [tema 04](https://taller-de-lenguajes-2.github.io/clases/
 
 ### Paso 1 · La excepción del negocio
 
-Carpeta nueva `Excepciones/`. La excepción lleva, además del mensaje, **el nombre del campo** del formulario donde hay
-que mostrar el error:
+Carpeta nueva `Excepciones/`. La excepción lleva, además del mensaje, **el nombre del campo** del formulario donde debe
+mostrarse el error:
 
 ```csharp
 // Excepciones/ReglaDeNegocioException.cs
@@ -71,17 +71,17 @@ public class ReglaDeNegocioException(string campo, string mensaje) : Exception(m
 }
 ```
 
-Fijate el constructor primario: `: Exception(mensaje)` le pasa el mensaje a la clase base, y así `ex.Message` funciona
+Notar el constructor primario: `: Exception(mensaje)` pasa el mensaje a la clase base, y así `ex.Message` funciona
 como en cualquier excepción. Es el mismo molde que `SaldoInsuficienteException` del tema 16.
 
 :::nota
-En el desafío 8 le vas a agregar un tercer parámetro opcional (la excepción original que la causó). Por ahora alcanza
-con dos.
+En el desafío 8 se le agrega un tercer parámetro opcional (la excepción original que la causó). Por ahora alcanza con
+dos.
 :::
 
 ### Paso 2 · El contrato: las interfaces de los servicios
 
-Carpeta nueva `Servicios/`. Primero el **qué** (los contratos). Podés ponerlas juntas en `Servicios/Interfaces.cs` o
+Carpeta nueva `Servicios/`. Primero el **qué** (los contratos). Pueden ubicarse juntas en `Servicios/Interfaces.cs` o
 una por archivo:
 
 ```csharp
@@ -107,20 +107,20 @@ public interface IVueloService
 }
 ```
 
-Mirá lo que **no** aparece en las firmas: ningún `ReservaCrearViewModel`, ningún `ModelStateDictionary`, ningún
+Notar lo que **no** aparece en las firmas: ningún `ReservaCrearViewModel`, ningún `ModelStateDictionary`, ningún
 `IActionResult`. El servicio recibe datos del dominio (ids, textos, entidades) y no sabe si lo llama un controlador MVC,
 una Web API o un programa de consola.
 
-### Paso 3 · `ReservaService`: mudar las reglas
+### Paso 3 · `ReservaService`: trasladar las reglas
 
-Ahora el **cómo**. Las cinco reglas que tenías en el controlador se mudan acá, en el mismo orden. La diferencia: en vez
-de `ModelState.AddModelError(nameof(modelo.Asiento), "…")`, el servicio **lanza**
-`new ReglaDeNegocioException("Asiento", "…")`. La primera regla que falla corta todo: las siguientes ni se evalúan.
+Ahora el **cómo**. Las cinco reglas que estaban en el controlador se trasladan aquí, en el mismo orden. La diferencia:
+en lugar de `ModelState.AddModelError(nameof(modelo.Asiento), "…")`, el servicio **lanza**
+`new ReglaDeNegocioException("Asiento", "…")`. La primera regla que falla interrumpe todo: las siguientes ni se evalúan.
 
 Por ahora el servicio recibe los repositorios **concretos** (como los controladores): las interfaces de los
 repositorios llegan en el desafío 7.
 
-Intentalo: abrí tu controlador del desafío 5 al lado y mudá regla por regla.
+Se recomienda intentarlo con el controlador del desafío 5 abierto al lado, trasladando regla por regla.
 
 :::solucion Ver ReservaService completo
 ```csharp
@@ -188,8 +188,8 @@ public class ReservaService(
 ```
 :::
 
-`?? throw` es una **cláusula de guarda** en una línea: si `Obtener` devuelve `null`, se lanza la excepción ahí mismo
-("lanzar temprano", tema 16). Y como el campo viaja como texto (`"VueloId"`), tiene que coincidir **letra por letra**
+`?? throw` es una **cláusula de guarda** en una línea: si `Obtener` devuelve `null`, se lanza la excepción en ese mismo
+punto ("lanzar temprano", tema 16). Y como el campo viaja como texto (`"VueloId"`), debe coincidir **letra por letra**
 con la propiedad del ViewModel: el servicio no conoce `ReservaCrearViewModel`, así que no puede usar `nameof`.
 
 ### Paso 4 · Registrar el servicio y adelgazar el controlador
@@ -197,15 +197,16 @@ con la propiedad del ViewModel: el servicio no conoce `ReservaCrearViewModel`, a
 En `Program.cs`, después de los repositorios:
 
 ```csharp
-// Servicios: las reglas del negocio. "Cuando alguien pida IReservaService, creá un ReservaService"
+// Servicios: las reglas del negocio. "Cuando se pida IReservaService, crear un ReservaService"
 builder.Services.AddScoped<IReservaService, ReservaService>();
 builder.Services.AddScoped<IPasajeroService, PasajeroService>();
 builder.Services.AddScoped<IVueloService, VueloService>();
 ```
 
-¿Cómo arma el contenedor un `ReservaService` si necesita tres repositorios? Mira su constructor, ve que pide
-`ReservaRepository`, `VueloRepository` y `PasajeroRepository`, y como esos ya están registrados (con tus
-`AddScoped(_ => new …Repository(cadenaConexion))`), los crea y se los pasa. Nadie escribe `new ReservaService(…)`.
+¿Cómo arma el contenedor un `ReservaService` si necesita tres repositorios? Examina su constructor, detecta que pide
+`ReservaRepository`, `VueloRepository` y `PasajeroRepository`, y como esos ya están registrados (con los
+`AddScoped(_ => new …Repository(cadenaConexion))` del proyecto), los crea y se los pasa. Nadie escribe
+`new ReservaService(…)`.
 
 El controlador pide el **contrato** y queda así:
 
@@ -236,7 +237,7 @@ public class ReservasController(
         }
         catch (ReglaDeNegocioException ex)
         {
-            // El servicio dice en qué campo está el problema: el error aparece al lado de ese input
+            // El servicio indica en qué campo está el problema: el error aparece al lado de ese input
             ModelState.AddModelError(ex.Campo, ex.Message);
             CargarListas(modelo);
             return View(modelo);
@@ -249,16 +250,16 @@ public class ReservasController(
 ¿Y los repositorios que quedaron en el constructor? Los usan `Index` y `CargarListas` para **leer** (listar vuelos y
 pasajeros). Leer para mostrar no tiene reglas; lo que **cambia datos** pasa por el servicio.
 
-Borrá del controlador las reglas que mudaste: si queda una copia en cada lado, el día que la regla cambie vas a
-cambiar una sola. Una regla, un lugar (DRY, tema 13).
+Eliminar del controlador las reglas trasladadas: si queda una copia en cada lado, el día que la regla cambie se va a
+modificar una sola. Una regla, un lugar (DRY, tema 13).
 
-Corré tus pruebas del desafío 5: mismo error, mismo campo. Si alguna dejó de mostrarse, revisá el nombre del campo.
+Ejecutar las pruebas del desafío 5: mismo error, mismo campo. Si alguna dejó de mostrarse, revisar el nombre del campo.
 
 ### Paso 5 · `PasajeroService` y `VueloService`
 
-Mismo movimiento con los otros dos formularios:
+El mismo movimiento con los otros dos formularios:
 
-- `PasajeroService.Registrar`: la regla del DNI repetido (`ExisteDni`) que tenías en `PasajerosController.Crear`.
+- `PasajeroService.Registrar`: la regla del DNI repetido (`ExisteDni`) que estaba en `PasajerosController.Crear`.
 - `PasajeroService.Actualizar` (para el paso 7): el DNI no puede ser de **otro** pasajero (`ExisteDni(dni, excepto: id)`).
 - `PasajeroService.Eliminar` (para el paso 7): no se borra un pasajero que tiene reservas.
 - `VueloService.Crear`: origen ≠ destino, que los aeropuertos existan y número único.
@@ -337,14 +338,14 @@ public class VueloService(
 ```
 :::
 
-Los controladores quedan con el mismo molde que `Reservas/Crear`: `if (!ModelState.IsValid)` → `try` { servicio,
+Los controladores siguen el mismo molde que `Reservas/Crear`: `if (!ModelState.IsValid)` → `try` { servicio,
 `TempData`, redirect } → `catch (ReglaDeNegocioException ex)` { `AddModelError`, recargar listas, misma vista }.
 Por ejemplo, en `VuelosController.Crear` (POST):
 
 ```csharp
 try
 {
-    // Pasó [Required]: acá los int? ya tienen valor
+    // Pasó [Required]: en este punto los int? ya tienen valor
     int id = vueloService.Crear(modelo.Numero, modelo.OrigenId!.Value, modelo.DestinoId!.Value,
         modelo.Salida!.Value, modelo.DuracionMinutos!.Value, modelo.Filas!.Value, modelo.Precio!.Value);
 
@@ -362,11 +363,11 @@ return View(modelo);
 
 ### Paso 6 · Cancelar una reserva
 
-El contrato pide `POST /Reservas/Cancelar/{id}`, que **no borra**: cambia `Estado` a `'Cancelada'`. Así queda la
+El contrato pide `POST /Reservas/Cancelar/{id}`, que **no borra**: cambia `Estado` a `'Cancelada'`. Así se conserva la
 historia (quién tuvo ese asiento) y el asiento vuelve a estar libre, porque `AsientosOcupados` solo cuenta las
 confirmadas.
 
-Primero, el ViewModel del listado sabe si una reserva se puede cancelar (para mostrar o no el botón):
+Primero, el ViewModel del listado indica si una reserva se puede cancelar (para mostrar o no el botón):
 
 ```csharp
 // en ReservaListadoViewModel
@@ -395,8 +396,8 @@ public IActionResult Cancelar(int id)
 }
 ```
 
-En `Views/Reservas/Index.cshtml`, una columna más con un **formulario** (no un link: un link es GET, y un GET nunca
-cambia datos):
+En `Views/Reservas/Index.cshtml`, se agrega una columna con un **formulario** (no un enlace: un enlace es GET, y un GET
+nunca cambia datos):
 
 ```cshtml
 <td>
@@ -410,12 +411,12 @@ cambia datos):
 </td>
 ```
 
-El tag helper `<form>` con `method="post"` agrega solo el campo oculto del token antiforgery: por eso
+El tag helper `<form>` con `method="post"` agrega automáticamente el campo oculto del token antiforgery: por eso
 `[ValidateAntiForgeryToken]` no rechaza este POST.
 
 **¿Y dónde se ve el mensaje?** Después del redirect hay **otro** request (el GET del `Index`). `ViewData` no
-sobrevive al cambio de request; `TempData` sí: dura hasta que alguien lo lee. Lo lee el layout, así sirve para
-cualquier pantalla. En `Views/Shared/_Layout.cshtml`, adentro del `<main>` y antes de `@RenderBody()`:
+sobrevive al cambio de request; `TempData` sí: dura hasta que alguien lo lee. Lo lee el layout, de modo que sirve para
+cualquier pantalla. En `Views/Shared/_Layout.cshtml`, dentro del `<main>` y antes de `@RenderBody()`:
 
 ```cshtml
 @* Mensajes que vienen de un Redirect (TempData sobrevive exactamente un request más) *@
@@ -432,14 +433,14 @@ cualquier pantalla. En `Views/Shared/_Layout.cshtml`, adentro del `<main>` y ant
 Las clases `mensaje ok` y `mensaje error` ya tienen estilo en `sitio.css`.
 
 :::catedra
-`TempData` no está en las diapositivas. Es parte del mismo tema que la sesión (tema 15, "estado entre requests"): por
+`TempData` no está en las diapositivas. Pertenece al mismo tema que la sesión (tema 15, "estado entre requests"): por
 defecto MVC lo guarda en una **cookie** que se borra al leerla. La alternativa sin `TempData` sería pasar el mensaje en
-la URL (`/Reservas?mensaje=…`), pero queda feo, se puede falsificar y se repite si recargás.
+la URL (`/Reservas?mensaje=…`), pero resulta poco prolijo, se puede falsificar y se repite al recargar la página.
 :::
 
 ### Paso 7 · Editar y eliminar pasajeros
 
-**Editar** usa el mismo formulario que crear. Sumale a `PasajeroFormViewModel` un `Id` opcional (null = nuevo) y un
+**Editar** usa el mismo formulario que crear. Agregar a `PasajeroFormViewModel` un `Id` opcional (null = nuevo) y un
 constructor para cargarlo desde la entidad:
 
 ```csharp
@@ -450,9 +451,9 @@ public class PasajeroFormViewModel
 
     // … Nombre, Dni y Email con sus atributos, como en el desafío 5
 
-    public PasajeroFormViewModel() { }                 // el model binding necesita este
+    public PasajeroFormViewModel() { }                 // el model binding necesita este constructor
 
-    // Entidad → ViewModel (para mostrar el formulario de edición lleno)
+    // Entidad → ViewModel (para mostrar el formulario de edición completo)
     public PasajeroFormViewModel(Pasajero pasajero)
     {
         Id = pasajero.Id;
@@ -472,7 +473,7 @@ public class PasajeroFormViewModel
 }
 ```
 
-Renombrá `Views/Pasajeros/Crear.cshtml` a `Formulario.cshtml` y hacé que el `<form>` apunte a una acción u otra:
+Renombrar `Views/Pasajeros/Crear.cshtml` a `Formulario.cshtml` y hacer que el `<form>` apunte a una acción u otra:
 
 ```cshtml
 @model PasajeroFormViewModel
@@ -525,7 +526,7 @@ public IActionResult Editar(int id)
 [ValidateAntiForgeryToken]
 public IActionResult Editar(int id, PasajeroFormViewModel modelo)
 {
-    modelo.Id = id;     // el Id lo manda la ruta, no un input que se pueda tocar
+    modelo.Id = id;     // el Id lo aporta la ruta, no un input que pueda modificarse
     if (!ModelState.IsValid) return View("Formulario", modelo);
 
     try
@@ -563,81 +564,85 @@ public IActionResult Eliminar(int id)
 }
 ```
 
-En `Views/Pasajeros/Detalle.cshtml`, un link "Editar" (`<a class="boton" asp-action="Editar" asp-route-id="@Model.Id">`)
+En `Views/Pasajeros/Detalle.cshtml`, un enlace "Editar" (`<a class="boton" asp-action="Editar" asp-route-id="@Model.Id">`)
 y un `<form asp-action="Eliminar" asp-route-id="@Model.Id" method="post">` con su botón, igual que el de cancelar.
-Probá eliminar a Ana Gómez (tiene reservas: error en rojo) y a un pasajero que hayas creado vos sin reservas (se borra).
+Probar eliminar a Ana Gómez (tiene reservas: error en rojo) y a un pasajero creado durante las pruebas, sin reservas (se
+borra).
 
 :::nota
-En el desafío 9, eliminar pasajeros va a quedar solo para el rol Admin. Por ahora el botón lo ve cualquiera.
+En el desafío 9, eliminar pasajeros quedará restringido al rol Admin. Por ahora el botón es visible para cualquier
+usuario.
 :::
 
 ## 🔴 Breakpoints
 
 :::breakpoint ReservasController.cs · Crear (POST) · la línea de reservaService.Reservar(…)
-Cuando frene, en **Inspección** agregá `reservaService.GetType().Name`: la variable es de tipo `IReservaService`, pero
-¿qué clase es el objeto de verdad? Apretá **F11** (entrar): ¿a qué archivo saltaste? Mirá la **Pila de llamadas**:
-`ReservaService.Reservar` arriba, `ReservasController.Crear` justo abajo. Es el viaje Controlador → Servicio.
+Cuando se detenga, agregar en **Inspección** `reservaService.GetType().Name`: la variable es de tipo
+`IReservaService`, pero ¿de qué clase es realmente el objeto? Presionar **F11** (entrar): ¿a qué archivo salta la
+ejecución? Observar la **Pila de llamadas**: `ReservaService.Reservar` arriba, `ReservasController.Crear` justo debajo.
+Es el recorrido Controlador → Servicio.
 :::
 
 :::breakpoint ReservaService.cs · Reservar · la primera línea
-Reservá un asiento en el AT0500. En **Inspección** agregá `reservas.ContarConfirmadas(vueloId)` y `vuelo.Capacidad`
-(el panel puede ejecutar métodos: esa línea hace una consulta a la base). Seguí con **F10**: ¿en qué `throw` sale?
-Cuando lanza, apretá F10 otra vez: ¿a qué línea del controlador vuelve?
+Reservar un asiento en el AT0500. En **Inspección**, agregar `reservas.ContarConfirmadas(vueloId)` y `vuelo.Capacidad`
+(el panel puede ejecutar métodos: esa línea hace una consulta a la base). Continuar con **F10**: ¿en qué `throw` sale?
+Cuando lanza, presionar F10 otra vez: ¿a qué línea del controlador vuelve?
 :::
 
 :::breakpoint ReservasController.cs · Cancelar
-Cancelá una reserva. Cuando frene, abrí F12 en el navegador, pestaña **Red**, y apretá F5 en VS Code. Vas a ver dos
-requests: un `POST /Reservas/Cancelar/…` que responde **302** y un `GET /Reservas` que responde 200. El mensaje
-verde viajó del primero al segundo en una cookie (`.AspNetCore.Mvc.CookieTempDataProvider`): buscala en la pestaña
-**Aplicación → Cookies**. Recargá la página: ¿el mensaje sigue?
+Cancelar una reserva. Cuando se detenga, abrir F12 en el navegador, pestaña **Red**, y presionar F5 en VS Code. Se ven
+dos requests: un `POST /Reservas/Cancelar/…` que responde **302** y un `GET /Reservas` que responde 200. El mensaje
+verde viajó del primero al segundo en una cookie (`.AspNetCore.Mvc.CookieTempDataProvider`), que puede buscarse en la
+pestaña **Aplicación → Cookies**. Al recargar la página, ¿el mensaje sigue?
 :::
 
-Preguntate:
+Preguntas para analizar:
 
-- Si sacás `IReservaService` del constructor del controlador y escribís `new ReservaService(…)` adentro de la acción,
-  ¿qué le tendrías que pasar? ¿De dónde lo sacarías?
-- ¿Qué pasa en la pantalla si el servicio lanza `new ReglaDeNegocioException("Vuelo", "…")` (sin el `Id`)?
+- Si se quita `IReservaService` del constructor del controlador y se escribe `new ReservaService(…)` dentro de la
+  acción, ¿qué habría que pasarle? ¿De dónde se obtendría?
+- ¿Qué ocurre en la pantalla si el servicio lanza `new ReglaDeNegocioException("Vuelo", "…")` (sin el `Id`)?
 
 ## 🔀 Alternativas
 
-**¿Cómo avisa el servicio que una regla no se cumple?**
+**¿Cómo informa el servicio que una regla no se cumple?**
 
 | Forma | Cómo se ve | Ventaja | Desventaja | Cuándo |
 |---|---|---|---|---|
-| Excepción propia | `throw new ReglaDeNegocioException("Asiento", "…")` | el camino feliz queda limpio; nadie puede "olvidarse" de mirar el error | un error por vez; lanzar es más lento que un `if` | **la del TP**; reglas del dominio que alguien atrapa por su tipo |
-| Objeto resultado | `ResultadoReserva { Ok, Campo, Mensaje, Reserva }` | sin excepciones; puede juntar varios errores | cada llamada tiene que acordarse de preguntar `if (!r.Ok)` | errores muy frecuentes o cuando querés mostrar todos juntos |
+| Excepción propia | `throw new ReglaDeNegocioException("Asiento", "…")` | el camino feliz queda limpio; nadie puede "olvidarse" de revisar el error | un error por vez; lanzar es más lento que un `if` | **la del TP**; reglas del dominio que alguien captura por su tipo |
+| Objeto resultado | `ResultadoReserva { Ok, Campo, Mensaje, Reserva }` | sin excepciones; puede reunir varios errores | cada llamada debe acordarse de preguntar `if (!r.Ok)` | errores muy frecuentes o cuando se quieren mostrar todos juntos |
 | Patrón Try | `bool TryReservar(…, out string error)` | igual que `int.TryParse` (tema 16) | con varios datos de salida se vuelve incómodo | operaciones chicas con un solo error posible |
-| Sin servicio | `AddModelError` en el controlador (desafío 5) | menos clases | reglas atadas a MVC; no se reusan | proyectos muy chicos (el tema 09 lo admite) |
+| Sin servicio | `AddModelError` en el controlador (desafío 5) | menos clases | reglas atadas a MVC; no se reutilizan | proyectos muy chicos (el tema 09 lo admite) |
 
 :::catedra
-El tema 16 dice dos cosas que parecen chocar: "las excepciones son para lo excepcional" (por eso `TryParse` en vez de
-atrapar `FormatException`) y que una excepción propia "tiene sentido cuando el error es del dominio y alguien lo va a
-capturar por su tipo". Una regla del negocio violada entra en la segunda: no es un error de tipeo que se chequea antes,
-es el dominio diciendo "no". La validación de **forma** (el usuario tipeó mal) sigue sin excepciones: atributos y
-`ModelState`.
+El tema 16 dice dos cosas que parecen contradecirse: "las excepciones son para lo excepcional" (por eso `TryParse` en
+lugar de capturar `FormatException`) y que una excepción propia "tiene sentido cuando el error es del dominio y alguien
+lo va a capturar por su tipo". Una regla del negocio violada corresponde al segundo caso: no es un error de tipeo que se
+verifica antes, es el dominio respondiendo "no". La validación de **forma** (el usuario escribió mal un dato) sigue sin
+excepciones: atributos y `ModelState`.
 :::
 
-**¿Quién trae los datos para mostrar?**
+**¿Quién obtiene los datos para mostrar?**
 
 | Forma | Ventaja | Desventaja |
 |---|---|---|
-| El controlador lee del repositorio y escribe a través del servicio (lo de este desafío) | sin métodos de "pasamanos" en el servicio | el controlador depende de repositorios y de servicios |
+| El controlador lee del repositorio y escribe a través del servicio (lo de este desafío) | sin métodos "pasamanos" en el servicio | el controlador depende de repositorios y de servicios |
 | Todo pasa por el servicio (`reservaService.Listar()`) | el controlador solo conoce servicios; capas estrictas | muchos métodos que solo llaman al repositorio |
 
 ## ⚠️ Errores típicos
 
 - **"Unable to resolve service for type 'IReservaService' while attempting to activate 'ReservasController'"**:
-  falta `AddScoped<IReservaService, ReservaService>()`, o registraste `AddScoped<ReservaService>()` (la clase) y el
-  controlador pide la interfaz. Lo que se pide tiene que ser lo que se registró.
-- **`catch (Exception ex)` en el controlador**: también atrapa tus bugs (`NullReferenceException`, un SQL mal escrito) y
-  se los muestra al usuario como si fueran una regla. Atrapá **solo** `ReglaDeNegocioException`. Y nunca un `catch` vacío.
-- **El campo de la excepción no coincide con el ViewModel** (`"Vuelo"` en vez de `"VueloId"`): `ModelState` queda
+  falta `AddScoped<IReservaService, ReservaService>()`, o se registró `AddScoped<ReservaService>()` (la clase) y el
+  controlador pide la interfaz. Lo que se pide debe coincidir con lo que se registró.
+- **`catch (Exception ex)` en el controlador**: también captura los bugs propios (`NullReferenceException`, un SQL mal
+  escrito) y los muestra al usuario como si fueran una regla. Capturar **solo** `ReglaDeNegocioException`. Y nunca un
+  `catch` vacío.
+- **El campo de la excepción no coincide con el ViewModel** (`"Vuelo"` en lugar de `"VueloId"`): `ModelState` queda
   inválido, pero el error no aparece en ningún lado. Con `""` va al resumen (`ModelOnly`).
 - **El servicio conoce MVC**: recibe un `ReservaCrearViewModel`, el `ModelState` o devuelve `IActionResult`. Si en
-  `Servicios/` aparece un `using Microsoft.AspNetCore.Mvc`, algo se coló.
-- **Cancelar o eliminar con un link** (`<a href="/Reservas/Cancelar/7">`): la acción es `[HttpPost]`, así que el link
-  responde 405 (*Method Not Allowed*). Y está bien que así sea: un GET nunca cambia datos.
+  `Servicios/` aparece un `using Microsoft.AspNetCore.Mvc`, hay un acoplamiento indebido.
+- **Cancelar o eliminar con un enlace** (`<a href="/Reservas/Cancelar/7">`): la acción es `[HttpPost]`, así que el
+  enlace responde 405 (*Method Not Allowed*). Es el comportamiento correcto: un GET nunca cambia datos.
 - **"Could not create an instance of type 'PasajeroFormViewModel'. Model bound complex types must … have a parameterless
-  constructor"**: le agregaste el constructor que recibe un `Pasajero` y te olvidaste del vacío. El binding lo necesita.
-- **Eliminar sin la regla**: SQLite te frena con *SQLite Error 19: 'FOREIGN KEY constraint failed'*, como una
-  excepción sin atrapar. La clave foránea es la última red; el mensaje amable lo da el servicio.
+  constructor"**: se agregó el constructor que recibe un `Pasajero` y se omitió el vacío. El binding lo necesita.
+- **Eliminar sin la regla**: SQLite rechaza la operación con *SQLite Error 19: 'FOREIGN KEY constraint failed'*, como
+  una excepción sin capturar. La clave foránea es la última red; el mensaje claro lo da el servicio.
