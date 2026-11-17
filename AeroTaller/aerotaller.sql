@@ -1,10 +1,80 @@
 -- ============================================================
--- datos.sql — datos de ejemplo de AeroTaller (desafío 1)
--- Se agregan AL FINAL de aerotaller.sql, DESPUÉS de los CREATE TABLE.
--- Si las tablas o columnas no se llaman exactamente como indica el desafío 1, estos INSERT fallan:
--- es a propósito (es el "contrato" que también revisa el verificador).
--- No deben modificarse: el verificador cuenta con estos datos (por ejemplo, que el 3A del AT1001 está ocupado).
+-- aerotaller.sql — base del TP AeroTaller (incluida en la plantilla)
+-- Aeropuertos, vuelos, pasajeros, reservas y usuarios, con datos de ejemplo.
+--
+-- Tres formas de crear aerotaller.db a partir de este script:
+--   · el botón "Crear base de datos" de la Torre de Control;
+--   · DB Browser for SQLite → pestaña "Ejecutar SQL" → ejecutar todo;
+--   · la propia aplicación al arrancar, si el archivo no existe (CrearBaseSiNoExiste, desafío 1).
+--
+-- Los nombres de tablas y columnas son los del CONTRATO.md y los datos son los que usa
+-- el verificador: no deben modificarse. En el simulacro se le agrega la tabla Equipaje.
 -- ============================================================
+
+PRAGMA foreign_keys = ON;
+
+DROP TABLE IF EXISTS Reserva;
+DROP TABLE IF EXISTS Vuelo;
+DROP TABLE IF EXISTS Pasajero;
+DROP TABLE IF EXISTS Aeropuerto;
+DROP TABLE IF EXISTS Usuario;
+
+CREATE TABLE Aeropuerto (
+    Id     INTEGER PRIMARY KEY AUTOINCREMENT,
+    Codigo TEXT NOT NULL UNIQUE,          -- código IATA: 'TUC', 'AEP'…
+    Ciudad TEXT NOT NULL,
+    Nombre TEXT NOT NULL
+);
+
+CREATE TABLE Vuelo (
+    Id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    Numero          TEXT NOT NULL UNIQUE,  -- 'AT1001'
+    OrigenId        INTEGER NOT NULL,
+    DestinoId       INTEGER NOT NULL,
+    Salida          TEXT NOT NULL,         -- 'AAAA-MM-DD HH:MM' (hora local)
+    DuracionMinutos INTEGER NOT NULL,
+    Filas           INTEGER NOT NULL,      -- cada fila tiene 6 asientos: A B C | D E F
+    Precio          REAL NOT NULL,
+    FOREIGN KEY (OrigenId)  REFERENCES Aeropuerto(Id),
+    FOREIGN KEY (DestinoId) REFERENCES Aeropuerto(Id),
+    CHECK (OrigenId <> DestinoId)
+);
+
+CREATE TABLE Pasajero (
+    Id     INTEGER PRIMARY KEY AUTOINCREMENT,
+    Nombre TEXT NOT NULL,
+    Dni    TEXT NOT NULL UNIQUE,
+    Email  TEXT
+);
+
+CREATE TABLE Reserva (
+    Id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    VueloId    INTEGER NOT NULL,
+    PasajeroId INTEGER NOT NULL,
+    Asiento    TEXT NOT NULL,              -- '12A'
+    Fecha      TEXT NOT NULL,              -- cuándo se hizo la reserva
+    Estado     TEXT NOT NULL DEFAULT 'Confirmada' CHECK (Estado IN ('Confirmada', 'Cancelada')),
+    FOREIGN KEY (VueloId)    REFERENCES Vuelo(Id),
+    FOREIGN KEY (PasajeroId) REFERENCES Pasajero(Id)
+);
+
+-- Defensa en profundidad: aunque el servicio ya lo controla, la BASE no admite
+-- dos reservas confirmadas en el mismo asiento del mismo vuelo (índice único parcial).
+-- Si dos personas reservan a la vez, una de las dos operaciones produce una SqliteException.
+CREATE UNIQUE INDEX UX_Reserva_AsientoConfirmado
+    ON Reserva (VueloId, Asiento) WHERE Estado = 'Confirmada';
+
+-- Usuarios del sistema (no confundir con Pasajero: los pasajeros no inician sesión).
+-- Atención: clave en texto plano SOLO para el TP (igual que en el tema 15). Ver "Para investigar" del desafío 9.
+CREATE TABLE Usuario (
+    Id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    NombreUsuario TEXT NOT NULL UNIQUE,
+    Nombre        TEXT NOT NULL,
+    Clave         TEXT NOT NULL,
+    Rol           TEXT NOT NULL CHECK (Rol IN ('Admin', 'Mostrador'))
+);
+
+-- ── Datos de ejemplo ──────────────────────────────────────────
 
 INSERT INTO Aeropuerto (Codigo, Ciudad, Nombre) VALUES
     ('TUC', 'San Miguel de Tucumán', 'Teniente Benjamín Matienzo'),
@@ -16,7 +86,7 @@ INSERT INTO Aeropuerto (Codigo, Ciudad, Nombre) VALUES
     ('SLA', 'Salta',                 'Martín Miguel de Güemes'),
     ('USH', 'Ushuaia',               'Malvinas Argentinas');
 
--- Las fechas se calculan a partir de HOY, así siempre hay vuelos futuros para reservar.
+-- Las fechas se calculan a partir de HOY; de este modo siempre hay vuelos futuros para reservar.
 -- strftime('%Y-%m-%d %H:%M', 'now', 'localtime', '+3 days', 'start of day', '+7 hours', '+30 minutes')
 --   → dentro de 3 días a las 07:30, en el formato 'AAAA-MM-DD HH:MM'
 INSERT INTO Vuelo (Numero, OrigenId, DestinoId, Salida, DuracionMinutos, Filas, Precio) VALUES
@@ -58,3 +128,6 @@ INSERT INTO Reserva (VueloId, PasajeroId, Asiento, Fecha, Estado) VALUES
     (9, 5, '1D',  strftime('%Y-%m-%d %H:%M', 'now', 'localtime', '-7 days'),  'Confirmada'),
     (9, 6, '1E',  strftime('%Y-%m-%d %H:%M', 'now', 'localtime', '-2 days'),  'Confirmada');
 
+INSERT INTO Usuario (NombreUsuario, Nombre, Clave, Rol) VALUES
+    ('admin',     'Administración', 'aero2026',   'Admin'),
+    ('mostrador', 'Marta',          'vuelos2026', 'Mostrador');

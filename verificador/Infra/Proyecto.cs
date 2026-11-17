@@ -74,7 +74,7 @@ public class Proyecto
           .Select(f => f.Ruta)
           .ToList();
 
-    // Para que un "new VueloRepository(" en un comentario no cuente
+    // Para que un "new VueloRepository(" en un comentario no se contabilice
     public static string SinComentarios(string codigo) =>
         Regex.Replace(Regex.Replace(codigo, @"/\*.*?\*/", "", RegexOptions.Singleline), @"//[^\n]*", "");
 

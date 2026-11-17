@@ -1,12 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 
-// Todo lo que el alumno hace dentro de un desafío. El controlador no decide nada: delega en los servicios.
+// Acciones del alumno dentro de un desafío. El controlador no contiene lógica de negocio: delega en los servicios.
 [ApiController]
 [Route("api/alumnos/{alumnoId:int}")]
 public class ProgresoController(
     IProgresoService progreso,
     IQuizService quiz,
     IVerificadorService verificador,
+    IBaseAeroTallerService baseAeroTaller,
     IInsigniaService insignias) : ControllerBase
 {
     [HttpGet("mapa")]
@@ -40,6 +41,13 @@ public class ProgresoController(
     [HttpPost("desafios/{desafioId}/verificar")]
     public ActionResult<ResultadoVerificacion> Verificar(int alumnoId, string desafioId) =>
         verificador.Verificar(alumnoId, desafioId);
+
+    // La base de AeroTaller en la carpeta del repositorio: su estado y la acción para crearla o recrearla
+    [HttpGet("base")]
+    public ActionResult<EstadoBaseAeroTaller> Base(int alumnoId) => baseAeroTaller.Estado(alumnoId);
+
+    [HttpPost("base")]
+    public ActionResult<ResultadoCrearBase> CrearBase(int alumnoId) => baseAeroTaller.Crear(alumnoId);
 
     [HttpGet("repo")]
     public ActionResult<EstadoRepoGit> Repo(int alumnoId) => verificador.EstadoRepo(alumnoId);

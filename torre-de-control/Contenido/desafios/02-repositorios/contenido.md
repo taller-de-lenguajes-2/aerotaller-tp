@@ -1,29 +1,29 @@
-## 🎯 Misión
+## :target: Misión
 
-La base ya existe, pero C# todavía no la conoce. En este desafío se construyen las dos piezas que conectan el mundo de las
+La base ya existe, pero todavía no hay código C# que acceda a ella. En este desafío se construyen las dos piezas que conectan el mundo de las
 **filas** con el mundo de los **objetos**:
 
-1. **El modelo** (`Models/Modelos.cs`): las clases de AeroTaller (`Vuelo`, `Pasajero`, `Reserva`…), que no saben nada de
-   SQL ni de HTML.
-2. **Los repositorios** (`Repositorios/`): una clase por tabla con **todo** el SQL, siempre con parámetros. Desde afuera se
-   ve `Listar()` u `Obtener(id)`; adentro quedan las conexiones, los comandos y los lectores.
+1. **El modelo** (`Models/Modelos.cs`): las clases de AeroTaller (`Vuelo`, `Pasajero`, `Reserva`…), que no dependen
+   de SQL ni de HTML.
+2. **Los repositorios** (`Repositorios/`): una clase por tabla con **todo** el SQL, siempre con parámetros. Hacia afuera
+   exponen `Listar()` u `Obtener(id)`; internamente quedan las conexiones, los comandos y los lectores.
 
-Y se prueban **sin pantallas**: un poco de código temporal en `Program.cs` y un breakpoint para inspeccionar los objetos
-que devuelven. En el desafío 3 los controladores los usan tal cual.
+Además, se prueban **sin pantallas**, mediante código temporal en `Program.cs` y un breakpoint para inspeccionar los objetos
+que devuelven. En el desafío 3 los controladores los usan sin modificaciones.
 
 :::nota
 Es el desafío más largo del TP, y el que más se parece al parcial: en casi todos los parciales hay una tabla nueva con su
 repositorio. Es razonable que requiera dos sesiones. Conviene hacer un commit al terminar cada repositorio.
 :::
 
-## 📚 Repaso
+## :book-open-text: Repaso
 
 Cuatro temas confluyen en este desafío:
 
 | Tema | La idea | Dónde aparece en este desafío |
 |---|---|---|
 | 01 · Abstracción | de la realidad se conserva lo que necesita **el** sistema | `Vuelo` tiene `Filas`, no la marca del avión |
-| 01 · Ocultamiento | lo que es detalle va `private` | `LeerAeropuerto(lector)` no se ve de afuera |
+| 01 · Ocultamiento | los detalles internos se declaran `private` | `LeerAeropuerto(lector)` no es accesible desde afuera |
 | 02 · Asociación | una clase tiene como miembro a otra | `Reserva` tiene un `Vuelo` y un `Pasajero` (objetos, no Ids) |
 | 08 · ADO.NET | `SqliteConnection` → `SqliteCommand` → `SqliteDataReader`, parámetros | el cuerpo de cada método |
 | 09 · Repositorio | una clase por entidad, una sola razón para cambiar | `VueloRepository`, `PasajeroRepository`… |
@@ -31,12 +31,12 @@ Cuatro temas confluyen en este desafío:
 La **receta** del tema 08, que se repite en cada método:
 
 1. `using var conexion = new SqliteConnection(cadenaConexion);` y `conexion.Open();`
-2. El SQL, con `@parámetros` para todo lo que venga de afuera.
+2. El SQL, con `@parámetros` para todo valor que provenga del exterior.
 3. `using var comando = new SqliteCommand(sql, conexion);` + `Parameters.AddWithValue(…)`.
-4. Ejecutar: `ExecuteReader` (filas), `ExecuteNonQuery` (cuántas cambió) o `ExecuteScalar` (un valor).
+4. Ejecutar: `ExecuteReader` (filas), `ExecuteNonQuery` (filas afectadas) o `ExecuteScalar` (un valor).
 5. Si hay filas: `while (lector.Read())` → objetos.
 
-Y la regla del tema 09 para saber si algo va en el repositorio:
+La regla del tema 09 para decidir qué va en el repositorio:
 
 | Sí va | No va |
 |---|---|
@@ -47,22 +47,50 @@ Y la regla del tema 09 para saber si algo va en el repositorio:
 
 :::catedra
 En el [tema 09](https://taller-de-lenguajes-2.github.io/clases/tema-09-repositorios/index.html) el repositorio venía
-con su interfaz (`IPacienteRepository`). En AeroTaller **la interfaz llega en el desafío 7**: por ahora se escribe la clase
+con su interfaz (`IPacienteRepository`). En AeroTaller **la interfaz se incorpora en el desafío 7**: por ahora se escribe la clase
 concreta, que recibe la cadena por el constructor igual que `PacienteRepository(string cadenaConexion)` de los temas 09
 y 10. Cuando en el desafío 7 se reemplace SQLite por datos en memoria, quedará claro para qué sirve la interfaz.
 :::
 
-## 💻 Paso a paso
+### :lightbulb: Tips y recursos
+
+**¿Cómo se lee una columna?**
+
+| Forma | Ejemplo | A favor | En contra | Cuándo |
+|---|---|---|---|---|
+| Por posición | `lector.GetInt32(0)` | rápido, tipado, permite la técnica de `desde` para reutilizar bloques | si cambia el orden del `SELECT`, se leen datos cruzados | la que se usa en AeroTaller (tema 08) |
+| Por nombre | `lector["Nombre"]` | autoexplicativo; el orden no importa | devuelve `object` (requiere conversión); en un JOIN dos columnas se llaman `Id`: hacen falta alias con `AS` | consultas cortas, sin JOIN |
+| Posición a partir del nombre | `lector.GetString(lector.GetOrdinal("Nombre"))` | tipado y sin depender del orden | más extenso; mismo problema de nombres repetidos | cuando el `SELECT` cambia con frecuencia |
+
+**¿Cómo se guarda una relación en el objeto?**
+
+| Forma | Ejemplo | A favor | En contra |
+|---|---|---|---|
+| Objeto completo | `Vuelo.Origen` es un `Aeropuerto` | en la vista se escribe `vuelo.Origen.Ciudad` sin otra consulta; es orientado a objetos | cada lectura requiere el JOIN; para insertar es necesario construir el objeto (o al menos su `Id`) |
+| Solo el Id | `Vuelo.OrigenId` es un `int` | igual a la tabla, simple de insertar | para mostrar la ciudad hay que hacer otra consulta por cada vuelo (el problema "N+1") |
+
+En AeroTaller se usa el objeto completo en el modelo. En el desafío 4 se verá que los **formularios** sí trabajan con
+Ids (`OrigenId`, `VueloId`): en ese punto se incorporan los ViewModels.
+
+:::catedra
+En el [tema 08](https://taller-de-lenguajes-2.github.io/clases/tema-08-ado-net/index.html) el JOIN de turnos se leía **por
+nombre**, con alias (`p.Nombre AS PacienteNombre`, `lector["PacienteNombre"]`). En AeroTaller se lee **por posición**, con un
+`desde`, para reutilizar `LeerVuelo` y `LeerPasajero` desde `ReservaRepository`. Las dos formas son correctas: en el
+parcial, lo importante es elegir una y ser consistente. Para el Id generado, la diapositiva también menciona `SELECT last_insert_rowid()`
+después del `INSERT`; `RETURNING Id` hace lo mismo en una sola instrucción.
+:::
+
+## :code-xml: Paso a paso
 
 ### Paso 1 · El modelo: `Models/Modelos.cs`
 
-Crear la carpeta `Models/` y dentro `Modelos.cs`. Sin `namespace` (como en los ejemplos de la cátedra): así las vistas
-y los controladores las ven sin `using`.
+Crear la carpeta `Models/` y dentro `Modelos.cs`. Sin `namespace` (como en los ejemplos de la cátedra): así las clases
+son accesibles desde las vistas y los controladores sin `using`.
 
 Las decisiones de abstracción importantes:
 
 - **`Vuelo.Origen` y `Vuelo.Destino` son objetos `Aeropuerto`**, no `int OrigenId`. En la base la relación es una clave
-  foránea; en C#, un objeto adentro de otro. Así una vista escribe `vuelo.Origen.Ciudad` sin pedir nada más.
+  foránea; en C#, un objeto dentro de otro. Así, en una vista se escribe `vuelo.Origen.Ciudad` sin consultas adicionales.
 - **Lo que se deduce, se calcula**: la llegada, la capacidad, si ya salió. No son columnas de la tabla: son propiedades
   de solo lectura (`=>`). Si cambia `Filas`, `Capacidad` nunca queda desactualizada.
 - **El estado es un `enum`**, no un `string`: el compilador no permite escribir `"Confirmda"`.
@@ -107,7 +135,7 @@ Usar `int.TryParse` para la fila y `LetrasAsiento.Contains(letra)` para la letra
 :::solucion Ver Modelos.cs completo
 ```csharp
 // El dominio de AeroTaller (desafío 2).
-// Son clases "de negocio": no saben nada de SQL, de HTML ni de formularios.
+// Son clases "de negocio": no dependen de SQL, de HTML ni de formularios.
 
 public class Aeropuerto
 {
@@ -161,7 +189,7 @@ public class Pasajero
     public string? Email { get; set; }             // opcional, como en la tabla
 }
 
-// Un enum en vez de un string suelto: el compilador no deja escribir "Confirmda"
+// Un enum en vez de un string suelto: el compilador no permite escribir "Confirmda"
 public enum EstadoReserva
 {
     Confirmada,
@@ -191,8 +219,8 @@ public record OcupacionVuelo(int VueloId, string Numero, string Ruta, DateTime S
 la diapositiva "Una clase por tabla" dice que `Turno` tiene un objeto `Paciente` y lo llama **composición**, en el sentido
 amplio de "un objeto armado con otros". Si se aplica la pregunta del [tema 02](https://taller-de-lenguajes-2.github.io/clases/tema-02-composicion-y-agregacion/index.html)
 ("si destruyo el contenedor, ¿el contenido tiene sentido por sí solo?"), el aeropuerto de Tucumán sigue existiendo aunque
-se cancele el vuelo: con ese criterio es **agregación** (◇). Si se pregunta en el parcial, la respuesta que suma es
-la que **justifica con el ciclo de vida**.
+se cancele el vuelo: con ese criterio es **agregación** (◇). Si se pregunta en el parcial, la respuesta adecuada es
+la que **se justifica con el ciclo de vida**.
 :::
 
 ### Paso 2 · El más simple: `AeropuertoRepository`
@@ -203,7 +231,7 @@ ciudad) y `Obtener(int id)`.
 ```csharp
 using Microsoft.Data.Sqlite;
 
-// Todo el SQL de la tabla Aeropuerto vive aquí
+// Todo el SQL de la tabla Aeropuerto se concentra aquí
 public class AeropuertoRepository(string cadenaConexion)
 {
     public Aeropuerto? Obtener(int id)
@@ -215,10 +243,10 @@ public class AeropuertoRepository(string cadenaConexion)
         comando.Parameters.AddWithValue("@id", id);
 
         using var lector = comando.ExecuteReader();
-        return lector.Read() ? LeerAeropuerto(lector) : null;   // no existe → null (el controlador decidirá el 404)
+        return lector.Read() ? LeerAeropuerto(lector) : null;   // no existe → null (el 404 se resuelve en el controlador)
     }
 
-    // Detalle interno: de una fila a un objeto. Nadie de afuera lo necesita → private
+    // Detalle interno: de una fila a un objeto. No se usa desde afuera → private
     private static Aeropuerto LeerAeropuerto(SqliteDataReader lector) => new()
     {
         Id = lector.GetInt32(0),
@@ -230,22 +258,22 @@ public class AeropuertoRepository(string cadenaConexion)
 ```
 
 `(string cadenaConexion)` después del nombre de la clase es un **primary constructor**: el parámetro se puede usar en todos
-los métodos. El repositorio **recibe** la cadena; no la inventa ni la lee de `appsettings.json` (eso es trabajo de `Program.cs`).
+los métodos. El repositorio **recibe** la cadena; no la define ni la lee de `appsettings.json` (esa responsabilidad corresponde a `Program.cs`).
 
 Escribir `Listar()` sin ayuda: mismo esquema, `ORDER BY Ciudad`, y un `while (lector.Read())` que agrega a una lista.
 
 ### Paso 3 · El CRUD completo: `PasajeroRepository`
 
-Es el repositorio "de libro" del tema 09: `Listar`, `Buscar`, `Obtener`, `Insertar`, `Actualizar`, `Eliminar`, más
-`ExisteDni` (se necesita en el desafío 5 para no repetir DNIs). Tres cosas nuevas respecto del aeropuerto:
+Es el repositorio típico del tema 09: `Listar`, `Buscar`, `Obtener`, `Insertar`, `Actualizar`, `Eliminar`, más
+`ExisteDni` (se necesita en el desafío 5 para no repetir DNIs). Tres elementos nuevos respecto del aeropuerto:
 
-**El `NULL` de la base.** `Email` es opcional: un `NULL` llega como `DBNull` y `GetString` lanza una excepción. Se pregunta antes:
+**El `NULL` de la base.** `Email` es opcional: un `NULL` llega como `DBNull` y `GetString` lanza una excepción. Se verifica antes:
 
 ```csharp
 Email = lector.IsDBNull(3) ? null : lector.GetString(3)
 ```
 
-Y al revés, al insertar: un `null` de C# se manda como `DBNull.Value`:
+A la inversa, al insertar: un `null` de C# se envía como `DBNull.Value`:
 
 ```csharp
 comando.Parameters.AddWithValue("@email", (object?)pasajero.Email ?? DBNull.Value);   // null de C# → NULL de SQL
@@ -259,8 +287,8 @@ using var comando = new SqliteCommand(Select + " WHERE Nombre LIKE @texto OR Dni
 comando.Parameters.AddWithValue("@texto", $"%{texto}%");
 ```
 
-Ese `$"%{texto}%"` es una interpolación, pero arma el **valor del parámetro**: viaja aparte y el motor nunca lo lee como
-SQL. Lo prohibido es interpolar **adentro del SQL**.
+Ese `$"%{texto}%"` es una interpolación, pero construye el **valor del parámetro**: se envía por separado y el motor nunca lo
+interpreta como SQL. Lo que no debe hacerse es interpolar **dentro del SQL**.
 
 **Insertar y devolver el Id**, con `RETURNING Id` y `ExecuteScalar` (tema 08):
 
@@ -363,8 +391,8 @@ public class PasajeroRepository(string cadenaConexion)
         return comando.ExecuteNonQuery() > 0;
     }
 
-    // Si el pasajero tiene reservas, la clave foránea no deja borrarlo: SQLite lanza SqliteException
-    // y el repositorio NO la atrapa (no sabe qué hacer con ella). Eso se decide más arriba (desafío 8).
+    // Si el pasajero tiene reservas, la clave foránea impide borrarlo: SQLite lanza SqliteException
+    // y el repositorio NO la captura (su manejo no le corresponde). Eso se resuelve en una capa superior (desafío 8).
     public bool Eliminar(int id)
     {
         using var conexion = new SqliteConnection(cadenaConexion);
@@ -401,7 +429,7 @@ public class PasajeroRepository(string cadenaConexion)
 
 ### Paso 4 · El JOIN doble: `VueloRepository`
 
-Para armar un `Vuelo` completo hacen falta sus **dos** aeropuertos: es la consulta 3 del desafío 1, ahora desde C#.
+Para construir un `Vuelo` completo se necesitan sus **dos** aeropuertos: es la consulta 3 del desafío 1, ahora desde C#.
 Como todos los métodos de lectura usan el mismo `SELECT … FROM … JOIN`, se escribe una sola vez en una constante:
 
 ```csharp
@@ -454,16 +482,16 @@ Los métodos del repositorio, y cuándo se usan:
 | `Obtener(int id)` | uno o `null` | desafío 3 |
 | `ListarOcupacion()` | la consulta 4 del desafío 1 → `List<OcupacionVuelo>`, solo vuelos futuros | desafío 3 (el tablero) |
 | `Buscar(int? destinoId, DateTime? desde)` | filtros opcionales | desafío 4 |
-| `ExisteNumero(string numero)` | ¿ya hay un vuelo con ese número? | desafío 5 |
+| `ExisteNumero(string numero)` | indica si ya existe un vuelo con ese número | desafío 5 |
 | `Insertar(Vuelo vuelo)` | `INSERT … RETURNING Id` con `vuelo.Origen.Id` y `vuelo.Destino.Id` | desafío 5 |
 
 Pueden escribirse ahora los seis o dejar los últimos tres para cuando se necesiten. El verificador de este desafío comprueba que
 existan los cuatro repositorios y que usen parámetros.
 
 :::nota
-En `Buscar` el `WHERE` se arma de a pedazos según qué filtros vinieron (`condiciones.Add("v.DestinoId = @destinoId")`).
-Eso **no** es inyección: los pedazos son texto fijo escrito por quien programa y los valores van como parámetros. Lo peligroso es
-pegar en el SQL algo que escribió el usuario.
+En `Buscar` el `WHERE` se construye por partes según los filtros recibidos (`condiciones.Add("v.DestinoId = @destinoId")`).
+Eso **no** es inyección: las partes son texto fijo escrito por quien programa y los valores van como parámetros. El riesgo está en
+insertar en el SQL un texto ingresado por el usuario.
 :::
 
 :::solucion Ver VueloRepository.cs
@@ -496,7 +524,7 @@ public class VueloRepository(string cadenaConexion)
         return LeerVuelos(comando);
     }
 
-    // Filtros opcionales: el WHERE se arma solo con los que vinieron, pero SIEMPRE con parámetros
+    // Filtros opcionales: el WHERE se construye solo con los filtros recibidos, pero SIEMPRE con parámetros
     public List<Vuelo> Buscar(int? destinoId, DateTime? desde)
     {
         using var conexion = new SqliteConnection(cadenaConexion);
@@ -648,11 +676,11 @@ public class VueloRepository(string cadenaConexion)
 
 ### Paso 5 · Juntar todo: `ReservaRepository`
 
-La reserva es la que más tablas toca: la reserva, su vuelo **con los dos aeropuertos** y el pasajero. Son cuatro tablas,
+La reserva es la entidad que involucra más tablas: la reserva, su vuelo **con los dos aeropuertos** y el pasajero. Son cuatro tablas,
 pero `Aeropuerto` aparece dos veces: cinco alias. La técnica consiste en ordenar las columnas **en bloques** y reutilizar los
 lectores de los otros repositorios:
 
-| Posiciones | Bloque | Lo lee |
+| Posiciones | Bloque | Se lee con |
 |---|---|---|
 | 0 – 3 | `r.Id, r.Asiento, r.Fecha, r.Estado` | `LeerReservas` |
 | 4 – 17 | el vuelo y sus aeropuertos, **en el mismo orden** que `VueloRepository` | `VueloRepository.LeerVuelo(lector, 4)` |
@@ -665,7 +693,7 @@ Estado = Enum.Parse<EstadoReserva>(lector.GetString(3)),        // "Confirmada" 
 comando.Parameters.AddWithValue("@estado", reserva.Estado.ToString());   // y al revés, para guardar
 ```
 
-Los métodos, y para qué sirven más adelante:
+Los métodos y su uso en los desafíos siguientes:
 
 | Método | Para |
 |---|---|
@@ -681,7 +709,7 @@ Los métodos, y para qué sirven más adelante:
 :::cuidado
 Las consultas que cuentan o buscan asientos (`AsientosOcupados`, `ContarConfirmadas`, `PasajeroTieneReserva`) filtran
 `Estado = 'Confirmada'`. Una reserva cancelada **libera** el asiento: si se omite el filtro, el 1C del AT1001 (cancelado
-en los datos de ejemplo) figura como ocupado para siempre.
+en los datos de ejemplo) figura como ocupado de forma permanente.
 :::
 
 :::solucion Ver ReservaRepository.cs
@@ -689,7 +717,7 @@ en los datos de ejemplo) figura como ocupado para siempre.
 using System.Globalization;
 using Microsoft.Data.Sqlite;
 
-// La reserva junta todo: vuelo (con sus dos aeropuertos) + pasajero → JOIN de 4 tablas (5 alias).
+// La reserva reúne todo: vuelo (con sus dos aeropuertos) + pasajero → JOIN de 4 tablas (5 alias).
 public class ReservaRepository(string cadenaConexion)
 {
     // Columnas 0–3: reserva · 4–17: vuelo y aeropuertos (mismo orden que VueloRepository) · 18–21: pasajero
@@ -850,10 +878,10 @@ var prueba = new VueloRepository(cadenaConexion).Listar();
 var reservasDeAna = new ReservaRepository(cadenaConexion).ListarPorPasajero(1);
 var terminanEnEz = new PasajeroRepository(cadenaConexion).Buscar("ez");
 var ocupacion = new VueloRepository(cadenaConexion).ListarOcupacion();
-Console.WriteLine($"Vuelos: {prueba.Count} · reservas de Ana: {reservasDeAna.Count}");   // ← 🔴 breakpoint aquí
+Console.WriteLine($"Vuelos: {prueba.Count} · reservas de Ana: {reservasDeAna.Count}");   // ← breakpoint aquí
 ```
 
-Colocar el breakpoint en el `Console.WriteLine` y arrancar con **F5**. Se detiene antes de que la app empiece a atender pedidos.
+Colocar el breakpoint en el `Console.WriteLine` y arrancar con **F5**. La ejecución se detiene antes de que la app comience a atender solicitudes.
 En el panel **Variables**, desplegar cada lista y comprobar:
 
 | Variable | Qué debe verse |
@@ -863,85 +891,14 @@ En el panel **Variables**, desplegar cada lista y comprobar:
 | `terminanEnEz` | Ana Gómez y Facundo López |
 | `ocupacion` | 8 vuelos (el que ya salió no está) con `Ocupados` y `Porcentaje` |
 
-Si algo falla, el mensaje de la excepción indica qué columna se leyó mal (ver los errores típicos más abajo).
+Si algo falla, el mensaje de la excepción indica qué columna se leyó mal.
 
 :::cuidado
 Cuando todo funcione, **eliminar el bloque de prueba**. Es código de exploración, no para el repositorio: la app no debe hacer
-consultas de prueba cada vez que arranca. En el desafío 3 los repositorios los crean los controladores… sin `new`.
+consultas de prueba cada vez que arranca. En el desafío 3, los controladores obtienen los repositorios sin usar `new`.
 :::
 
 ### Paso 7 · Commit
 
-Como se indicó en la misión: un commit por repositorio es una buena costumbre. Al final, el commit del desafío con
+Como se indicó en la misión: un commit por repositorio es una buena práctica. Al final, el commit del desafío con
 `Program.cs` limpio.
-
-## 🔴 Breakpoints
-
-:::breakpoint Program.cs · el Console.WriteLine de la prueba
-Desplegar `prueba[1]`. ¿Qué vuelo es y por qué no es el `AT1001`? Observar `Capacidad`, `Llegada`, `YaSalio` y `LlegaAlOtroDia`:
-ninguna es una columna, pero el depurador las muestra como si lo fueran. Buscar en la lista el `AT3110`: ¿`LlegaAlOtroDia`
-es `true`? Agregar al Watch `prueba[0].Origen == prueba[1].Origen`: ¿es el mismo objeto aunque los dos salgan de Tucumán?
-:::
-
-:::breakpoint VueloRepository.cs · LeerVuelo
-Colocar un breakpoint dentro de `LeerVuelo` y arrancar. Se detiene primero desde `Listar` (observar el **Call Stack**: `LeerVuelos`
-→ `Listar` → `Program`). Presionar F5 varias veces hasta que la pila muestre `LeerReservas` (la llamada de `ReservaRepository`):
-¿cuánto vale `desde` en cada caso? Agregar al Watch `lector.GetString(desde + 1)`: siempre debe ser un número de vuelo.
-:::
-
-:::breakpoint PasajeroRepository.cs · Buscar
-Detener la ejecución en el `return LeerPasajeros(comando);` y observar en el Watch `comando.CommandText` y `comando.Parameters[0].Value`.
-El SQL nunca contiene `ez`: el valor viaja aparte. A continuación, cambiar en la prueba `Buscar("ez")` por `Buscar("' OR '1'='1")`:
-¿cuántos pasajeros trae?
-:::
-
-Preguntas para analizar:
-
-- Si dos vuelos salen de TUC, ¿cuántos objetos `Aeropuerto` de Tucumán hay en memoria? ¿Importa?
-- ¿Qué ocurre con `reservasDeAna` si se borra la reserva 1 en DB Browser y se vuelve a arrancar?
-
-## 🔀 Alternativas
-
-**¿Cómo se lee una columna?**
-
-| Forma | Ejemplo | A favor | En contra | Cuándo |
-|---|---|---|---|---|
-| Por posición | `lector.GetInt32(0)` | rápido, tipado, permite la técnica de `desde` para reutilizar bloques | si cambia el orden del `SELECT`, lee datos cruzados | la que se usa en AeroTaller (tema 08) |
-| Por nombre | `lector["Nombre"]` | se entiende solo; el orden no importa | devuelve `object` (hay que convertir); en un JOIN dos columnas se llaman `Id`: hacen falta alias con `AS` | consultas cortas, sin JOIN |
-| Posición a partir del nombre | `lector.GetString(lector.GetOrdinal("Nombre"))` | tipado y sin depender del orden | más largo; mismo problema de nombres repetidos | cuando el `SELECT` cambia seguido |
-
-**¿Cómo se guarda una relación en el objeto?**
-
-| Forma | Ejemplo | A favor | En contra |
-|---|---|---|---|
-| Objeto completo | `Vuelo.Origen` es un `Aeropuerto` | la vista escribe `vuelo.Origen.Ciudad` sin otra consulta; es orientado a objetos | cada lectura necesita el JOIN; para insertar hay que armar el objeto (o al menos su `Id`) |
-| Solo el Id | `Vuelo.OrigenId` es un `int` | igual a la tabla, simple de insertar | para mostrar la ciudad hay que hacer otra consulta por cada vuelo (el problema "N+1") |
-
-En AeroTaller se usa el objeto completo en el modelo. En el desafío 4 se verá que los **formularios** sí trabajan con
-Ids (`OrigenId`, `VueloId`): ahí es donde entran los ViewModels.
-
-:::catedra
-En el [tema 08](https://taller-de-lenguajes-2.github.io/clases/tema-08-ado-net/index.html) el JOIN de turnos se leía **por
-nombre**, con alias (`p.Nombre AS PacienteNombre`, `lector["PacienteNombre"]`). En AeroTaller se lee **por posición**, con un
-`desde`, para reutilizar `LeerVuelo` y `LeerPasajero` desde `ReservaRepository`. Las dos formas son correctas: en el
-parcial, lo importante es elegir una y ser consistente. Para el Id generado, la diapositiva también menciona `SELECT last_insert_rowid()`
-después del `INSERT`; `RETURNING Id` hace lo mismo en una sola instrucción.
-:::
-
-## ⚠️ Errores típicos
-
-- **`GetString` sobre un `NULL`**: `The data is NULL at ordinal 3. This method can't be called on NULL values. Check using
-  IsDBNull before calling.` Es el `Email` de Bruno Díaz. Consultar `IsDBNull` antes.
-- **SQL armado con el valor adentro**: `$"… WHERE Dni = '{dni}'"` o `"… WHERE Id = " + id`. Funciona en la prueba, es
-  inyección SQL en la vida real y el verificador lo marca en rojo. Todo valor de afuera va con `AddWithValue`.
-- **El `%` en el SQL**: `"… LIKE '%@texto%'"` no reemplaza nada (adentro de comillas `@texto` es texto común) y la búsqueda
-  no trae resultados. Los `%` van en el valor: `$"%{texto}%"`.
-- **Posiciones corridas** en `LeerVuelo` o `LeerReservas`: a veces falla con una conversión inválida y a veces, peor,
-  lee datos cruzados sin avisar (la ciudad en el nombre, el Id del aeropuerto en `Filas`). Contar las columnas del `SELECT`
-  desde 0, con el breakpoint de `LeerVuelo`.
-- **Fechas sin formato fijo**: `DateTime.Parse` o `vuelo.Salida.ToString()` usan la cultura de la máquina (`18/11/2026 7:30:00 a. m.`
-  en es-AR). Al guardar se rompe el orden de los textos y al leer, `ParseExact` lanza `FormatException`. Siempre
-  `FormatoFecha` + `CultureInfo.InvariantCulture`.
-- **El enum como número**: `AddWithValue("@estado", reserva.Estado)` manda `0` y el `CHECK` de la tabla lo rechaza:
-  `CHECK constraint failed: Estado IN ('Confirmada', 'Cancelada')`. Enviar `reserva.Estado.ToString()`.
-- **Olvidarse el código de prueba en `Program.cs`**: la app hace cuatro consultas cada vez que arranca y el commit queda sucio.

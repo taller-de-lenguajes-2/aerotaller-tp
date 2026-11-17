@@ -33,17 +33,19 @@ export default {
       error.value = null;
       if (!form.nombre.trim()) { error.value = 'El nombre es obligatorio.'; return; }
       guardando.value = true;
+      const nueva = !editando.value;
       try {
         if (editando.value) {
           await api.actualizarAlumno(estado.alumnoId, { ...form });
-          avisar('Tarjeta de embarque actualizada.', { icono: '🎫' });
+          avisar('Tarjeta de embarque actualizada.', { icono: 'ticket' });
         } else {
           const nuevo = await api.crearAlumno({ ...form });
           elegirAlumno(nuevo.id);
-          avisar(`Tarjeta de embarque creada: ${nuevo.nombre}.`, { icono: '🎫' });
+          avisar(`Tarjeta de embarque creada: ${nuevo.nombre}.`, { icono: 'ticket' });
         }
         await refrescarResumen();
-        location.hash = '#/plan';
+        // Una tarjeta nueva empieza por la introducción del proyecto; una edición vuelve al plan
+        location.hash = nueva ? '#/introduccion' : '#/plan';
       } catch (e) { error.value = e.message; } finally { guardando.value = false; }
     }
 
@@ -60,25 +62,25 @@ export default {
         <h1>{{ editando ? 'Tarjeta de embarque' : 'Check-in' }}</h1>
         <p class="suave" v-if="!editando">
           El progreso (tareas, cuestionarios, bitácora e insignias) se guarda en <code>torre-de-control/progreso.db</code>,
-          en esta computadora. Si la máquina es compartida, cada persona usa su propia tarjeta.
+          en esta computadora. Si la computadora es compartida, cada persona usa su propia tarjeta.
         </p>
 
         <div class="boarding">
           <div class="principal">
-            <div class="cabecera"><strong>✈ AEROTALLER</strong><span class="mono">TARJETA DE EMBARQUE</span></div>
+            <div class="cabecera"><strong><Icono nombre="plane" /> AEROTALLER</strong><span class="mono">TARJETA DE EMBARQUE</span></div>
             <div class="ruta"><span>TL2</span><span class="linea"></span><span>{{ iniciales }}</span></div>
             <form @submit.prevent="guardar">
               <label class="campo" for="nombre">Pasajero (nombre y apellido)</label>
               <input id="nombre" type="text" v-model="form.nombre" autocomplete="name" placeholder="Ana Gómez">
               <label class="campo" for="ruta">Carpeta del repositorio (la que contiene AeroTaller/)</label>
               <input id="ruta" type="text" v-model="form.rutaProyecto" class="mono">
-              <p class="suave" style="font-size:.85rem;margin:.3rem 0 0">La usan el botón Verificar y el estado de git. Si la Torre se ejecuta desde el repositorio clonado, no es necesario modificarla.</p>
+              <p class="suave" style="font-size:.85rem;margin:.3rem 0 0">Se utiliza para el botón Verificar y para consultar el estado de git. Si la Torre se ejecuta desde el repositorio clonado, no es necesario modificarla.</p>
               <label class="fila" style="margin-top:.9rem;font-size:.92rem">
                 <input type="checkbox" v-model="form.modoLibre"> Modo libre: todos los desafíos desbloqueados (para repasar)
               </label>
               <div class="error-caja" v-if="error" style="margin-top:.8rem">{{ error }}</div>
               <p style="margin-top:1.2rem">
-                <button class="boton ambar" type="submit" :disabled="guardando">{{ editando ? 'Guardar cambios' : 'Embarcar ✈' }}</button>
+                <button class="boton ambar" type="submit" :disabled="guardando">{{ editando ? 'Guardar cambios' : 'Embarcar' }} <Icono v-if="!editando" nombre="plane-takeoff" /></button>
                 <a v-if="editando" href="#/plan" style="margin-left:1rem">volver al plan</a>
               </p>
             </form>
@@ -88,7 +90,7 @@ export default {
               <dt>Vuelo</dt><dd class="mono">AT-TP2</dd>
               <dt>Puerta</dt><dd class="mono">5200</dd>
               <dt>Asiento</dt><dd class="mono">{{ asiento }}</dd>
-              <dt>Destino</dt><dd>Parcial ✓</dd>
+              <dt>Destino</dt><dd>Parcial</dd>
             </dl>
           </aside>
         </div>

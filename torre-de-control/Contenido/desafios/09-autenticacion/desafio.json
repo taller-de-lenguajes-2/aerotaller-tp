@@ -14,7 +14,7 @@
   "tareas": [
     {
       "id": "usuarios",
-      "texto": "Tabla Usuario creada con los datos de material/datos-usuarios.sql (aerotaller.db borrada y recreada); UsuarioRepository y UsuarioRepositoryFalso registrados en las dos ramas de Program.cs",
+      "texto": "Modelo Usuario a partir de la tabla Usuario de aerotaller.sql; UsuarioRepository y UsuarioRepositoryFalso registrados en las dos ramas de Program.cs",
       "ayuda": "En DB Browser, SELECT * FROM Usuario; debe devolver admin y mostrador"
     },
     {
@@ -29,13 +29,13 @@
       "id": "roles",
       "texto": "Con mostrador, /Vuelos/Crear muestra la vista SinPermiso; con admin muestra el formulario"
     },
-    { "id": "push", "texto": "Commit y push realizados con el mensaje del desafío; el commit se ve en GitHub" },
-    { "id": "verificador", "texto": "El verificador da todo en verde para el desafío 9 (botón Verificar o dotnet run --project verificador -- 9)" }
+    { "id": "push", "texto": "Commit y push realizados con el mensaje del desafío; el commit aparece en GitHub" },
+    { "id": "verificador", "texto": "El verificador aprueba todos los chequeos del desafío 9 (botón Verificar o dotnet run --project verificador -- 9)" }
   ],
   "quiz": [
     {
       "id": "p1",
-      "texto": "Sin sesión iniciada, con un breakpoint en RequiereLoginAttribute.OnActionExecuting, se abre /Reservas?estado=Cancelada. Con F10 se pasa la línea de var pedido y en Variables se despliega para observar Path y QueryString. ¿Qué valor viaja como returnUrl?",
+      "texto": "Sin sesión iniciada, con un breakpoint en RequiereLoginAttribute.OnActionExecuting, se abre /Reservas?estado=Cancelada. Con F10 se ejecuta la línea de var pedido y, en Variables, se despliega pedido para observar Path y QueryString. ¿Qué valor viaja como returnUrl?",
       "codigo": "var pedido = context.HttpContext.Request;\ncontext.Result = new RedirectToActionResult(\"Index\", \"Login\",\n    new { returnUrl = pedido.Path + pedido.QueryString });",
       "opciones": [
         { "id": "a", "texto": "\"/Reservas?estado=Cancelada\"" },
@@ -44,8 +44,8 @@
         { "id": "d", "texto": "\"/Login?returnUrl=%2FReservas\"" }
       ],
       "correcta": "a",
-      "pista": "Path es la ruta sin el dominio; QueryString es lo que viene desde el signo de pregunta. Todavía no hubo ninguna redirección: la ejecución está ANTES de que corra la acción.",
-      "explicacion": "Path es \"/Reservas\" y QueryString es \"?estado=Cancelada\": juntos forman la dirección relativa solicitada. Ese valor viaja como returnUrl al login y, después de ingresar, el LoginController vuelve ahí (si Url.IsLocalUrl lo aprueba). La acción ReservasController.Index nunca llegó a ejecutarse: el filtro asignó un Result y cortó el flujo.",
+      "pista": "Path es la ruta sin el dominio; QueryString es lo que viene desde el signo de pregunta. Todavía no hubo ninguna redirección: la ejecución está ANTES de que se ejecute la acción.",
+      "explicacion": "Path es \"/Reservas\" y QueryString es \"?estado=Cancelada\": juntos forman la dirección relativa solicitada. Ese valor viaja como returnUrl al login y, después de ingresar, LoginController redirige a esa dirección (si Url.IsLocalUrl la valida). La acción ReservasController.Index nunca llegó a ejecutarse: el filtro asignó un Result e interrumpió el flujo.",
       "etiquetas": ["depurador"]
     },
     {
@@ -53,17 +53,17 @@
       "texto": "¿Por qué el rol del usuario se guarda en la sesión y no en una cookie propia como Rol=Mostrador?",
       "opciones": [
         { "id": "a", "texto": "Porque las cookies no pueden guardar texto, solo números" },
-        { "id": "b", "texto": "Porque la sesión dura para siempre y la cookie se borra al cerrar el navegador" },
-        { "id": "c", "texto": "Porque la cookie vive en el navegador y el usuario la puede editar (Rol=Admin); con la sesión, los datos quedan en el servidor y la cookie solo lleva un Id imposible de adivinar" },
+        { "id": "b", "texto": "Porque la sesión no expira nunca y la cookie se borra al cerrar el navegador" },
+        { "id": "c", "texto": "Porque la cookie se almacena en el navegador y el usuario la puede editar (Rol=Admin); con la sesión, los datos quedan en el servidor y la cookie solo contiene un Id imposible de adivinar" },
         { "id": "d", "texto": "Porque la sesión no usa cookies, así funciona aunque el navegador las bloquee" }
       ],
       "correcta": "c",
       "pista": "Analizar dónde está guardado cada dato y quién lo puede modificar. En las herramientas del navegador (Aplicación → Cookies), ¿qué contiene .AspNetCore.Session?",
-      "explicacion": "Todo lo que está en el navegador, el usuario lo puede leer y cambiar. La sesión deja Usuario, Nombre y Rol en el servidor, y en el navegador solo queda la cookie .AspNetCore.Session con un identificador. La sesión sí usa una cookie (para ese Id), y no dura para siempre: se pierde con IdleTimeout o al reiniciar la app."
+      "explicacion": "Todo lo que está en el navegador, el usuario lo puede leer y cambiar. La sesión deja Usuario, Nombre y Rol en el servidor, y en el navegador solo queda la cookie .AspNetCore.Session con un identificador. La sesión sí usa una cookie (para ese Id), y no es permanente: expira con IdleTimeout o se pierde al reiniciar la aplicación."
     },
     {
       "id": "p3",
-      "texto": "Con una sesión iniciada como mostrador, se accede a /Vuelos/Crear. ¿Qué ocurre, y qué código HTTP sería el «de manual» para esta situación?",
+      "texto": "Con una sesión iniciada como mostrador, se accede a /Vuelos/Crear. ¿Qué ocurre, y qué código HTTP corresponde según el estándar para esta situación?",
       "opciones": [
         { "id": "a", "texto": "Se redirige al login: 401 Unauthorized, porque el usuario no está autenticado" },
         { "id": "b", "texto": "404 Not Found, porque para el mostrador esa página no existe" },
@@ -71,18 +71,18 @@
         { "id": "d", "texto": "Se muestra la vista SinPermiso: el usuario está autenticado pero no autorizado, que en HTTP es 403 Forbidden" }
       ],
       "correcta": "d",
-      "pista": "Separar las dos preguntas: ¿la app sabe quién es el usuario? ¿Le permite hacer eso? Cada «no» tiene su código.",
-      "explicacion": "La autenticación (¿quién es?) ya se superó: hay sesión. Falla la autorización (¿qué puede hacer?): eso es 403 Forbidden. 401 corresponde a cuando no se sabe quién es el usuario (por eso, sin sesión, se redirige al login). Importante: el filtro del TP devuelve la vista SinPermiso con código 200; con [Authorize] y autenticación por cookie de ASP.NET Core sería un 403 (o una redirección a una página de acceso denegado)."
+      "pista": "Separar las dos preguntas: ¿el usuario está identificado? ¿Tiene permiso para esa acción? Cada «no» tiene su código.",
+      "explicacion": "La autenticación (¿quién es?) ya se superó: hay sesión. Falla la autorización (¿qué puede hacer?): eso es 403 Forbidden. 401 corresponde al caso en que se desconoce la identidad del usuario (por eso, sin sesión, se redirige al login). Importante: el filtro del TP devuelve la vista SinPermiso con código 200; con [Authorize] y autenticación por cookie de ASP.NET Core sería un 403 (o una redirección a una página de acceso denegado)."
     }
   ],
   "lecturas": [
-    { "id": "tema15", "titulo": "Tema 15 — Cookies y sesión", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-15-cookies-y-sesion/index.html", "fuente": "Diapositivas de la cátedra", "pregunta": "En «¿Qué es un filtro?»: ¿qué diferencia hay entre un middleware y un filtro, y cuál de los dos ya se venía usando de forma implícita?" },
-    { "id": "sesion", "titulo": "Administración de sesiones y estado en ASP.NET Core", "url": "https://learn.microsoft.com/es-es/aspnet/core/fundamentals/app-state", "fuente": "Microsoft Learn", "pregunta": "¿Dónde se guardan los datos de la sesión con AddDistributedMemoryCache, y qué les ocurre si se reinicia la app o si se ejecuta en dos servidores?" },
+    { "id": "tema15", "titulo": "Tema 15 — Cookies y sesión", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-15-cookies-y-sesion/index.html", "fuente": "Diapositivas de la cátedra", "pregunta": "En «¿Qué es un filtro?»: ¿qué diferencia hay entre un middleware y un filtro, y cuál de los dos ya se usaba de forma implícita?" },
+    { "id": "sesion", "titulo": "Administración de sesiones y estado en ASP.NET Core", "url": "https://learn.microsoft.com/es-es/aspnet/core/fundamentals/app-state", "fuente": "Microsoft Learn", "pregunta": "¿Dónde se guardan los datos de la sesión con AddDistributedMemoryCache, y qué les ocurre si se reinicia la aplicación o si se ejecuta en dos servidores?" },
     { "id": "cookie-auth", "titulo": "Autenticación con cookies sin ASP.NET Core Identity", "url": "https://learn.microsoft.com/es-es/aspnet/core/security/authentication/cookie", "fuente": "Microsoft Learn", "pregunta": "Para investigar: ¿cómo se reemplazaría [RequiereLogin] por [Authorize]? ¿Qué es un claim y dónde quedaría el rol?" },
-    { "id": "owasp-claves", "titulo": "Password Storage Cheat Sheet", "url": "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html", "fuente": "OWASP", "pregunta": "¿Por qué no alcanza con un hash rápido (como SHA-256) para guardar contraseñas? ¿Qué agrega una «sal»?" }
+    { "id": "owasp-claves", "titulo": "Password Storage Cheat Sheet", "url": "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html", "fuente": "OWASP", "pregunta": "¿Por qué no es suficiente un hash rápido (como SHA-256) para guardar contraseñas? ¿Qué agrega una «sal»?" }
   ],
   "commit": {
     "mensaje": "Desafío 9: login, sesión y roles",
-    "detalle": "Revisar el diff: aerotaller.sql (tabla Usuario + datos), Models/Usuario.cs, el repositorio y su falso, AutenticacionService, LoginController, Filtros/, SinPermiso y el layout."
+    "detalle": "Revisar el diff: Models/Usuario.cs, el repositorio y su versión falsa, AutenticacionService, LoginController, Filtros/, SinPermiso y el layout."
   }
 }

@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-// ✈ Verificador del TP AeroTaller
+// Verificador del TP AeroTaller
 //
 //   dotnet run --project verificador -- 3          revisa el desafío 3
 //   dotnet run --project verificador -- 0-5        revisa del 0 al 5
@@ -8,7 +8,7 @@ using System.Text.Json;
 //   opciones: --json (salida para la Torre de Control)  --proyecto <carpeta AeroTaller>  --sin-git
 //
 // Compila el proyecto, lo ejecuta con una base TEMPORAL (el aerotaller.db del proyecto no se modifica) y prueba cada desafío
-// como lo haría una persona: navegando, enviando formularios y mirando qué quedó en la base y en el log.
+// del mismo modo que una persona: navega, envía formularios y consulta qué se registró en la base y en el log.
 
 Desafio[] todos =
 [
@@ -45,7 +45,7 @@ var resultados = new List<ResultadoDesafio>();
 
 try
 {
-    if (!json) Console.WriteLine($"✈ Verificador AeroTaller · {proyecto.Carpeta}\n  Compilando…");
+    if (!json) Console.WriteLine($"Verificador AeroTaller · {proyecto.Carpeta}\n  Compilando…");
     (bool compila, string errores) = proyecto.Compilar();
 
     foreach (Desafio desafio in elegidos)
@@ -64,7 +64,7 @@ try
             }
             catch (VerificacionAbortada ex)
             {
-                informe.Agregar("La app se pudo levantar para probarla", false, ex.Message);
+                informe.Agregar("La aplicación se pudo iniciar para las pruebas", false, ex.Message);
             }
             catch (Exception ex)
             {
@@ -112,7 +112,7 @@ static void Imprimir(List<ResultadoDesafio> resultados)
         Console.WriteLine();
     }
     int ok = resultados.Count(r => r.Ok);
-    Color(ok == resultados.Count ? ConsoleColor.Green : ConsoleColor.Yellow, $"Resultado: {ok}/{resultados.Count} desafíos en verde.");
+    Color(ok == resultados.Count ? ConsoleColor.Green : ConsoleColor.Yellow, $"Resultado: {ok}/{resultados.Count} desafíos aprobados.");
 }
 
 static void Color(ConsoleColor color, string texto)

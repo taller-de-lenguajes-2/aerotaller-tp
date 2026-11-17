@@ -1,12 +1,12 @@
 using System.Text.RegularExpressions;
 
-// Todo lo que necesita un desafío para verificarse
+// Datos y servicios que requiere la verificación de un desafío
 public class Contexto(Proyecto proyecto, string carpetaTemporal, bool revisarGit)
 {
     public Proyecto Proyecto { get; } = proyecto;
     public bool RevisarGit { get; } = revisarGit;
 
-    // Cada servidor usa su propia subcarpeta temporal (así cada desafío arranca con una base nueva)
+    // Cada servidor usa su propia subcarpeta temporal (de este modo, cada desafío comienza con una base nueva)
     public string NuevaCarpeta()
     {
         string carpeta = Path.Combine(carpetaTemporal, Guid.NewGuid().ToString("N")[..8]);
@@ -23,7 +23,7 @@ public abstract class Desafio
     public abstract string Titulo { get; }
     public abstract void Verificar(Contexto ctx, Informe informe);
 
-    // Datos de material/datos.sql que usan las pruebas
+    // Datos de ejemplo de aerotaller.sql que usan las pruebas
     protected const string DniAna = "30111222";      // reservas en AT0999, AT1001 (3A), AT1002
     protected const string DniBruno = "28999000";    // AT1001 3B
     protected const string DniDiego = "33777888";
@@ -51,7 +51,7 @@ public abstract class Desafio
     protected static string Describir(Respuesta r) =>
         r.EsRedireccion ? $"respondió {r.Codigo} → {r.Ubicacion}" : $"respondió {r.Codigo}: «{Recorte(r)}»";
 
-    // Login automático para las páginas protegidas (desde el desafío 9). Antes del 9 no hace nada.
+    // Login automático para las páginas protegidas (desde el desafío 9). Antes del desafío 9 no realiza ninguna acción.
     protected static Navegador Mostrador(Servidor s, string paginaProtegida = "/Reservas")
     {
         var nav = s.NuevoNavegador();
@@ -66,7 +66,7 @@ public abstract class Desafio
         return nav;
     }
 
-    // Detecta strings interpolados que arman SQL: $"SELECT … {x}" o $"""… WHERE Id = {id} """
+    // Detecta strings interpolados que construyen SQL: $"SELECT … {x}" o $"""… WHERE Id = {id} """
     protected static List<string> SqlInterpolado(Proyecto p)
     {
         var hallazgos = new List<string>();

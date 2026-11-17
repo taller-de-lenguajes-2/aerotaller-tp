@@ -20,7 +20,7 @@ public record Respuesta(int Codigo, string Html, string? Ubicacion, HttpResponse
         Regex.Match(Html, @"name=""__RequestVerificationToken""[^>]*value=""([^""]+)""").Groups[1].Value;
 }
 
-// Un "navegador" mínimo: guarda cookies (sesión, antiforgery), no sigue redirecciones solo (así se pueden revisar).
+// Un "navegador" mínimo: guarda cookies (sesión, antiforgery) y no sigue redirecciones automáticamente (para poder inspeccionarlas).
 public sealed class Navegador : IDisposable
 {
     private readonly HttpClient http;
@@ -46,17 +46,17 @@ public sealed class Navegador : IDisposable
         return Enviar(new HttpRequestMessage(HttpMethod.Post, ruta) { Content = new FormUrlEncodedContent(datos) });
     }
 
-    // Pide la página del formulario (para sacar el token antiforgery) y envía el POST
+    // Solicita la página del formulario (para obtener el token antiforgery) y envía el POST
     public Respuesta EnviarFormulario(string paginaFormulario, string accion, Dictionary<string, string> campos)
     {
         Respuesta formulario = Get(paginaFormulario);
         if (formulario.EsRedireccion)
-            throw new VerificacionAbortada($"GET {paginaFormulario} redirige a {formulario.Ubicacion}: ¿falta iniciar sesión?");
+            throw new VerificacionAbortada($"GET {paginaFormulario} redirige a {formulario.Ubicacion}: posiblemente falta iniciar sesión.");
         return Post(accion, campos, formulario.Token());
     }
 
     // Antes del desafío 9 no hay login; después, las páginas protegidas redirigen a /Login.
-    // Si la página redirige al login, inicia sesión con el usuario pedido.
+    // Si la página redirige al login, inicia sesión con el usuario indicado.
     public void IniciarSesionSiHaceFalta(string paginaProtegida, string usuario, string clave)
     {
         Respuesta r = Get(paginaProtegida);

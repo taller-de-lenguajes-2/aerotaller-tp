@@ -18,6 +18,7 @@ public class Desafio
     public List<Pregunta> Quiz { get; set; } = [];
     public List<Lectura> Lecturas { get; set; } = [];
     public Commit? Commit { get; set; }
+    public List<string> Herramientas { get; set; } = [];   // paneles extra de la página: "base" (crear aerotaller.db)
 
     // contenido.md, tal cual (lo dibuja el navegador)
     public string Markdown { get; set; } = "";

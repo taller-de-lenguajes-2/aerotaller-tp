@@ -65,6 +65,7 @@
     }
   ],
   "insignia": "simulacro",
+  "herramientas": ["base"],
   "tareas": [
     {
       "id": "r1-base",
@@ -80,11 +81,11 @@
     },
     {
       "id": "r4-formulario",
-      "texto": "R4 · Formulario: GET/POST /Equipaje/Crear?reservaId={id} con EquipajeCrearViewModel (Tipo, PesoKg), validaciones, antiforgery, PRG y [RequiereLogin]; 25 kg en bodega muestra el error al lado del peso"
+      "texto": "R4 · Formulario: GET/POST /Equipaje/Crear?reservaId={id} con EquipajeCrearViewModel (Tipo, PesoKg), validaciones, antiforgery, PRG y [RequiereLogin]; 25 kg en bodega muestra el error junto al campo del peso"
     },
     {
       "id": "r5-detalle",
-      "texto": "R5 · Detalle de la reserva: /Reservas/Detalle/{id} muestra la reserva, sus piezas y el total de kilos, con un link para agregar equipaje"
+      "texto": "R5 · Detalle de la reserva: /Reservas/Detalle/{id} muestra la reserva, sus piezas y el total de kilos, con un enlace para agregar equipaje"
     },
     {
       "id": "r6-bodega",
@@ -92,11 +93,11 @@
     },
     {
       "id": "push",
-      "texto": "Commit y push cada 20 minutos (al menos 7 commits en las 2 h 30 min); el último commit se ve en GitHub"
+      "texto": "Commit y push cada 20 minutos (al menos 7 commits en las 2 h 30 min); el último commit aparece en GitHub"
     },
     {
       "id": "verificador",
-      "texto": "El verificador da todo en verde para el desafío 10 (botón Verificar o dotnet run --project verificador -- 10)"
+      "texto": "El verificador aprueba todos los chequeos del desafío 10 (botón Verificar o dotnet run --project verificador -- 10)"
     }
   ],
   "quiz": [],
@@ -120,11 +121,11 @@
       "titulo": "Tema 12 — ViewModels",
       "url": "https://taller-de-lenguajes-2.github.io/clases/tema-12-viewmodels/index.html",
       "fuente": "Diapositivas de la cátedra",
-      "pregunta": "¿Por qué el formulario de equipaje no recibe directamente la entidad Equipaje? ¿Qué campo podría «colar» un usuario malintencionado?"
+      "pregunta": "¿Por qué el formulario de equipaje no recibe directamente la entidad Equipaje? ¿Qué campo podría agregar indebidamente un usuario malintencionado?"
     }
   ],
   "commit": {
     "mensaje": "Desafío 10: simulacro de parcial — equipaje",
-    "detalle": "Hacer un commit por requisito (R1, R2…) a medida que se avanza: si se termina el tiempo, lo que se subió con push es lo que cuenta."
+    "detalle": "Hacer un commit por requisito (R1, R2…) a medida que se avanza: al agotarse el tiempo, solo cuenta lo que se subió con push."
   }
 }

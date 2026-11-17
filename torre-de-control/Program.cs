@@ -1,7 +1,7 @@
 using System.Globalization;
 using Microsoft.Data.Sqlite;
 
-// ✈ Torre de Control: el tutorial interactivo del TP AeroTaller.
+// Torre de Control: el tutorial interactivo del TP AeroTaller.
 // Backend: Web API (temas 06, 08, 09, 14, 16, 17) · Frontend: Vue 3 en wwwroot/ (sin compilar nada).
 CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("es-AR");
 
@@ -26,6 +26,7 @@ builder.Services.AddScoped<IInsigniaService, InsigniaService>();
 builder.Services.AddScoped<IProgresoService, ProgresoService>();
 builder.Services.AddScoped<IQuizService, QuizService>();
 builder.Services.AddScoped<IVerificadorService, VerificadorService>();
+builder.Services.AddScoped<IBaseAeroTallerService, BaseAeroTallerService>();
 
 builder.Services.AddControllers();
 builder.Services.AddProblemDetails();

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-// Las "tarjetas de embarque": quién está usando el tutorial en esta compu.
+// Las "tarjetas de embarque": perfiles de quienes usan el tutorial en esta computadora.
 [ApiController]
 [Route("api/alumnos")]
 public class AlumnosController(IAlumnoRepository alumnos, IProgresoService progreso) : ControllerBase

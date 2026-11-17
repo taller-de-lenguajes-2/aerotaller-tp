@@ -3,27 +3,29 @@
   "codigo": "SQL",
   "numero": 1,
   "titulo": "La base",
-  "subtitulo": "Tablas, claves y datos: aerotaller.db se crea sola al arrancar",
+  "subtitulo": "El script viene incluido: leerlo, crear aerotaller.db y lograr que la app la cree automáticamente al arrancar",
   "tipo": "desafio",
-  "minutosEstimados": 100,
+  "minutosEstimados": 80,
   "temas": [
     { "numero": "07", "titulo": "Bases de datos", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-07-bases-de-datos/index.html" },
     { "numero": "08", "titulo": "ADO.NET", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-08-ado-net/index.html" }
   ],
   "insignia": "base",
+  "herramientas": ["base"],
   "tareas": [
     { "id": "paquete", "texto": "Paquete Microsoft.Data.Sqlite agregado a AeroTaller", "ayuda": "cd AeroTaller y después dotnet add package Microsoft.Data.Sqlite" },
-    { "id": "script", "texto": "AeroTaller/aerotaller.sql crea Aeropuerto, Vuelo, Pasajero y Reserva con los nombres del CONTRATO, sus claves foráneas, y carga material/datos.sql sin errores", "ayuda": "Probarlo entero en DB Browser for SQLite (Ejecutar SQL) antes de usarlo desde C#." },
+    { "id": "base", "texto": "aerotaller.db creada con el botón Crear base de datos y recorrida en DB Browser: 8 aeropuertos, 9 vuelos, 8 pasajeros, 15 reservas y 2 usuarios", "ayuda": "El panel Base de datos de esta página muestra las tablas y sus filas." },
+    { "id": "esquema", "texto": "Leído aerotaller.sql: se puede explicar cada FOREIGN KEY, los CHECK, el DEFAULT de Estado y el índice único parcial", "ayuda": "El script no se modifica: el verificador depende de esos nombres y esos datos." },
     { "id": "arranque", "texto": "appsettings.json tiene ConnectionStrings:AeroTaller y, con la app detenida y aerotaller.db borrada, al arrancar la base se vuelve a crear con los datos", "ayuda": "Verificar que el .csproj copie aerotaller.sql a la salida (CopyToOutputDirectory)." },
     { "id": "consultas", "texto": "Las 6 consultas ejecutadas en DB Browser (ORDER BY, LIKE, JOIN doble, LEFT JOIN + GROUP BY, UPDATE y DELETE con WHERE)" },
-    { "id": "push", "texto": "Commit y push realizados con el mensaje del desafío; el commit se ve en GitHub (aerotaller.db NO se sube: está en .gitignore)" },
-    { "id": "verificador", "texto": "El verificador da todo en verde para el desafío 1 (botón Verificar o dotnet run --project verificador -- 1)" }
+    { "id": "push", "texto": "Commit y push realizados con el mensaje del desafío; el commit aparece en GitHub (aerotaller.db NO se sube: está en .gitignore)" },
+    { "id": "verificador", "texto": "El verificador aprueba todos los chequeos del desafío 1 (botón Verificar o dotnet run --project verificador -- 1)" }
   ],
   "quiz": [
     {
       "id": "p1",
       "texto": "Con un breakpoint en la línea if (File.Exists(archivo)) return; de CrearBaseSiNoExiste, se arranca con F5 (configuración AeroTaller). ¿Qué valor muestra archivo en el panel Variables?",
-      "codigo": "var archivo = new SqliteConnectionStringBuilder(cadenaConexion).DataSource;\nif (File.Exists(archivo)) return;   // ← 🔴",
+      "codigo": "var archivo = new SqliteConnectionStringBuilder(cadenaConexion).DataSource;\nif (File.Exists(archivo)) return;   // ← breakpoint",
       "opciones": [
         { "id": "a", "texto": "\"Data Source=aerotaller.db;Foreign Keys=True\"" },
         { "id": "b", "texto": "\"aerotaller.db\"" },
@@ -32,7 +34,7 @@
       ],
       "correcta": "b",
       "pista": "Compararlo con el valor de cadenaConexion (pasando el mouse por encima o agregándolo al Watch). ¿Qué parte de la cadena conserva el builder?",
-      "explicacion": "SqliteConnectionStringBuilder parte la cadena en sus claves y DataSource es solo el valor de 'Data Source': \"aerotaller.db\", una ruta relativa a la carpeta desde donde corre la app (AeroTaller/). Cuando el verificador pasa su propia cadena, ese mismo valor es una ruta completa a una carpeta temporal: por eso no se escribe \"aerotaller.db\" a mano en File.Exists.",
+      "explicacion": "SqliteConnectionStringBuilder parte la cadena en sus claves y DataSource es solo el valor de 'Data Source': \"aerotaller.db\", una ruta relativa a la carpeta desde donde corre la app (AeroTaller/). Cuando el verificador pasa su propia cadena, ese mismo valor es una ruta completa a una carpeta temporal: por eso no se escribe \"aerotaller.db\" de forma fija en File.Exists.",
       "etiquetas": ["depurador"]
     },
     {
@@ -46,8 +48,8 @@
         { "id": "d", "texto": "No aparecen: el WHERE descarta las filas donde r.Estado es NULL" }
       ],
       "correcta": "d",
-      "pista": "Analizar la fila que arma el LEFT JOIN para un vuelo sin reservas: ¿qué valor tienen las columnas de r? ¿Y qué hace el WHERE con esa fila?",
-      "explicacion": "El LEFT JOIN conserva el vuelo sin reservas, pero con todas las columnas de r en NULL. Después el WHERE pregunta r.Estado = 'Confirmada', NULL no es igual a nada, y la fila se descarta: el LEFT JOIN quedó convertido en un INNER JOIN. La condición del estado va en el ON (LEFT JOIN Reserva r ON r.VueloId = v.Id AND r.Estado = 'Confirmada')."
+      "pista": "Analizar la fila que genera el LEFT JOIN para un vuelo sin reservas: ¿qué valor tienen las columnas de r? ¿Y qué hace el WHERE con esa fila?",
+      "explicacion": "El LEFT JOIN conserva el vuelo sin reservas, pero con todas las columnas de r en NULL. Después el WHERE evalúa r.Estado = 'Confirmada'; como NULL no es igual a ningún valor, la fila se descarta: el LEFT JOIN quedó convertido en un INNER JOIN. La condición del estado va en el ON (LEFT JOIN Reserva r ON r.VueloId = v.Id AND r.Estado = 'Confirmada')."
     },
     {
       "id": "p3",
@@ -59,15 +61,15 @@
         { "id": "d", "texto": "Porque ocupa menos espacio en el archivo .db" }
       ],
       "correcta": "a",
-      "pista": "SQLite no tiene un tipo fecha: compara esos valores como texto, carácter por carácter. Probar a mano: ¿'18/11/2026' es mayor o menor que '17/12/2026'?",
+      "pista": "SQLite no tiene un tipo fecha: compara esos valores como texto, carácter por carácter. Probar manualmente: ¿'18/11/2026' es mayor o menor que '17/12/2026'?",
       "explicacion": "Comparando texto carácter por carácter, '18/11/2026' > '17/12/2026' aunque sea un mes antes. Con año-mes-día, el orden de los textos coincide con el orden cronológico: ORDER BY Salida y WHERE Salida >= @desde funcionan sin convertir nada. SQLite acepta cualquier texto (no da error), y por eso el formato es responsabilidad de quien programa."
     }
   ],
   "lecturas": [
     { "id": "tema07", "titulo": "Tema 07 — Bases de datos", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-07-bases-de-datos/index.html", "fuente": "Diapositivas de la cátedra", "pregunta": "¿Qué tres problemas de 'guardar todo junto' resuelven las tablas relacionadas, y cuál de ellos evita la clave foránea?" },
-    { "id": "sqlite-fk", "titulo": "SQLite Foreign Key Support", "url": "https://www.sqlite.org/foreignkeys.html", "fuente": "SQLite (en inglés)", "pregunta": "¿Por qué las claves foráneas se activan por conexión y qué ocurre con un INSERT inválido si nadie las activó?" },
-    { "id": "configuracion", "titulo": "Configuración en ASP.NET Core", "url": "https://learn.microsoft.com/es-es/aspnet/core/fundamentals/configuration/", "fuente": "Microsoft Learn", "pregunta": "Si la misma clave está en appsettings.json y en una variable de entorno, ¿cuál gana? (Así es como el verificador cambia la base)" },
+    { "id": "sqlite-fk", "titulo": "SQLite Foreign Key Support", "url": "https://www.sqlite.org/foreignkeys.html", "fuente": "SQLite (en inglés)", "pregunta": "¿Por qué las claves foráneas se activan por conexión y qué ocurre con un INSERT inválido si no se activaron?" },
+    { "id": "configuracion", "titulo": "Configuración en ASP.NET Core", "url": "https://learn.microsoft.com/es-es/aspnet/core/fundamentals/configuration/", "fuente": "Microsoft Learn", "pregunta": "Si la misma clave está en appsettings.json y en una variable de entorno, ¿cuál tiene prioridad? (Así es como el verificador cambia la base)" },
     { "id": "w3schools-sql", "titulo": "Tutorial de SQL", "url": "https://www.w3schools.com/sql/", "fuente": "W3Schools", "pregunta": "En la página de LEFT JOIN: ¿qué devuelve para las filas de la izquierda que no tienen pareja a la derecha?" }
   ],
-  "commit": { "mensaje": "Desafío 1: script de la base y creación al arrancar", "detalle": "Commitear aerotaller.sql, el .csproj, appsettings.json y Program.cs. La base (aerotaller.db) no se sube: se genera sola a partir del script." }
+  "commit": { "mensaje": "Desafío 1: conexión a la base y creación al arrancar", "detalle": "Commitear el .csproj, appsettings.json y Program.cs. aerotaller.sql ya viene en el repositorio y no cambia; la base (aerotaller.db) no se sube." }
 }

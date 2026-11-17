@@ -26,19 +26,23 @@ Para **depurar** la aplicación: abrir la carpeta del repositorio en VS Code y p
 
 ## Torre de Control
 
-Es el tutorial del TP. Presenta cada desafío con la misión, un repaso teórico, el paso a paso, los puntos de interrupción
-sugeridos, alternativas, errores frecuentes, lecturas, una lista de tareas y un cuestionario breve que habilita la etapa
+Es el tutorial del TP. Comienza con una **introducción** que presenta el proyecto y detalla cada entidad con sus propiedades. Presenta cada desafío con la misión, un repaso teórico con tips y lecturas para investigar, el paso a paso, una lista
+de tareas y un cuestionario breve que habilita la etapa
 siguiente. Cada tres desafíos hay un checkpoint "¿Cómo vamos?" con una bitácora (lo realizado, lo pendiente y las dudas para
 la consulta).
 
 El progreso se guarda en `torre-de-control/progreso.db`, en la computadora local (no se sube al repositorio).
+
+**Base de datos.** La plantilla trae el script completo `AeroTaller/aerotaller.sql` (tablas, claves, índices y datos de
+ejemplo). El botón **Crear base de datos** de la Torre (en el desafío 1 y en *Manual de vuelo → Base de datos*) lo
+ejecuta y genera `AeroTaller/aerotaller.db`; el mismo botón la recrea cuando se necesita restaurar los datos originales.
 
 ## Plan de vuelo
 
 | Escala | Desafío | Temas |
 |---|---|---|
 | CHK | 0 · Check-in: repositorio, proyecto en ejecución, primer punto de interrupción | 00 · 10 |
-| SQL | 1 · La base: tablas, claves, datos y `CrearBaseSiNoExiste` | 07 · 08 |
+| SQL | 1 · La base: el script de la plantilla, la base en DB Browser y `CrearBaseSiNoExiste` | 07 · 08 |
 | REP | 2 · Modelos y repositorios con ADO.NET | 01 · 02 · 08 · 09 |
 | CP1 | ¿Cómo vamos? | |
 | MVC | 3 · Controladores, vistas y layout | 10 · 11 |
@@ -58,14 +62,14 @@ Cada `git push` ejecuta el verificador en GitHub (pestaña **Actions** del repos
 aprobado. Es el mismo programa que se ejecuta con `dotnet run --project verificador`. Los nombres que verifica están en
 [CONTRATO.md](./CONTRATO.md).
 
-No deben modificarse `verificador/`, `.github/` ni `material/datos.sql`: la cátedra vuelve a ejecutar el verificador
-oficial al corregir.
+No deben modificarse `verificador/`, `.github/` ni los datos de `AeroTaller/aerotaller.sql`: la cátedra vuelve a ejecutar el
+verificador oficial al corregir.
 
 ## Contenido del repositorio
 
 ```
-AeroTaller/          ← proyecto del TP (parte casi vacío)
-material/            ← datos de ejemplo para la base (desafíos 1, 9 y simulacro)
+AeroTaller/          ← proyecto base del TP (casi vacío; incluye el script de la base aerotaller.sql)
+material/            ← datos de equipaje para el simulacro
 torre-de-control/    ← tutorial (ASP.NET Web API + Vue)
 verificador/         ← programa que verifica el TP
 CONTRATO.md          ← nombres obligatorios
@@ -75,7 +79,8 @@ CONTRATO.md          ← nombres obligatorios
 ## Procedimiento sugerido para cada desafío
 
 1. Leer la misión e intentar cada paso **antes** de consultar la solución.
-2. Colocar los puntos de interrupción indicados y seguir el flujo de ejecución.
-3. Ejecutar `dotnet run --project verificador -- N` hasta obtener todos los chequeos aprobados.
-4. `git add -A` · `git commit -m "Desafío N: …"` · `git push` · comprobar el commit en GitHub.
-5. Responder el cuestionario y continuar con la etapa siguiente.
+2. Se recomienda colocar puntos de interrupción para seguir el flujo del código.
+3. Marcar en el checklist de la Torre cada tarea cumplida.
+4. Ejecutar `dotnet run --project verificador -- N` (o el botón Verificar) hasta obtener todos los chequeos aprobados.
+5. `git add -A` · `git commit -m "Desafío N: …"` · `git push` · comprobar el commit en GitHub.
+6. Responder el cuestionario y completar la escala: se habilita con el checklist completo y el cuestionario aprobado.

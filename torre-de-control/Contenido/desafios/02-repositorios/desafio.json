@@ -16,10 +16,10 @@
   "tareas": [
     { "id": "modelos", "texto": "Models/Modelos.cs tiene Aeropuerto, Vuelo (con Origen y Destino como objetos y las propiedades calculadas), Pasajero, EstadoReserva, Reserva y OcupacionVuelo" },
     { "id": "repos", "texto": "Repositorios/ tiene AeropuertoRepository, VueloRepository, PasajeroRepository y ReservaRepository, y cada uno recibe la cadena de conexión por el constructor", "ayuda": "public class VueloRepository(string cadenaConexion) { … }" },
-    { "id": "parametros", "texto": "Todo valor que viene de afuera viaja con Parameters.AddWithValue: no hay ningún SQL armado con $\"…{x}…\" ni con + variable" },
+    { "id": "parametros", "texto": "Todo valor externo se pasa con Parameters.AddWithValue: no hay ningún SQL armado con $\"…{x}…\" ni con + variable" },
     { "id": "prueba", "texto": "Repositorios probados desde Program.cs con un breakpoint (vuelos, reservas de Ana, búsqueda y ocupación) y código de prueba eliminado" },
-    { "id": "push", "texto": "Commit y push realizados con el mensaje del desafío; el commit se ve en GitHub" },
-    { "id": "verificador", "texto": "El verificador da todo en verde para el desafío 2 (botón Verificar o dotnet run --project verificador -- 2)" }
+    { "id": "push", "texto": "Commit y push realizados con el mensaje del desafío; el commit aparece en GitHub" },
+    { "id": "verificador", "texto": "El verificador aprueba todos los chequeos del desafío 2 (botón Verificar o dotnet run --project verificador -- 2)" }
   ],
   "quiz": [
     {
@@ -32,13 +32,13 @@
         { "id": "d", "texto": "AT0500, con Capacidad 1" }
       ],
       "correcta": "c",
-      "pista": "Revisar el ORDER BY de Listar: ¿ordena por Id o por otra cosa? Además, Capacidad no es una columna de la tabla: desplegar el objeto y analizar de dónde sale.",
+      "pista": "Revisar el ORDER BY de Listar: ¿ordena por Id o por otra columna? Además, Capacidad no es una columna de la tabla: desplegar el objeto y analizar de dónde proviene su valor.",
       "explicacion": "Listar ordena por v.Salida: primero AT0999 (salió ayer) y segundo AT0500 (sale mañana), aunque AT0500 sea el último que se insertó. Su Capacidad es 6 porque es una propiedad calculada (Filas × 6) y la avioneta tiene una sola fila. El depurador muestra las propiedades calculadas como si fueran datos: se evalúan al inspeccionarlas.",
       "etiquetas": ["depurador"]
     },
     {
       "id": "p2",
-      "texto": "¿Cuál de estas líneas, en un repositorio, deja la puerta abierta a la inyección SQL?",
+      "texto": "¿Cuál de estas líneas, en un repositorio, permite la inyección SQL?",
       "opciones": [
         { "id": "a", "texto": "new SqliteCommand($\"SELECT Id, Nombre FROM Pasajero WHERE Dni = '{dni}'\", conexion)" },
         { "id": "b", "texto": "comando.Parameters.AddWithValue(\"@texto\", $\"%{texto}%\");" },
@@ -46,8 +46,8 @@
         { "id": "d", "texto": "condiciones.Add(\"v.DestinoId = @destinoId\");" }
       ],
       "correcta": "a",
-      "pista": "No importa si hay un $ o un + en la línea: lo relevante es si un texto que escribió el usuario termina dentro del SQL que lee el motor.",
-      "explicacion": "En (a) el DNI que escribe el usuario se pega dentro del SQL: con ' OR '1'='1 trae todos los pasajeros. En (b) la interpolación arma el VALOR de un parámetro, que viaja aparte y nunca se interpreta como SQL. En (c) y (d) se concatenan textos fijos escritos por quien programa, sin nada que venga de afuera."
+      "pista": "No importa si hay un $ o un + en la línea: lo relevante es si un texto ingresado por el usuario queda dentro del SQL que interpreta el motor.",
+      "explicacion": "En (a) el DNI que ingresa el usuario se inserta dentro del SQL: con ' OR '1'='1 la consulta devuelve todos los pasajeros. En (b) la interpolación construye el VALOR de un parámetro, que viaja aparte y nunca se interpreta como SQL. En (c) y (d) se concatenan textos fijos escritos por quien programa, sin nada que venga de afuera."
     },
     {
       "id": "p3",
@@ -61,14 +61,14 @@
       ],
       "correcta": "d",
       "pista": "Contar desde cero las columnas del SELECT. ¿En qué posición está v.Id?",
-      "explicacion": "Las posiciones arrancan en 0: r.Id, r.Asiento, r.Fecha y r.Estado ocupan 0–3, y el bloque del vuelo (v, o y d: 14 columnas) va de 4 a 17. LeerVuelo lee siempre el mismo bloque a partir de 'desde': VueloRepository lo llama con 0 y ReservaRepository con 4. Por eso el pasajero se lee desde la 18."
+      "explicacion": "Las posiciones comienzan en 0: r.Id, r.Asiento, r.Fecha y r.Estado ocupan 0–3, y el bloque del vuelo (v, o y d: 14 columnas) va de 4 a 17. LeerVuelo lee siempre el mismo bloque a partir de 'desde': VueloRepository lo llama con 0 y ReservaRepository con 4. Por eso el pasajero se lee desde la 18."
     }
   ],
   "lecturas": [
     { "id": "tema09", "titulo": "Tema 09 — El patrón repositorio", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-09-repositorios/index.html", "fuente": "Diapositivas de la cátedra", "pregunta": "En la diapositiva 'Qué va en un repositorio y qué no': ¿por qué una regla como 'un vuelo no se reserva si ya salió' NO va en el repositorio?" },
     { "id": "parametros", "titulo": "Microsoft.Data.Sqlite: parámetros", "url": "https://learn.microsoft.com/es-es/dotnet/standard/data/sqlite/parameters", "fuente": "Microsoft Learn", "pregunta": "¿Con qué prefijos se puede nombrar un parámetro en SQLite, cuál se usa en la materia, y por qué el valor de un parámetro nunca se interpreta como SQL?" },
-    { "id": "owasp-sqli", "titulo": "SQL Injection Prevention Cheat Sheet", "url": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html", "fuente": "OWASP (en inglés)", "pregunta": "¿Cuál es la 'opción 1' de defensa que se recomienda y por qué escapar comillas a mano no alcanza?" },
-    { "id": "fowler-repository", "titulo": "Repository (Patterns of Enterprise Application Architecture)", "url": "https://martinfowler.com/eaaCatalog/repository.html", "fuente": "Martin Fowler (en inglés)", "pregunta": "Fowler dice que el repositorio se comporta 'como una colección en memoria'. ¿Qué métodos de los repositorios de AeroTaller encajan con esa idea?" }
+    { "id": "owasp-sqli", "titulo": "SQL Injection Prevention Cheat Sheet", "url": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html", "fuente": "OWASP (en inglés)", "pregunta": "¿Cuál es la 'opción 1' de defensa que se recomienda y por qué escapar comillas manualmente no es suficiente?" },
+    { "id": "fowler-repository", "titulo": "Repository (Patterns of Enterprise Application Architecture)", "url": "https://martinfowler.com/eaaCatalog/repository.html", "fuente": "Martin Fowler (en inglés)", "pregunta": "Fowler afirma que el repositorio se comporta 'como una colección en memoria'. ¿Qué métodos de los repositorios de AeroTaller encajan con esa idea?" }
   ],
   "commit": { "mensaje": "Desafío 2: modelos y repositorios con ADO.NET", "detalle": "Antes de commitear, eliminar el código de prueba de Program.cs: el repositorio debe quedar con Program.cs igual que al final del desafío 1." }
 }

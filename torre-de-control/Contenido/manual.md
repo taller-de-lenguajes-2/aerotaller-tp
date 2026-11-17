@@ -1,11 +1,11 @@
-## 🧭 El viaje de un request (de memoria)
+## :route: El viaje de un request (de memoria)
 
 ```text
 Navegador ──GET /Reservas/Crear──▶ Ruteo {controller}/{action}/{id?}
    ▲                                   │
    │                         [filtros: RequiereLogin…]
    │                                   ▼
-   │                       ReservasController.Crear()        ← recibe y decide qué vista
+   │                       ReservasController.Crear()        ← recibe el request y selecciona la vista
    │                                   │ llama
    │                                   ▼
    │                         IReservaService.Reservar()       ← reglas del negocio
@@ -19,14 +19,14 @@ Navegador ──GET /Reservas/Crear──▶ Ruteo {controller}/{action}/{id?}
    └──── HTML ◀── Razor (Views/Reservas/Crear.cshtml + _Layout) ◀── View(viewModel)
 ```
 
-| Capa | Sabe | No sabe |
+| Capa | Responsabilidad | Fuera de su responsabilidad |
 |---|---|---|
-| Vista | dibujar el ViewModel | de dónde salen los datos |
-| Controlador | HTTP: formularios, redirecciones, qué vista | SQL, reglas del negocio |
-| Servicio | las reglas ("¿está libre el asiento?") | HTML, `ModelState` |
+| Vista | presentación del ViewModel | origen de los datos |
+| Controlador | HTTP: formularios, redirecciones, selección de la vista | SQL, reglas del negocio |
+| Servicio | reglas del negocio ("¿está libre el asiento?") | HTML, `ModelState` |
 | Repositorio | SQL de **una** tabla/entidad | reglas, HTML |
 
-## 🏗️ Program.cs (el orden importa)
+## :layers: Program.cs (el orden importa)
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
@@ -58,13 +58,13 @@ app.Run();
 
 | Tiempo de vida | Se crea | Ejemplo |
 |---|---|---|
-| `AddSingleton` | una vez para toda la app | `ConexionDb`, `BaseFalsa` (datos en memoria) |
+| `AddSingleton` | una vez para toda la aplicación | `ConexionDb`, `BaseFalsa` (datos en memoria) |
 | `AddScoped` | una por request | repositorios, servicios |
-| `AddTransient` | cada vez que alguien lo pide | objetos livianos sin estado |
+| `AddTransient` | cada vez que se resuelve | objetos livianos sin estado |
 
-⚠️ Un Singleton **no** puede recibir un Scoped (*captive dependency*). Las entidades y los ViewModels **no** se inyectan.
+:triangle-alert: Un Singleton **no** puede recibir un Scoped (*captive dependency*). Las entidades y los ViewModels **no** se inyectan.
 
-## 🗄️ Repositorio (ADO.NET)
+## :database: Repositorio (ADO.NET)
 
 ```csharp
 public class VueloRepository(ConexionDb conexionDb) : IVueloRepository
@@ -102,7 +102,7 @@ public class VueloRepository(ConexionDb conexionDb) : IVueloRepository
 - `null` de C# → `(object?)valor ?? DBNull.Value`
 - `LIKE`: los `%` van en el **valor**: `AddWithValue("@texto", $"%{texto}%")`
 
-## 🧾 SQL de uso frecuente
+## :database: SQL de uso frecuente
 
 ```sql
 SELECT v.Numero, o.Codigo AS Origen, d.Codigo AS Destino          -- JOIN doble con alias
@@ -115,11 +115,11 @@ FROM Vuelo v
 LEFT JOIN Reserva r ON r.VueloId = v.Id AND r.Estado = 'Confirmada' -- el filtro va en el ON
 GROUP BY v.Id, v.Numero;
 
-UPDATE Reserva SET Estado = 'Cancelada' WHERE Id = 7;               -- ¡con WHERE!
+UPDATE Reserva SET Estado = 'Cancelada' WHERE Id = 7;               -- siempre con WHERE
 SELECT * FROM Pasajero WHERE Email IS NULL;                         -- IS NULL, no = NULL
 ```
 
-## 📋 Controlador + ViewModel + vista
+## :layout-template: Controlador + ViewModel + vista
 
 ```csharp
 [HttpGet]
@@ -134,7 +134,7 @@ public IActionResult Crear()
 [ValidateAntiForgeryToken]
 public IActionResult Crear(ReservaCrearViewModel modelo)
 {
-    if (!ModelState.IsValid) { CargarListas(modelo); return View(modelo); }   // las listas no vuelven en el POST
+    if (!ModelState.IsValid) { CargarListas(modelo); return View(modelo); }   // las listas no se reciben en el POST
     try
     {
         Reserva r = reservaService.Reservar(modelo.VueloId!.Value, modelo.PasajeroId!.Value, modelo.Asiento);
@@ -170,7 +170,7 @@ public IActionResult Crear(ReservaCrearViewModel modelo)
 | `[ValidateNever]` | listas `SelectListItem` del ViewModel |
 | atributo propio `: ValidationAttribute` | `[FechaFutura]` |
 
-## 🧯 Excepciones y logs
+## :fire-extinguisher: Excepciones y logs
 
 ```csharp
 try
@@ -185,12 +185,12 @@ catch (SqliteException ex) when (ex.SqliteErrorCode == 19)    // SQLITE_CONSTRAI
 logger.LogInformation("Reserva {ReservaId} confirmada", reserva.Id);   // plantilla, no $"…"
 ```
 
-- Nunca `catch { }` vacío. Atrapar lo **específico** y solo donde se sabe qué hacer.
-- `throw;` conserva el stack trace; `throw ex;` lo pisa.
-- Log **una** vez. Nunca claves, cadenas de conexión ni datos personales.
-- El usuario ve un mensaje adecuado + un código; el detalle técnico va al log.
+- Nunca `catch { }` vacío. Atrapar solo excepciones **específicas**, y únicamente donde pueden manejarse.
+- `throw;` conserva el stack trace; `throw ex;` lo reemplaza.
+- Registrar cada error **una** sola vez. No registrar claves, cadenas de conexión ni datos personales.
+- El usuario ve un mensaje adecuado + un código; el detalle técnico se registra en el log.
 
-## 🔐 Login con sesión y filtros
+## :lock-keyhole: Login con sesión y filtros
 
 ```csharp
 public class RequiereLoginAttribute : ActionFilterAttribute
@@ -211,10 +211,10 @@ public class RequiereLoginAttribute : ActionFilterAttribute
 |---|---|
 | Autenticación | ¿quién es el usuario? → login |
 | Autorización | ¿qué puede hacer? → roles |
-| Cookie | la guarda el navegador (no guardar datos sensibles en ella) |
-| Sesión | la guarda el servidor; el navegador solo tiene el Id |
+| Cookie | se almacena en el navegador (no debe contener datos sensibles) |
+| Sesión | se almacena en el servidor; el navegador solo conserva el Id |
 
-## 🔴 Depurador
+## :circle-dot: Depurador
 
 | Tecla | |
 |---|---|
@@ -226,7 +226,7 @@ public class RequiereLoginAttribute : ActionFilterAttribute
 
 Paneles: **Variables**, **Inspección (Watch)**, **Pila de llamadas (Call Stack)**. Breakpoint condicional: clic derecho sobre el punto rojo.
 
-## 🌿 Ritual de git
+## :git-branch: Ritual de git
 
 ```bash
 git status
@@ -237,13 +237,13 @@ git push
 
 Un commit por paso lógico. Después del push, **revisar GitHub**.
 
-## ✅ Checklist antes de entregar el parcial
+## :list-checks: Checklist antes de entregar el parcial
 
 - [ ] Compila sin errores (`dotnet build`).
-- [ ] La base se crea sola desde el script.
+- [ ] La base se genera automáticamente a partir del script.
 - [ ] Cada formulario: `[ValidateAntiForgeryToken]`, `ModelState.IsValid`, recarga de listas, PRG.
-- [ ] Ningún SQL armado con `+` o `$"…{x}"` a partir de datos del usuario.
-- [ ] Controladores flacos: las reglas en servicios, el SQL en repositorios.
-- [ ] Todo registrado en `Program.cs`; nada de `new XRepository(` en controladores.
+- [ ] Ningún SQL construido con `+` o `$"…{x}"` a partir de datos del usuario.
+- [ ] Controladores delgados: las reglas en servicios, el SQL en repositorios.
+- [ ] Todo registrado en `Program.cs`; ningún `new XRepository(` en controladores.
 - [ ] Errores: mensaje para el usuario + log.
 - [ ] Commit y push. Revisar GitHub.

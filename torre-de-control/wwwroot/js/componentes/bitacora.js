@@ -2,9 +2,9 @@ import { ref, reactive, computed, onMounted } from 'vue';
 import { api } from '../api.js';
 import { estado, avisar, festejarInsignias, mostrarError } from '../estado.js';
 
-const ICONOS = { Hice: '✅', Falta: '⏳', Duda: '🙋', Nota: '📝' };
+const ICONOS = { Hice: 'circle-check', Falta: 'hourglass', Duda: 'message-circle-question', Nota: 'notebook-pen' };
 
-// La bitácora: lo que fuiste anotando (en los checkpoints o cuando quieras). Las dudas se pueden copiar para la consulta.
+// La bitácora: notas registradas en los checkpoints o en cualquier otro momento. Las dudas pueden copiarse para la consulta.
 export default {
   setup() {
     const notas = ref([]);
@@ -37,7 +37,7 @@ export default {
     }
     async function copiarDudas() {
       const texto = dudasAbiertas.value.map((n, i) => `${i + 1}. ${n.texto}${n.desafioId ? ` (${n.desafioId})` : ''}`).join('\n');
-      try { await navigator.clipboard.writeText(texto); avisar('Dudas copiadas al portapapeles para el canal de consultas.', { icono: '📋' }); } catch { /* nada */ }
+      try { await navigator.clipboard.writeText(texto); avisar('Dudas copiadas al portapapeles para el canal de consultas.', { icono: 'clipboard' }); } catch { /* nada */ }
     }
     const fecha = f => new Date(f).toLocaleString('es-AR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
@@ -52,7 +52,7 @@ export default {
         <select v-model="nueva.tipo" style="padding:.5rem;border-radius:8px;border:1px solid var(--linea);background:var(--papel);color:var(--tinta)">
           <option>Duda</option><option>Hice</option><option>Falta</option><option>Nota</option>
         </select>
-        <input type="text" v-model="nueva.texto" placeholder="Ej.: por qué las listas no vuelven en el POST" style="flex:1;min-width:240px">
+        <input type="text" v-model="nueva.texto" placeholder="Ej.: por qué las listas no se conservan después del POST" style="flex:1;min-width:240px">
         <button class="boton" type="submit">Anotar</button>
       </div>
     </form>
@@ -61,21 +61,21 @@ export default {
       <button v-for="f in ['Todas', 'Duda', 'Hice', 'Falta', 'Nota']" :key="f" type="button" class="boton chico"
               :class="{ secundario: filtro !== f }" @click="filtro = f">{{ f }}</button>
       <button class="boton ambar chico" type="button" style="margin-left:auto" @click="copiarDudas" :disabled="!dudasAbiertas.length">
-        📋 Copiar {{ dudasAbiertas.length }} duda(s) abiertas</button>
+        <Icono nombre="clipboard" /> Copiar {{ dudasAbiertas.length }} duda(s) abiertas</button>
     </div>
 
     <p v-if="!visibles.length" class="suave">No hay notas todavía.</p>
     <div class="notas">
       <div class="nota-item" v-for="n in visibles" :key="n.id" :class="{ resuelta: n.resuelta }">
-        <span style="font-size:1.3rem" :title="n.tipo">{{ ICONOS[n.tipo] }}</span>
+        <span class="icono-nota" :title="n.tipo"><Icono :nombre="ICONOS[n.tipo]" /></span>
         <div>
           <div class="texto">{{ n.texto }}</div>
           <div class="suave mono" style="font-size:.75rem">{{ fecha(n.fecha) }}{{ n.desafioId ? ' · ' + n.desafioId : '' }}</div>
         </div>
         <div class="fila" style="gap:.4rem">
           <button v-if="n.tipo === 'Duda' || n.tipo === 'Falta'" class="boton secundario chico" type="button" @click="resolver(n)">
-            {{ n.resuelta ? 'reabrir' : 'resuelta ✓' }}</button>
-          <button class="boton secundario chico" type="button" @click="borrar(n)" title="Borrar">🗑</button>
+            <template v-if="n.resuelta">reabrir</template><template v-else><Icono nombre="check" /> resuelta</template></button>
+          <button class="boton secundario chico" type="button" @click="borrar(n)" title="Borrar" aria-label="Borrar"><Icono nombre="trash-2" /></button>
         </div>
       </div>
     </div>

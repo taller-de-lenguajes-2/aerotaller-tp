@@ -1,8 +1,8 @@
 import { reactive } from 'vue';
 import { api } from './api.js';
 
-// Estado compartido por toda la app. Lo único que va a localStorage es QUÉ tarjeta de embarque está activa
-// (el progreso de verdad vive en progreso.db, en el servidor).
+// Estado compartido por toda la aplicación. En localStorage solo se guarda qué tarjeta de embarque está activa
+// (el progreso se almacena en progreso.db, en el servidor).
 const CLAVE = 'torre.alumnoId';
 
 export const estado = reactive({
@@ -32,7 +32,7 @@ export async function refrescarResumen() {
 }
 
 let siguienteAviso = 1;
-export function avisar(texto, { icono = '✈', tipo = '', titulo = '', duracion = 4500 } = {}) {
+export function avisar(texto, { icono = 'plane', tipo = '', titulo = '', duracion = 4500 } = {}) {
   const aviso = { id: siguienteAviso++, texto, icono, tipo, titulo };
   estado.avisos.push(aviso);
   setTimeout(() => {
@@ -48,7 +48,7 @@ export function festejarInsignias(insignias) {
 }
 
 export function mostrarError(e) {
-  avisar(e.message, { icono: '⚠️', tipo: 'error', duracion: 6000 });
+  avisar(e.message, { icono: 'triangle-alert', tipo: 'error', duracion: 6000 });
 }
 
 export function despegar(titulo, siguiente) {

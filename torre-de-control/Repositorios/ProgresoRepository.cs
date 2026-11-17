@@ -188,7 +188,7 @@ public class ProgresoRepository(ConexionDb conexionDb) : IProgresoRepository
         return ultimas;
     }
 
-    // En cuántos desafíos distintos el verificador dio todo en verde alguna vez
+    // En cuántos desafíos distintos el verificador aprobó todos los chequeos alguna vez
     public int ContarDesafiosVerificados(int alumnoId)
     {
         using var conexion = Abrir();

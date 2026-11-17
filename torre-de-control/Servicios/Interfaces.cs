@@ -27,3 +27,9 @@ public interface IVerificadorService
     ResultadoVerificacion Verificar(int alumnoId, string desafioId);
     EstadoRepoGit EstadoRepo(int alumnoId);
 }
+
+public interface IBaseAeroTallerService
+{
+    EstadoBaseAeroTaller Estado(int alumnoId);
+    ResultadoCrearBase Crear(int alumnoId);
+}

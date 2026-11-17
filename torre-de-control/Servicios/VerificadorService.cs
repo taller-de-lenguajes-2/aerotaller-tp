@@ -4,8 +4,8 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-// El botón "Verificar" de la Torre corre el MISMO verificador que usa GitHub Classroom
-// (la carpeta verificador/ del repo) sobre el proyecto del alumno, y además mira su git.
+// El botón "Verificar" de la Torre ejecuta el MISMO verificador que usa GitHub Classroom
+// (la carpeta verificador/ del repositorio) sobre el proyecto del alumno, y además consulta el estado de su repositorio git.
 public class VerificadorService(
     IContenidoRepository contenido,
     IProgresoService progresoService,
@@ -19,7 +19,7 @@ public class VerificadorService(
 
     private static readonly JsonSerializerOptions OpcionesJson = new() { PropertyNameCaseInsensitive = true };
 
-    // La carpeta del repo: la que tiene AeroTaller/ y verificador/ (por defecto, la que contiene a torre-de-control/)
+    // La carpeta del repositorio: la que contiene AeroTaller/ y verificador/ (por defecto, la carpeta superior a torre-de-control/)
     public string RutaPorDefecto => Path.GetFullPath(Path.Combine(entorno.ContentRootPath, ".."));
 
     public ResultadoVerificacion Verificar(int alumnoId, string desafioId)
@@ -49,7 +49,7 @@ public class VerificadorService(
             (bool ok, string salida) = Correr("dotnet", RutaPorDefecto, TimeSpan.FromMinutes(5),
                 "run", "--project", verificador, "--", desafio.Numero.Value.ToString(), "--json", "--proyecto", carpetaAeroTaller);
 
-            // La salida de dotnet run puede traer líneas antes del JSON: tomamos la última que empieza con {
+            // La salida de dotnet run puede incluir líneas antes del JSON: se toma la última que empieza con {
             string? json = salida.Split('\n').LastOrDefault(l => l.TrimStart().StartsWith('{'));
             if (json is null)
             {
@@ -107,7 +107,7 @@ public class VerificadorService(
         string mensaje = (cambios, sinPushear, tieneRemoto) switch
         {
             (_, _, false) when commits.Count == 0 => "Todavía no hay commits.",
-            (_, _, false) => $"La rama no tiene remoto: git push -u origin {rama}",
+            (_, _, false) => $"La rama no tiene remoto configurado: ejecutar git push -u origin {rama}",
             (0, 0, _) => "Todo registrado en commits y subido con push.",
             ( > 0, _, _) => $"Hay {cambios} archivo(s) con cambios sin commit.",
             _ => $"Hay {sinPushear} commit(s) sin push."
@@ -117,7 +117,7 @@ public class VerificadorService(
         return new EstadoRepoGit(true, rama, tieneRemoto, cambios, sinPushear, commits, mensaje);
     }
 
-    // Corre un programa con los argumentos separados (ArgumentList): nada de armar un string de comando a mano
+    // Ejecuta un programa con los argumentos separados (ArgumentList), sin construir manualmente una cadena de comando
     private static (bool Ok, string Salida) Correr(string programa, string carpeta, TimeSpan limite, params string[] argumentos)
     {
         var inicio = new ProcessStartInfo(programa)
@@ -141,7 +141,7 @@ public class VerificadorService(
                 proceso.Kill(entireProcessTree: true);
                 return (false, $"{programa} tardó más de {limite.TotalMinutes:0.#} minutos.");
             }
-            // El verificador devuelve 1 si algún chequeo falla: su salida se usa igual
+            // El verificador devuelve 1 si algún chequeo falla: su salida se utiliza de todos modos
             return (programa == "dotnet" || proceso.ExitCode == 0, salida.Result + error.Result);
         }
         catch (Win32Exception)

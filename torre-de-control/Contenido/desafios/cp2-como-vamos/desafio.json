@@ -3,7 +3,7 @@
   "codigo": "CP2",
   "numero": null,
   "titulo": "¿Cómo vamos? · Checkpoint 2",
-  "subtitulo": "Mitad del vuelo: pantallas con ViewModels y formularios que no dejan pasar cualquier cosa",
+  "subtitulo": "Mitad del vuelo: pantallas con ViewModels y formularios validados",
   "tipo": "checkpoint",
   "minutosEstimados": 25,
   "minutosLimite": null,

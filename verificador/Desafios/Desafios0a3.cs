@@ -15,7 +15,7 @@ public class Desafio0 : Desafio
         using (Servidor s = ctx.Arrancar())
         using (Navegador nav = s.NuevoNavegador())
         {
-            informe.Probar("La app arranca y responde en /", () =>
+            informe.Probar("La aplicación inicia y responde en /", () =>
             {
                 Respuesta r = nav.Get("/");
                 return Resultado(r.Codigo == 200, $"GET / {Describir(r)}");
@@ -29,7 +29,7 @@ public class Desafio0 : Desafio
                 (int codigo, string salida) = Comando.Correr("git", p.CarpetaRepo, TimeSpan.FromSeconds(10), "rev-list", "--count", "HEAD");
                 if (codigo != 0) return (false, "La carpeta no es un repositorio git (el repositorio de Classroom debe clonarse).");
                 int commits = int.Parse(salida.Trim());
-                return Resultado(commits >= 2, "Solo está el commit inicial de la plantilla: falta el primer commit y push propio.", $"{commits} commits");
+                return Resultado(commits >= 2, "Solo existe el commit inicial de la plantilla: faltan el primer commit propio y su push.", $"{commits} commits");
             });
         }
     }
@@ -56,7 +56,7 @@ public class Desafio1 : Desafio
         informe.Probar("El proyecto usa el paquete Microsoft.Data.Sqlite", () =>
             Resultado(csproj.Contains("Microsoft.Data.Sqlite"), "Falta: dotnet add AeroTaller package Microsoft.Data.Sqlite"));
         informe.Probar("Existe AeroTaller/aerotaller.sql", () =>
-            Resultado(p.Existe("aerotaller.sql"), "No está el script aerotaller.sql en la carpeta AeroTaller/."));
+            Resultado(p.Existe("aerotaller.sql"), "No se encontró el script aerotaller.sql en la carpeta AeroTaller/ (viene con la plantilla: recuperarlo con git checkout -- AeroTaller/aerotaller.sql)."));
         informe.Probar("aerotaller.sql se copia junto al ejecutable", () =>
             Resultado(Regex.IsMatch(csproj, @"aerotaller\.sql""[^>]*CopyToOutputDirectory|CopyToOutputDirectory[\s\S]{0,80}aerotaller\.sql", RegexOptions.IgnoreCase)
                       || Regex.IsMatch(csproj, @"Include=""aerotaller\.sql""[\s\S]{0,120}<CopyToOutputDirectory>", RegexOptions.IgnoreCase),
@@ -68,12 +68,12 @@ public class Desafio1 : Desafio
             return Resultado(ok, "Falta \"ConnectionStrings\": { \"AeroTaller\": \"Data Source=aerotaller.db;Foreign Keys=True\" }");
         });
         informe.Probar("Program.cs lee la cadena con GetConnectionString(\"AeroTaller\")", () =>
-            Resultado(p.Leer("Program.cs").Contains("GetConnectionString(\"AeroTaller\")"), "La cadena tiene que salir de la configuración, no estar escrita a mano."));
+            Resultado(p.Leer("Program.cs").Contains("GetConnectionString(\"AeroTaller\")"), "La cadena debe leerse de la configuración, no escribirse en el código."));
 
         using Servidor s = ctx.Arrancar();
         var db = new BaseDatos(s.RutaBase);
 
-        informe.Probar("Al arrancar con una base nueva, la app la crea", () =>
+        informe.Probar("Al iniciar con una base nueva, la aplicación la crea", () =>
             Resultado(db.Existe, "Con otra cadena de conexión la aplicación no creó la base. CrearBaseSiNoExiste debe usar la cadena de la configuración."));
         if (!db.Existe) return;
 
@@ -103,11 +103,11 @@ public class Desafio1 : Desafio
             Resultado(db.EsUnica("Pasajero", "Dni"), "Dni TEXT NOT NULL UNIQUE"));
         informe.Probar("El número de vuelo es único", () =>
             Resultado(db.EsUnica("Vuelo", "Numero"), "Numero TEXT NOT NULL UNIQUE"));
-        informe.Probar("Los datos de material/datos.sql están cargados", () =>
+        informe.Probar("Los datos de ejemplo de aerotaller.sql están cargados", () =>
         {
             long vuelos = db.Contar("SELECT COUNT(*) FROM Vuelo"), reservas = db.TotalReservas(), pasajeros = db.Contar("SELECT COUNT(*) FROM Pasajero");
             return Resultado(vuelos == 9 && reservas == 15 && pasajeros == 8,
-                $"Se esperaban 9 vuelos, 8 pasajeros y 15 reservas; hay {vuelos}, {pasajeros} y {reservas}. material/datos.sql debe estar al final de aerotaller.sql.");
+                $"Se esperaban 9 vuelos, 8 pasajeros y 15 reservas; hay {vuelos}, {pasajeros} y {reservas}. Los datos de aerotaller.sql no deben modificarse.");
         });
     }
 }
@@ -135,7 +135,7 @@ public class Desafio2 : Desafio
             if (!Regex.IsMatch(todo, @"\bAeropuerto\??\s+Destino\b")) faltan.Add("Aeropuerto Destino");
             if (!Regex.IsMatch(todo, @"\bVuelo\??\s+Vuelo\s*\{")) faltan.Add("Vuelo Vuelo (en Reserva)");
             if (!Regex.IsMatch(todo, @"\bPasajero\??\s+Pasajero\s*\{")) faltan.Add("Pasajero Pasajero (en Reserva)");
-            return Resultado(faltan.Count == 0, "Los objetos se componen de otros objetos, no de Id sueltos. Falta: " + string.Join(", ", faltan));
+            return Resultado(faltan.Count == 0, "Los objetos se componen de otros objetos, no de Id aislados. Falta: " + string.Join(", ", faltan));
         });
         informe.Probar("Repositorios: Aeropuerto, Vuelo, Pasajero y Reserva", () =>
         {
@@ -172,10 +172,10 @@ public class Desafio3 : Desafio
     public override void Verificar(Contexto ctx, Informe informe)
     {
         var p = ctx.Proyecto;
-        informe.Probar("Los controladores no hablan SQL (sin SqliteConnection)", () =>
+        informe.Probar("Los controladores no contienen SQL (sin SqliteConnection)", () =>
         {
             var archivos = p.Coincidencias(@"\bSqliteConnection\b", r => r.StartsWith("Controllers/"));
-            return Resultado(archivos.Count == 0, "SQL en: " + string.Join(", ", archivos) + ". Eso va en los repositorios.");
+            return Resultado(archivos.Count == 0, "SQL en: " + string.Join(", ", archivos) + ". El acceso a datos corresponde a los repositorios.");
         });
 
         using Servidor s = ctx.Arrancar();
@@ -202,7 +202,7 @@ public class Desafio3 : Desafio
                 && (Contiene(r, "TUC") || Contiene(r, "Tucumán")) && (Contiene(r, "AEP") || Contiene(r, "Buenos Aires"));
             return Resultado(ok, $"/Vuelos/Detalle/{at1001} (AT1001, TUC → AEP) {Describir(r)}");
         });
-        informe.Probar("Un vuelo que no existe da 404", () =>
+        informe.Probar("Un vuelo que no existe devuelve 404", () =>
         {
             Respuesta r = nav.Get("/Vuelos/Detalle/987654");
             return Resultado(r.Codigo == 404, $"Se esperaba 404 (return NotFound()); {Describir(r)}");
@@ -218,13 +218,13 @@ public class Desafio3 : Desafio
         {
             Respuesta r = mostrador.Get("/Pasajeros?buscar=ana");
             return Resultado(r.Codigo == 200 && Contiene(r, "Ana Gómez") && !Contiene(r, "Bruno Díaz"),
-                "Con ?buscar=ana tiene que aparecer Ana Gómez y no Bruno Díaz (LIKE con parámetro). " + Describir(r));
+                "Con ?buscar=ana debe aparecer Ana Gómez y no Bruno Díaz (LIKE con parámetro). " + Describir(r));
         });
         informe.Probar("GET /Pasajeros?buscar=2899 busca también por DNI", () =>
         {
             Respuesta r = mostrador.Get("/Pasajeros?buscar=2899");
             return Resultado(r.Codigo == 200 && Contiene(r, "Bruno Díaz") && !Contiene(r, "Ana Gómez"),
-                "Con ?buscar=2899 tiene que aparecer Bruno Díaz (DNI 28999000). " + Describir(r));
+                "Con ?buscar=2899 debe aparecer Bruno Díaz (DNI 28999000). " + Describir(r));
         });
         informe.Probar("El detalle del pasajero muestra sus reservas", () =>
         {

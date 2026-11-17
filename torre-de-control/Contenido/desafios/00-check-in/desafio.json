@@ -16,7 +16,7 @@
     { "id": "correr", "texto": "AeroTaller corre en http://localhost:5210 y muestra la página de inicio" },
     { "id": "breakpoint", "texto": "Ejecución detenida en HomeController.Index con un punto de interrupción y Request.Path inspeccionado" },
     { "id": "pasos", "texto": "F10 (paso a paso), F11 (entrar) y F5 (continuar) probados" },
-    { "id": "push", "texto": "Primer commit y push realizados; el commit se ve en GitHub" }
+    { "id": "push", "texto": "Primer commit y push realizados; el commit aparece en GitHub" }
   ],
   "quiz": [
     {
@@ -29,8 +29,8 @@
         { "id": "d", "texto": "null, porque no hay ruta" }
       ],
       "correcta": "b",
-      "pista": "Revisar el valor en el panel Variables (o agregar Request.Path al Watch). La URL ingresada no tenía ni controlador ni acción: ¿quién los completó?",
-      "explicacion": "Request.Path es exactamente lo que vino en la URL: \"/\". El ruteo convencional completa los valores por defecto (controller=Home, action=Index), pero el Path no cambia.",
+      "pista": "Revisar el valor en el panel Variables (o agregar Request.Path al Watch). La URL ingresada no tenía ni controlador ni acción: ¿qué mecanismo los completó?",
+      "explicacion": "Request.Path es exactamente la ruta que contiene la URL: \"/\". El ruteo convencional completa los valores por defecto (controller=Home, action=Index), pero el Path no cambia.",
       "etiquetas": ["depurador"]
     },
     {
@@ -44,7 +44,7 @@
       ],
       "correcta": "c",
       "pista": "Una tecla ejecuta la línea entera como si fuera una sola; otra entra en el método que se llama.",
-      "explicacion": "F11 entra al método (Step Into). F10 lo ejecuta entero y se detiene en la línea siguiente; Shift+F11 termina el método actual y vuelve a quien lo llamó.",
+      "explicacion": "F11 entra al método (Step Into). F10 lo ejecuta entero y se detiene en la línea siguiente; Shift+F11 termina el método actual y vuelve al método que lo llamó.",
       "etiquetas": ["depurador"]
     },
     {
@@ -54,11 +54,11 @@
         { "id": "a", "texto": "El commit quedó en la computadora local: falta git push" },
         { "id": "b", "texto": "Falta git add después del commit" },
         { "id": "c", "texto": "GitHub tarda unas horas en mostrar los commits" },
-        { "id": "d", "texto": "Hay que hacer git pull para subirlo" }
+        { "id": "d", "texto": "Es necesario ejecutar git pull para subirlo" }
       ],
       "correcta": "a",
-      "pista": "Analizar dónde reside cada cosa: el commit, ¿se guarda en la máquina local o en GitHub?",
-      "explicacion": "commit guarda una instantánea del proyecto en el repositorio LOCAL; push envía esos commits al remoto (GitHub). Sin push, el docente no ve nada."
+      "pista": "Analizar dónde se almacena el commit: ¿en la máquina local o en GitHub?",
+      "explicacion": "commit guarda una instantánea del proyecto en el repositorio LOCAL; push envía esos commits al remoto (GitHub). Sin push, los cambios no son visibles para el docente."
     }
   ],
   "lecturas": [

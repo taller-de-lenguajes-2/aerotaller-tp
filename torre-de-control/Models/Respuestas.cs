@@ -14,7 +14,7 @@ public record DesafioVista(
     string Id, int Orden, string Codigo, string Titulo, string Subtitulo, string Tipo,
     int MinutosEstimados, int? MinutosLimite, List<TemaRef> Temas, string? Insignia, string Markdown,
     List<Tarea> Tareas, List<PreguntaPublica> Quiz, List<Lectura> Lecturas, Commit? Commit,
-    int? Numero, ProgresoDesafio Progreso, string? Anterior, string? Siguiente);
+    int? Numero, ProgresoDesafio Progreso, string? Anterior, string? Siguiente, List<string> Herramientas);
 
 public record ProgresoDesafio(
     string Estado, DateTime? Iniciado, DateTime? Completado,
@@ -47,3 +47,12 @@ public record InsigniaVista(string Id, string Nombre, string Icono, string Descr
 public record NotaEntrada(string Tipo, string Texto, string? DesafioId);
 
 public record ResumenAlumno(Alumno Alumno, int Completados, int Total, int Insignias, int InsigniasTotal, string? Actual);
+
+// La base de AeroTaller (aerotaller.db) en la carpeta del alumno, para el botón "Crear base de datos"
+public record EstadoBaseAeroTaller(
+    string Carpeta, string Archivo, bool HayScript, bool Existe, long Bytes, DateTime? Modificada,
+    List<TablaBase> Tablas, string? Problema);
+
+public record TablaBase(string Nombre, long Filas);
+
+public record ResultadoCrearBase(bool Ok, string Mensaje, EstadoBaseAeroTaller Estado);

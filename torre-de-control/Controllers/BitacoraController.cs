@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-// La bitácora: notas propias (qué hice, qué falta, dudas para la consulta)
+// La bitácora: notas personales (trabajo realizado, pendientes, dudas para la consulta)
 [ApiController]
 [Route("api/alumnos/{alumnoId:int}/bitacora")]
 public class BitacoraController(IBitacoraRepository bitacora, IProgresoService progreso, IInsigniaService insignias) : ControllerBase

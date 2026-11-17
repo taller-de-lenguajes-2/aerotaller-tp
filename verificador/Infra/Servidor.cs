@@ -3,8 +3,8 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 
-// Levanta la app del alumno (el .dll ya compilado) en un puerto libre, con la configuración que le pasemos.
-// La base va a una carpeta temporal: nunca toca el aerotaller.db del alumno.
+// Inicia la aplicación del alumno (el .dll ya compilado) en un puerto libre, con la configuración indicada.
+// La base se crea en una carpeta temporal: el aerotaller.db del alumno nunca se modifica.
 public sealed class Servidor : IDisposable
 {
     private readonly Process proceso;
@@ -44,7 +44,7 @@ public sealed class Servidor : IDisposable
         proceso.BeginErrorReadLine();
     }
 
-    // Arranca y espera a que responda. Si no arranca, aborta el desafío con lo que imprimió la app.
+    // Inicia la aplicación y espera a que responda. Si no inicia, aborta el desafío con la salida que imprimió la aplicación.
     public static Servidor Arrancar(Proyecto proyecto, string carpetaTemporal, string? cadena = null,
         Dictionary<string, string>? extra = null, string nombreBase = "aerotaller.db")
     {
@@ -59,7 +59,7 @@ public sealed class Servidor : IDisposable
             if (servidor.proceso.HasExited)
             {
                 Thread.Sleep(300);
-                throw new VerificacionAbortada("La app se cerró al arrancar:\n" + Ultimas(servidor.Salida, 12));
+                throw new VerificacionAbortada("La aplicación se cerró al iniciar:\n" + Ultimas(servidor.Salida, 12));
             }
             try
             {
@@ -72,7 +72,7 @@ public sealed class Servidor : IDisposable
             }
         }
         servidor.Dispose();
-        throw new VerificacionAbortada("La app no respondió en 40 segundos:\n" + Ultimas(servidor.Salida, 12));
+        throw new VerificacionAbortada("La aplicación no respondió en 40 segundos:\n" + Ultimas(servidor.Salida, 12));
     }
 
     public Navegador NuevoNavegador() => new(Url);
@@ -89,7 +89,7 @@ public sealed class Servidor : IDisposable
         }
         catch (InvalidOperationException) { }
         proceso.Dispose();
-        // Microsoft.Data.Sqlite deja conexiones en el pool del proceso del alumno; al matarlo, se liberan
+        // Microsoft.Data.Sqlite deja conexiones en el pool del proceso del alumno; al finalizarlo, se liberan
     }
 
     public static string Ultimas(string texto, int cantidad) =>

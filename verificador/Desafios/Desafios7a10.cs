@@ -25,10 +25,10 @@ public class Desafio7 : Desafio
                 .Where(i => !Regex.IsMatch(program, $@"Add(Scoped|Transient|Singleton)<\s*{i}\s*,")).ToList();
             return Resultado(faltan.Count == 0, "Falta builder.Services.AddScoped<I…Repository, …>() para: " + string.Join(", ", faltan));
         });
-        informe.Probar("Ningún controlador ni servicio hace new de un repositorio", () =>
+        informe.Probar("Ningún controlador ni servicio instancia un repositorio con new", () =>
         {
             var archivos = p.Coincidencias(@"new\s+\w+Repository(Falso)?\s*\(", r => r.StartsWith("Controllers/") || r.StartsWith("Servicios/"));
-            return Resultado(archivos.Count == 0, "El contenedor tiene que dárselos por el constructor. Hay new en: " + string.Join(", ", archivos));
+            return Resultado(archivos.Count == 0, "Los repositorios deben recibirse por constructor desde el contenedor. Hay new en: " + string.Join(", ", archivos));
         });
         informe.Probar("Los controladores reciben interfaces, no clases concretas", () =>
         {
@@ -43,7 +43,7 @@ public class Desafio7 : Desafio
             return Resultado(cantidad >= 4, $"Se encontraron {cantidad} clases …RepositoryFalso : I…Repository (se esperaban al menos 4).", $"{cantidad} falsos");
         });
 
-        informe.Probar("Con OrigenDeDatos=Falso la app anda sin tocar la base", () =>
+        informe.Probar("Con OrigenDeDatos=Falso la aplicación funciona sin acceder a la base", () =>
         {
             string carpeta = ctx.NuevaCarpeta();
             string rutaProhibida = Path.Combine(carpeta, "no-tiene-que-existir.db");
@@ -54,9 +54,9 @@ public class Desafio7 : Desafio
             if (inicio.Codigo != 200 || vuelos.Codigo != 200)
                 return (false, $"Con datos falsos: GET / {Describir(inicio)} · GET /Vuelos {Describir(vuelos)}");
             return Resultado(!File.Exists(rutaProhibida),
-                "Con OrigenDeDatos=Falso se creó/abrió la base igual: ¿CrearBaseSiNoExiste y ConexionDb quedaron fuera del if?");
+                "Con OrigenDeDatos=Falso se creó o abrió la base de todos modos: revisar si CrearBaseSiNoExiste y ConexionDb quedaron fuera del if.");
         });
-        informe.Probar("Con OrigenDeDatos=Sqlite sigue usando la base", () =>
+        informe.Probar("Con OrigenDeDatos=Sqlite la aplicación sigue usando la base", () =>
         {
             using Servidor s = ctx.Arrancar(new() { ["OrigenDeDatos"] = "Sqlite" });
             using Navegador nav = s.NuevoNavegador();
@@ -81,19 +81,19 @@ public class Desafio8 : Desafio
                 "dotnet add AeroTaller package Serilog.AspNetCore + builder.Services.AddSerilog(...) en Program.cs"));
         informe.Probar("Página de error: app.UseExceptionHandler(...)", () =>
             Resultado(program.Contains("UseExceptionHandler"), "app.UseExceptionHandler(\"/Home/Error\");"));
-        informe.Probar("Los servicios registran lo que pasa con ILogger<T>", () =>
+        informe.Probar("Los servicios registran eventos con ILogger<T>", () =>
             Resultado(p.Coincidencias(@"ILogger<\w+Service>", r => r.StartsWith("Servicios/")).Count > 0, "ILogger<ReservaService> debe recibirse por el constructor."));
         informe.Probar("Los logs usan plantillas, no $\"...\"", () =>
         {
             var archivos = p.Coincidencias(@"\.Log(Trace|Debug|Information|Warning|Error|Critical)\(\s*(\w+\s*,\s*)?\$""");
             return Resultado(archivos.Count == 0, "logger.LogInformation(\"Reserva {ReservaId}…\", id) en vez de $\"…\": " + string.Join(", ", archivos));
         });
-        informe.Probar("Hay un catch (SqliteException …) when (…) para el choque de reservas", () =>
+        informe.Probar("Hay un catch (SqliteException …) when (…) para el conflicto de reservas", () =>
             Resultado(p.Coincidencias(@"catch\s*\(\s*SqliteException\s+\w+\s*\)\s*when").Count > 0, "catch (SqliteException ex) when (ex.SqliteErrorCode == 19)"));
         informe.Probar("Ningún catch vacío", () =>
         {
             var archivos = p.Coincidencias(@"catch(\s*\([^)]*\))?\s*\{\s*\}");
-            return Resultado(archivos.Count == 0, "Un catch vacío esconde el error: " + string.Join(", ", archivos));
+            return Resultado(archivos.Count == 0, "Un catch vacío oculta el error: " + string.Join(", ", archivos));
         });
 
         string carpeta = ctx.NuevaCarpeta();
@@ -106,7 +106,7 @@ public class Desafio8 : Desafio
             {
                 var indices = db.IndicesUnicosParciales("Reserva");
                 bool ok = indices.Any(sql => Regex.IsMatch(sql, @"VueloId", RegexOptions.IgnoreCase) && Regex.IsMatch(sql, @"Asiento", RegexOptions.IgnoreCase) && sql.Contains("Confirmada"));
-                return Resultado(ok, "CREATE UNIQUE INDEX … ON Reserva (VueloId, Asiento) WHERE Estado = 'Confirmada' (y borrar aerotaller.db para recrearla)");
+                return Resultado(ok, "Falta el índice UX_Reserva_AsientoConfirmado de aerotaller.sql: el script de la plantilla lo incluye y no debe quitarse.");
             });
 
             informe.Probar("Una reserva queda registrada en logs/", () =>
@@ -114,7 +114,7 @@ public class Desafio8 : Desafio
                 using Navegador nav = Mostrador(s);
                 Respuesta r = nav.EnviarFormulario("/Reservas/Crear", "/Reservas/Crear", Reserva(at2020, db.IdPasajero(DniDiego), "17D"));
                 if (!r.EsRedireccion) return (false, "No fue posible reservar AT2020 17D: " + Describir(r));
-                Thread.Sleep(1500);   // Serilog escribe el archivo cada tanto
+                Thread.Sleep(1500);   // Serilog escribe el archivo de forma periódica
                 return Resultado(Logs(p, s.Inicio).Any(l => l.Contains("17D") && !l.Contains("HTTP ")),
                     "No se encontró en AeroTaller/logs/*.txt una línea del servicio con el asiento 17D (ej.: \"Reserva {ReservaId} confirmada… asiento {Asiento}\").");
             });
@@ -141,7 +141,7 @@ public class Desafio8 : Desafio
             Respuesta r = nav.EnviarFormulario("/Reservas/Crear", "/Reservas/Crear", Reserva(db.IdVuelo("AT3110"), db.IdPasajero(DniHernan), "4A"));
             if (r.Codigo != 500) return (false, $"Se esperaba 500: {Describir(r)}");
             if (Contiene(r, "SqliteException") || r.Texto.Contains("   at ") || Contiene(r, "StackTrace"))
-                return (false, "La página de error muestra detalles técnicos (excepción/stack trace): el usuario no tiene que verlos.");
+                return (false, "La página de error muestra detalles técnicos (excepción/stack trace): no deben mostrarse al usuario.");
             Thread.Sleep(1500);
             return Resultado(Logs(p, s.Inicio).Any(l => l.Contains("SqliteException") || l.Contains("readonly", StringComparison.OrdinalIgnoreCase)),
                 "La página de error es correcta, pero el SqliteException no aparece en AeroTaller/logs/*.txt.");
@@ -190,9 +190,9 @@ public class Desafio9 : Desafio
 
         informe.Probar("Tabla Usuario con admin y mostrador", () =>
         {
-            if (!db.TieneTabla("Usuario")) return (false, "No existe la tabla Usuario (borrar aerotaller.db para recrearla).");
+            if (!db.TieneTabla("Usuario")) return (false, "No existe la tabla Usuario: aerotaller.sql de la plantilla la incluye y no debe quitarse.");
             long cantidad = db.Contar("SELECT COUNT(*) FROM Usuario WHERE NombreUsuario IN ('admin', 'mostrador')");
-            return Resultado(cantidad == 2, "material/datos-usuarios.sql debe estar al final de aerotaller.sql.");
+            return Resultado(cantidad == 2, "Faltan los usuarios admin y mostrador de aerotaller.sql: los datos del script no deben modificarse.");
         });
 
         using (Navegador anonimo = s.NuevoNavegador())
@@ -223,7 +223,7 @@ public class Desafio9 : Desafio
 
         using (Navegador mostrador = s.NuevoNavegador())
         {
-            informe.Probar("Login de mostrador: redirige y entra a /Reservas", () =>
+            informe.Probar("Login de mostrador: redirige y accede a /Reservas", () =>
             {
                 Respuesta r = mostrador.IniciarSesion("mostrador", "vuelos2026");
                 Respuesta reservas = mostrador.Get("/Reservas");
@@ -253,7 +253,7 @@ public class Desafio9 : Desafio
 
         using (Navegador admin = s.NuevoNavegador())
         {
-            informe.Probar("Admin entra a /Vuelos/Crear", () =>
+            informe.Probar("Admin accede a /Vuelos/Crear", () =>
             {
                 admin.IniciarSesion("admin", "aero2026");
                 Respuesta r = admin.Get("/Vuelos/Crear");
@@ -261,7 +261,7 @@ public class Desafio9 : Desafio
             });
         }
 
-        informe.Probar("returnUrl: después del login vuelve a donde quería ir", () =>
+        informe.Probar("returnUrl: después del login redirige a la página solicitada", () =>
         {
             using Navegador nav = s.NuevoNavegador();
             Respuesta login = nav.Get("/Login?returnUrl=%2FPasajeros");

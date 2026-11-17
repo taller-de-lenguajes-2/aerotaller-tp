@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 [Route("api")]
 public class ContenidoController(IContenidoRepository contenido, IVerificadorService verificador) : ControllerBase
 {
-    // Para la tarjeta de embarque: la carpeta del repo que se sugiere por defecto
+    // Para la tarjeta de embarque: la carpeta del repositorio que se sugiere por defecto
     [HttpGet("sugerencias")]
     public IActionResult Sugerencias() => Ok(new { rutaProyecto = verificador.RutaPorDefecto });
 

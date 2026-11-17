@@ -79,11 +79,12 @@ public class ProgresoService(
             desafio.Id, desafio.Orden, desafio.Codigo, desafio.Titulo, desafio.Subtitulo, desafio.Tipo,
             desafio.MinutosEstimados, desafio.MinutosLimite, desafio.Temas, desafio.Insignia, desafio.Markdown,
             desafio.Tareas,
-            // La respuesta correcta, la pista y la explicación NO viajan al navegador
+            // La respuesta correcta, la pista y la explicación NO se envían al navegador
             desafio.Quiz.Select(p => new PreguntaPublica(p.Id, p.Texto, p.Codigo, p.Opciones, p.Etiquetas)).ToList(),
             desafio.Lecturas, desafio.Commit, desafio.Numero, vista,
             indice > 0 ? desafios[indice - 1].Id : null,
-            indice < desafios.Count - 1 ? desafios[indice + 1].Id : null);
+            indice < desafios.Count - 1 ? desafios[indice + 1].Id : null,
+            desafio.Herramientas);
     }
 
     public void MarcarTarea(int alumnoId, string desafioId, string tareaId, bool marcada)
@@ -121,7 +122,7 @@ public class ProgresoService(
     {
         Desafio desafio = DesafioDisponible(alumnoId, desafioId);
         if (desafio.Tipo != TiposDesafio.Checkpoint)
-            throw new SolicitudInvalidaException("Esto no es un checkpoint.");
+            throw new SolicitudInvalidaException("El desafío indicado no es un checkpoint.");
 
         var faltantes = new List<string>();
         if (string.IsNullOrWhiteSpace(entrada.Hice)) faltantes.Add("Falta describir el trabajo realizado.");

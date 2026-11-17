@@ -13,11 +13,11 @@
   "insignia": "viewmodels",
   "tareas": [
     { "id": "carpeta", "texto": "Carpeta ViewModels/ creada con VueloListadoViewModel, VueloIndexViewModel, AsientoViewModel y VueloDetalleViewModel, y /Vuelos filtra por destino y fecha", "ayuda": "Probar /Vuelos?DestinoId=2 y /Vuelos?Desde=2030-01-01 (este último no debe mostrar ningún resultado)" },
-    { "id": "mapa", "texto": "/Vuelos/Detalle/2 (AT1001) dibuja 20 filas de 6 asientos con el pasillo entre C y D: 3A, 3B y 10F en gris (clase ocupado), el 1C libre, y cada libre es un enlace", "ayuda": "El 1C tiene una reserva Cancelada: no cuenta como ocupado" },
+    { "id": "mapa", "texto": "/Vuelos/Detalle/2 (AT1001) dibuja 20 filas de 6 asientos con el pasillo entre C y D: 3A, 3B y 10F en gris (clase ocupado), el 1C libre, y cada libre es un enlace", "ayuda": "El 1C tiene una reserva Cancelada: no se considera ocupado" },
     { "id": "listados", "texto": "/Reservas lista las reservas con ReservaListadoViewModel y /Pasajeros/Detalle/{id} usa PasajeroDetalleViewModel" },
     { "id": "formulario", "texto": "Al hacer clic en un asiento libre se abre /Reservas/Crear con el vuelo y el asiento ya cargados; al reservar, se vuelve al mapa y ese asiento aparece ocupado", "ayuda": "Revisar la URL: /Reservas/Crear?vueloId=2&asiento=5C" },
-    { "id": "push", "texto": "Commit y push realizados con el mensaje del desafío; el commit se ve en GitHub" },
-    { "id": "verificador", "texto": "El verificador da todo en verde para el desafío 4 (botón Verificar o dotnet run --project verificador -- 4)" }
+    { "id": "push", "texto": "Commit y push realizados con el mensaje del desafío; el commit aparece en GitHub" },
+    { "id": "verificador", "texto": "El verificador aprueba todos los chequeos del desafío 4 (botón Verificar o dotnet run --project verificador -- 4)" }
   ],
   "quiz": [
     {
@@ -30,8 +30,8 @@
         { "id": "d", "texto": "Mapa: 6 · asientosOcupados: 3" }
       ],
       "correcta": "c",
-      "pista": "Mapa es una lista de filas (cada fila es otra lista). Y en los datos de ejemplo el AT1001 tiene cuatro reservas… pero no todas están en el mismo estado. Desplegar las dos variables y contar sus elementos.",
-      "explicacion": "Mapa tiene un elemento por FILA (20), y cada uno es una lista de 6 AsientoViewModel: 20 × 6 = 120 asientos en total. asientosOcupados tiene 3 (3A, 3B y 10F) porque AsientosOcupados solo trae reservas 'Confirmada': la del 1C está cancelada y ese asiento se vuelve a ofrecer.",
+      "pista": "Mapa es una lista de filas (cada fila es otra lista). Además, en los datos de ejemplo el AT1001 tiene cuatro reservas, pero no todas están en el mismo estado. Desplegar las dos variables y contar sus elementos.",
+      "explicacion": "Mapa tiene un elemento por FILA (20), y cada uno es una lista de 6 AsientoViewModel: 20 × 6 = 120 asientos en total. asientosOcupados tiene 3 (3A, 3B y 10F) porque AsientosOcupados solo devuelve reservas 'Confirmada': la del 1C está cancelada y ese asiento se vuelve a ofrecer.",
       "etiquetas": ["depurador"]
     },
     {
@@ -40,13 +40,13 @@
       "codigo": "[HttpPost]\n[ValidateAntiForgeryToken]\npublic IActionResult Crear(ReservaCrearViewModel modelo)\n{\n    if (vuelo is null || pasajero is null)\n    {\n        return View(modelo);   // ← sin CargarListas\n    }\n    …\n}",
       "opciones": [
         { "id": "a", "texto": "Los desplegables vacíos (solo \"— Elegir —\"): el formulario envió el valor elegido, no las listas" },
-        { "id": "b", "texto": "Los desplegables completos: el ViewModel recuerda las listas del GET" },
+        { "id": "b", "texto": "Los desplegables completos: el ViewModel conserva las listas del GET" },
         { "id": "c", "texto": "Una NullReferenceException, porque Vuelos vale null" },
         { "id": "d", "texto": "Los desplegables completos, porque ASP.NET los guarda en la sesión entre el GET y el POST" }
       ],
       "correcta": "a",
-      "pista": "Entre el GET y el POST hay dos requests distintos y dos objetos ReservaCrearViewModel distintos. ¿Qué viaja en un POST de un <select>?",
-      "explicacion": "Un <select> envía solo el value elegido (VueloId=2). El ViewModel del POST es un objeto nuevo armado con lo que vino en el formulario: las listas quedan como se inicializaron (vacías). Por eso CargarListas va en el GET y en cada camino del POST que vuelve a mostrar la vista."
+      "pista": "Entre el GET y el POST hay dos requests distintos y dos objetos ReservaCrearViewModel distintos. ¿Qué se envía en un POST desde un <select>?",
+      "explicacion": "Un <select> envía solo el value elegido (VueloId=2). El ViewModel del POST es un objeto nuevo, construido con los valores recibidos del formulario: las listas quedan como se inicializaron (vacías). Por eso CargarListas se invoca en el GET y en cada camino del POST que vuelve a mostrar la vista."
     },
     {
       "id": "p3",
@@ -54,18 +54,18 @@
       "opciones": [
         { "id": "a", "texto": "Ninguno: el formulario solo tiene VueloId, PasajeroId y Asiento, así que no puede llegar otra cosa" },
         { "id": "b", "texto": "Que la vista no compile, porque Reserva no tiene [Display]" },
-        { "id": "c", "texto": "Que el repositorio tenga que conocer los ViewModels" },
-        { "id": "d", "texto": "Overposting: cualquiera puede agregar a mano un campo (por ejemplo Estado o Fecha) con las herramientas del navegador y el binding lo carga igual" }
+        { "id": "c", "texto": "Que el repositorio deba depender de los ViewModels" },
+        { "id": "d", "texto": "Overposting: cualquier usuario puede agregar manualmente un campo (por ejemplo Estado o Fecha) con las herramientas del navegador y el binding lo asigna de todos modos" }
       ],
       "correcta": "d",
-      "pista": "El model binding completa cualquier propiedad pública que venga en el request, esté o no en el HTML. ¿Qué propiedades tiene Reserva que el usuario nunca debería poder elegir?",
-      "explicacion": "Eso es overposting (mass assignment). Con un ViewModel que solo tiene VueloId, PasajeroId y Asiento, cualquier campo de más no tiene dónde asignarse. La Fecha y el Estado los asigna el servidor, nunca el formulario."
+      "pista": "El model binding completa cualquier propiedad pública incluida en el request, esté o no en el HTML. ¿Qué propiedades tiene Reserva que el usuario nunca debería poder elegir?",
+      "explicacion": "Eso es overposting (mass assignment). Con un ViewModel que solo tiene VueloId, PasajeroId y Asiento, cualquier campo adicional no tiene dónde asignarse. La Fecha y el Estado los asigna el servidor, nunca el formulario."
     }
   ],
   "lecturas": [
     { "id": "tema12", "titulo": "Tema 12 — ViewModels", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-12-viewmodels/index.html", "fuente": "Diapositivas de la cátedra", "pregunta": "¿Cuáles son los tres escenarios en los que conviene un ViewModel? ¿A cuál corresponde el mapa de asientos?" },
-    { "id": "model-binding", "titulo": "Enlace de modelos en ASP.NET Core", "url": "https://learn.microsoft.com/es-es/aspnet/core/mvc/models/model-binding", "fuente": "Microsoft Learn", "pregunta": "¿De qué fuentes saca valores el model binding (formulario, ruta, query string) y en qué orden las consulta?" },
-    { "id": "select", "titulo": "Formularios: el tag helper de select", "url": "https://learn.microsoft.com/es-es/aspnet/core/mvc/views/working-with-forms#the-select-tag-helper", "fuente": "Microsoft Learn", "pregunta": "¿Cómo sabe el <select> qué opción mostrar elegida cuando la vista se vuelve a dibujar?" },
+    { "id": "model-binding", "titulo": "Enlace de modelos en ASP.NET Core", "url": "https://learn.microsoft.com/es-es/aspnet/core/mvc/models/model-binding", "fuente": "Microsoft Learn", "pregunta": "¿De qué fuentes obtiene valores el model binding (formulario, ruta, query string) y en qué orden las consulta?" },
+    { "id": "select", "titulo": "Formularios: el tag helper de select", "url": "https://learn.microsoft.com/es-es/aspnet/core/mvc/views/working-with-forms#the-select-tag-helper", "fuente": "Microsoft Learn", "pregunta": "¿Cómo se determina qué opción del <select> se muestra seleccionada cuando la vista se vuelve a dibujar?" },
     { "id": "anticorrupcion", "titulo": "Patrón de capa contra daños (anticorrupción)", "url": "https://learn.microsoft.com/es-es/azure/architecture/patterns/anti-corruption-layer", "fuente": "Microsoft Learn", "pregunta": "¿Qué dos partes de AeroTaller separan los ViewModels y por qué eso es una capa anticorrupción?" }
   ],
   "commit": { "mensaje": "Desafío 4: ViewModels y mapa de asientos", "detalle": "Antes del commit, revisar el diff: debería aparecer una carpeta ViewModels/ nueva y vistas que cambiaron su @model." }

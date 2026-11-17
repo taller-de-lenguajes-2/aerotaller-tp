@@ -1,4 +1,4 @@
-// Un chequeo: qué se revisó, si pasó y una explicación para el alumno (sobre todo cuando falla)
+// Un chequeo: qué se revisó, si se aprobó y una explicación para el alumno (sobre todo cuando falla)
 public record Chequeo(string Nombre, bool Ok, string Detalle = "");
 
 public record ResultadoDesafio(int Numero, string Titulo, List<Chequeo> Chequeos)
@@ -6,10 +6,11 @@ public record ResultadoDesafio(int Numero, string Titulo, List<Chequeo> Chequeos
     public bool Ok => Chequeos.Count > 0 && Chequeos.All(c => c.Ok);
 }
 
-// Para cortar un desafío cuando algo básico falla (por ejemplo, la app no arranca)
+// Interrumpe la verificación de un desafío cuando falla un requisito básico (por ejemplo, la aplicación no inicia)
 public class VerificacionAbortada(string mensaje) : Exception(mensaje);
 
-// Acumula los chequeos de un desafío. Cada chequeo corre aislado: si explota, queda en rojo con el error y se sigue.
+// Acumula los chequeos de un desafío. Cada chequeo se ejecuta de forma aislada: si lanza una excepción, se marca
+// como no aprobado con el error y la verificación continúa.
 public class Informe
 {
     public List<Chequeo> Chequeos { get; } = [];

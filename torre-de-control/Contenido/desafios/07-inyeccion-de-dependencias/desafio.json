@@ -20,7 +20,7 @@
     },
     {
       "id": "contenedor",
-      "texto": "Program.cs registra AddScoped<IVueloRepository, VueloRepository>() (y las otras tres), y ningún controlador ni servicio pide una clase concreta ni hace new de un repositorio",
+      "texto": "Program.cs registra AddScoped<IVueloRepository, VueloRepository>() (y las otras tres), y ningún controlador ni servicio declara una clase concreta como dependencia ni hace new de un repositorio",
       "ayuda": "Buscar en Controllers/ y Servicios/: «new » seguido de Repository, y parámetros de tipo VueloRepository, PasajeroRepository…"
     },
     {
@@ -32,8 +32,8 @@
       "id": "tiempos",
       "texto": "BaseFalsa probada como AddScoped: el pasajero nuevo desaparece en el request siguiente; BaseFalsa restaurada a AddSingleton"
     },
-    { "id": "push", "texto": "Commit y push realizados con el mensaje del desafío; el commit se ve en GitHub" },
-    { "id": "verificador", "texto": "El verificador da todo en verde para el desafío 7 (botón Verificar o dotnet run --project verificador -- 7)" }
+    { "id": "push", "texto": "Commit y push realizados con el mensaje del desafío; el commit aparece en GitHub" },
+    { "id": "verificador", "texto": "El verificador aprueba todos los chequeos del desafío 7 (botón Verificar o dotnet run --project verificador -- 7)" }
   ],
   "quiz": [
     {
@@ -47,8 +47,8 @@
         { "id": "d", "texto": "BaseFalsa" }
       ],
       "correcta": "b",
-      "pista": "El constructor declara un tipo, pero una interfaz no se puede instanciar: alguien tuvo que crear un objeto de una clase concreta. ¿Qué clase está registrada para IVueloRepository en la rama Falso de Program.cs?",
-      "explicacion": "El controlador pide IVueloRepository; el contenedor le entrega la clase que indica Program.cs. Con «AeroTaller (datos falsos)» es VueloRepositoryFalso; con «AeroTaller» sería VueloRepository. El controlador no cambió ni una letra: eso es depender de una abstracción.",
+      "pista": "El constructor declara un tipo, pero una interfaz no se puede instanciar: el contenedor tuvo que crear un objeto de una clase concreta. ¿Qué clase está registrada para IVueloRepository en la rama Falso de Program.cs?",
+      "explicacion": "El controlador declara una dependencia de IVueloRepository; el contenedor le entrega una instancia de la clase registrada en Program.cs. Con «AeroTaller (datos falsos)» es VueloRepositoryFalso; con «AeroTaller» sería VueloRepository. El código del controlador no cambió en absoluto: eso es depender de una abstracción.",
       "etiquetas": ["depurador"]
     },
     {
@@ -58,11 +58,11 @@
         { "id": "a", "texto": "PasajeroRepositoryFalso.Insertar no asigna el Id, entonces el 3 no existe" },
         { "id": "b", "texto": "Con Scoped el contenedor guarda la BaseFalsa en la sesión del navegador, y el redirect la pierde" },
         { "id": "c", "texto": "El redirect es un GET y los repositorios falsos solo guardan datos en los POST" },
-        { "id": "d", "texto": "Cada request recibe una BaseFalsa nueva, armada desde su constructor: el pasajero quedó en la del POST, que se descartó al terminar ese request" }
+        { "id": "d", "texto": "Cada request recibe una BaseFalsa nueva, creada por su constructor: el pasajero quedó en la del POST, que se descartó al terminar ese request" }
       ],
       "correcta": "d",
       "pista": "Scoped significa «uno por request». El POST y el GET del redirect, ¿son el mismo request? ¿Qué hace el constructor de BaseFalsa cada vez que se ejecuta?",
-      "explicacion": "Scoped = un objeto por request. El pasajero se agregó a la lista de la BaseFalsa del POST; el GET /Pasajeros/Detalle/3 es otro request, con otra BaseFalsa recién construida (con los 2 pasajeros de siempre). Por eso BaseFalsa es Singleton: una sola para toda la app, como una base de datos real."
+      "explicacion": "Scoped = un objeto por request. El pasajero se agregó a la lista de la BaseFalsa del POST; el GET /Pasajeros/Detalle/3 es otro request, con otra BaseFalsa recién construida (con los 2 pasajeros iniciales). Por eso BaseFalsa es Singleton: una sola para toda la app, como una base de datos real."
     },
     {
       "id": "p3",
@@ -74,12 +74,12 @@
         { "id": "d", "texto": "AddScoped<IReservaRepository, ReservaRepository>() y AddScoped<IReservaService, ReservaService>()" }
       ],
       "correcta": "c",
-      "pista": "Regla de la diapositiva: un servicio solo puede recibir servicios que vivan igual o más que él. Revisar en cada par quién recibe a quién y cuánto vive cada uno.",
-      "explicacion": "Un Singleton (ReservaService) que recibe un Scoped (el repositorio) se quedaría con el del primer request para siempre: es una dependencia cautiva. En Development .NET lo detecta al arrancar: «Cannot consume scoped service 'IReservaRepository' from singleton 'IReservaService'». En los otros pares, el que recibe vive igual o menos que lo que recibe."
+      "pista": "Regla de la diapositiva: un servicio solo puede recibir servicios con un tiempo de vida igual o mayor que el suyo. Revisar en cada par qué servicio recibe a cuál y cuánto vive cada uno.",
+      "explicacion": "Un Singleton (ReservaService) que recibe un Scoped (el repositorio) conservaría el del primer request durante toda la ejecución: es una dependencia cautiva. En Development .NET lo detecta al arrancar: «Cannot consume scoped service 'IReservaRepository' from singleton 'IReservaService'». En los otros pares, el que recibe vive igual o menos que lo que recibe."
     }
   ],
   "lecturas": [
-    { "id": "tema14", "titulo": "Tema 14 — Inyección de dependencias", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-14-inyeccion-de-dependencias/index.html", "fuente": "Diapositivas de la cátedra", "pregunta": "En la diapositiva «Las dependencias de las dependencias»: ¿en qué orden crea el contenedor los objetos para atender GET /Turnos, y qué es lo único que se arma a mano?" },
+    { "id": "tema14", "titulo": "Tema 14 — Inyección de dependencias", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-14-inyeccion-de-dependencias/index.html", "fuente": "Diapositivas de la cátedra", "pregunta": "En la diapositiva «Las dependencias de las dependencias»: ¿en qué orden crea el contenedor los objetos para atender GET /Turnos, y qué es lo único que se construye manualmente?" },
     { "id": "di-aspnet", "titulo": "Inserción de dependencias en ASP.NET Core", "url": "https://learn.microsoft.com/es-es/aspnet/core/fundamentals/dependency-injection", "fuente": "Microsoft Learn", "pregunta": "En la sección sobre duración de los servicios: ¿qué ocurre si se resuelve un servicio Scoped desde un Singleton, y qué hace la validación de ámbitos en Development?" },
     { "id": "di-pautas", "titulo": "Instrucciones de inserción de dependencias", "url": "https://learn.microsoft.com/es-es/dotnet/core/extensions/dependency-injection-guidelines", "fuente": "Microsoft Learn", "pregunta": "¿Qué dice sobre los servicios Singleton y la seguridad para subprocesos (thread safety)? ¿Por qué BaseFalsa tiene un Candado?" },
     { "id": "fowler", "titulo": "Inversion of Control Containers and the Dependency Injection pattern", "url": "https://martinfowler.com/articles/injection.html", "fuente": "Martin Fowler (2004)", "pregunta": "¿Qué diferencia hay entre la inyección por constructor y un Service Locator? ¿Cuál de las dos se usa en AeroTaller?" }

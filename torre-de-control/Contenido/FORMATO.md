@@ -25,6 +25,7 @@ Para agregar un desafío nuevo, crear la carpeta y asignar un `orden` que lo ubi
   "minutosLimite": null,              // solo simulacro
   "temas": [ { "numero": "13", "titulo": "Validación", "url": "https://taller-de-lenguajes-2.github.io/clases/tema-13-validacion/index.html" } ],
   "insignia": "validacion",           // id en insignias.json que se gana al completarlo
+  "herramientas": ["base"],           // opcional: paneles extra; "base" = crear/recrear aerotaller.db con el script
   "tareas": [ { "id": "t1", "texto": "…", "ayuda": "opcional" } ],
   "quiz": [
     {
@@ -52,15 +53,17 @@ Secciones `##` con estos títulos exactos (el tutorial arma el índice lateral c
 
 | Sección | Para qué |
 |---|---|
-| `## 🎯 Misión` | el problema de AeroTaller y qué debe quedar funcionando |
-| `## 📚 Repaso` | el concepto explicado en términos simples + "lo que vimos en clase" (enlace a la diapositiva) |
-| `## 💻 Paso a paso` | pasos `### Paso N · Título`, que se revelan de a uno |
-| `## 🔴 Breakpoints` | dónde detenerse, qué observar, qué preguntas analizar |
-| `## 🔀 Alternativas` | al menos 2 formas, con tabla de pros y contras |
-| `## ⚠️ Errores típicos` | lo que más se ve en los parciales |
+| `## :target: Misión` | el problema de AeroTaller y qué debe quedar funcionando |
+| `## :book-open-text: Repaso` | el concepto explicado en términos simples + "lo que vimos en clase" (enlace a la diapositiva); al final, `### :lightbulb: Tips y recursos` con alternativas y sus pros y contras. Debajo, el tutorial agrega las lecturas "Para investigar" del JSON |
+| `## :code-xml: Paso a paso` | pasos `### Paso N · Título`, que se revelan de a uno |
 
-Checkpoints: `## 🛬 ¿Cómo vamos?`, `## ✅ Lo que ya se sabe hacer`, `## 🧭 Lo que viene`, `## 🔎 Repaso sugerido`.
-Simulacro: `## ✈️ Consigna`, `## 📋 Requisitos`, `## ⏱️ Reglas del simulacro`, `## 🧪 Cómo se corrige`.
+Checkpoints: `## :plane-landing: ¿Cómo vamos?`, `## :circle-check: Lo que ya se sabe hacer`, `## :compass: Lo que viene`, `## :search: Repaso sugerido`.
+Simulacro: `## :plane: Consigna`, `## :clipboard-list: Requisitos`, `## :timer: Reglas del simulacro`, `## :clipboard-check: Cómo se corrige`.
+
+**Íconos.** No se usan emojis: los íconos son de [Lucide](https://lucide.dev) y se escriben `:nombre:`. Al comienzo de un título
+`##` el ícono acompaña la sección y el índice; en el texto o en una tabla (`:check:`, `:x:`, `:circle-check:`) se dibuja en línea.
+Solo están disponibles los íconos de `wwwroot/js/iconos-lucide.js`; un `:nombre:` desconocido queda como texto. Dentro de los
+bloques de código no se reemplaza nada.
 
 Lo que NO va en el `.md` porque lo arma el tutorial desde el JSON: checklist, cuestionario, lecturas ("Para investigar"),
 commit y push, y verificación.
@@ -76,8 +79,12 @@ Se muestra plegada: se abre solo si hace falta.
 Plegada también. Para el código "de referencia" de un paso.
 :::
 
+:::detalle Título de lo que se despliega
+Plegada. Para información de consulta que no hace falta leer de corrido (por ejemplo, tablas largas).
+:::
+
 :::catedra
-"Lo que vimos en clase": cómo lo muestra la diapositiva, con enlace.
+"Lo visto en clase": cómo lo muestra la diapositiva, con enlace.
 :::
 
 :::cuidado

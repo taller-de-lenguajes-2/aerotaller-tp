@@ -4,7 +4,7 @@ import { estado, mostrarError } from '../estado.js';
 
 const CLAVE_AVION = 'torre.avion';
 
-// El plan de vuelo: todas las escalas (desafíos y checkpoints) con el avión en la que toca ahora
+// El plan de vuelo: todas las escalas (desafíos y checkpoints), con el avión ubicado en la escala actual
 export default {
   setup() {
     const etapas = ref([]);
@@ -35,7 +35,7 @@ export default {
         insignias.value = ins;
       } catch (e) { mostrarError(e); } finally { cargando.value = false; }
 
-      // El avión arranca donde lo dejaste y "vuela" hasta la escala actual
+      // El avión parte de la última posición guardada y se desplaza con una animación hasta la escala actual
       await nextTick();
       let anterior = actual.value;
       try { anterior = Number(localStorage.getItem(CLAVE_AVION) ?? actual.value); } catch { /* nada */ }
@@ -47,8 +47,8 @@ export default {
     });
 
     const textoEstado = e => {
-      if (e.estado === 'completado') return '✔ completado';
-      if (e.estado === 'bloqueado') return '🔒 bloqueado';
+      if (e.estado === 'completado') return 'completado';
+      if (e.estado === 'bloqueado') return 'bloqueado';
       if (e.tipo === 'checkpoint') return 'bitácora';
       return e.tareasTotal ? `${e.tareasHechas}/${e.tareasTotal} tareas` : 'disponible';
     };
@@ -80,7 +80,7 @@ export default {
           <div v-else-if="!repo.esRepo" class="suave" style="font-size:.85rem">{{ repo.mensaje }}</div>
           <template v-else>
             <div class="valor" :style="{ color: repo.sinCommitear || repo.sinPushear ? 'var(--ambar)' : 'var(--verde)' }">
-              {{ repo.sinCommitear || repo.sinPushear ? '⚠' : '✔' }} <span class="mono" style="font-size:1rem">{{ repo.rama }}</span>
+              <Icono :nombre="repo.sinCommitear || repo.sinPushear ? 'triangle-alert' : 'circle-check'" /> <span class="mono" style="font-size:1rem">{{ repo.rama }}</span>
             </div>
             <div class="suave" style="font-size:.85rem">{{ repo.mensaje }}</div>
           </template>
@@ -90,8 +90,22 @@ export default {
       <div class="plan">
         <section>
           <h1 style="margin-top:0">Plan de vuelo</h1>
+          <div class="tarjeta como-avanzar">
+            <h3><Icono nombre="compass" /> Cómo avanzar en el TP</h3>
+            <p>Cada escala es un desafío. Para completarla:</p>
+            <ol>
+              <li>Leer la <strong>misión</strong> y el <strong>repaso</strong>, con sus tips y las lecturas para investigar.</li>
+              <li>Realizar el <strong>paso a paso</strong>, intentando cada paso antes de abrir la solución. Se recomienda colocar
+                breakpoints para seguir el flujo del código.</li>
+              <li>Marcar en el <strong>checklist</strong> cada tarea a medida que se cumple.</li>
+              <li><strong>Verificar</strong>, hacer <strong>commit</strong> y <strong>push</strong>.</li>
+              <li>Responder el <strong>cuestionario</strong>.</li>
+              <li><strong>Completar la escala</strong>: se habilita con el checklist completo y el cuestionario aprobado, y
+                desbloquea la siguiente.</li>
+            </ol>
+          </div>
           <div class="ruta-vuelo" ref="lista">
-            <span class="avion" :style="{ top: avionTop + 'px' }" aria-hidden="true">✈</span>
+            <span class="avion" :style="{ top: avionTop + 'px' }" aria-hidden="true"><Icono nombre="plane" /></span>
             <component :is="enlace(e) ? 'a' : 'div'" v-for="e in etapas" :key="e.id" :href="enlace(e)"
                 class="escala" :class="[e.estado, e.tipo]" :aria-disabled="e.estado === 'bloqueado'">
               <span class="codigo">{{ e.codigo }}</span>
@@ -101,11 +115,11 @@ export default {
                 <div class="fila" style="gap:.3rem">
                   <span class="chip" v-for="t in e.temas" :key="t.numero">Tema {{ t.numero }}</span>
                   <span class="chip ambar" v-if="e.minutosEstimados">~{{ e.minutosEstimados }} min</span>
-                  <span class="chip verde" v-if="e.verificado === true">verificador ✔</span>
-                  <span class="chip rojo" v-if="e.verificado === false">verificador ✘</span>
+                  <span class="chip verde" v-if="e.verificado === true"><Icono nombre="check" /> verificador</span>
+                  <span class="chip rojo" v-if="e.verificado === false"><Icono nombre="x" /> verificador</span>
                 </div>
               </div>
-              <span class="estado">{{ textoEstado(e) }}</span>
+              <span class="estado"><Icono v-if="e.estado === 'completado'" nombre="circle-check" /><Icono v-else-if="e.estado === 'bloqueado'" nombre="lock" /> {{ textoEstado(e) }}</span>
             </component>
           </div>
         </section>
@@ -114,24 +128,9 @@ export default {
           <div class="tarjeta">
             <h3>Insignias</h3>
             <div class="mini-insignias">
-              <span v-for="i in insignias" :key="i.id" :class="{ si: i.obtenida }" :title="i.nombre + ': ' + i.descripcion">{{ i.icono }}</span>
+              <span v-for="i in insignias" :key="i.id" :class="{ si: i.obtenida }" :title="i.nombre + ': ' + i.descripcion"><Icono :nombre="i.icono" /></span>
             </div>
             <p style="margin:.6rem 0 0"><a href="#/insignias">ver todas ▸</a></p>
-          </div>
-          <div class="tarjeta repo" v-if="repo && repo.esRepo">
-            <h3>Últimos commits</h3>
-            <ul v-if="repo.ultimosCommits.length"><li v-for="c in repo.ultimosCommits" :key="c">{{ c }}</li></ul>
-            <p v-else class="suave">Todavía no hay commits.</p>
-          </div>
-          <div class="tarjeta">
-            <h3>Procedimiento de cada escala</h3>
-            <ol style="margin:0;padding-left:1.2rem;font-size:.92rem">
-              <li>Leer la misión y el repaso.</li>
-              <li>Intentar cada paso <em>antes</em> de abrir la solución.</li>
-              <li>Colocar los breakpoints y seguir el flujo.</li>
-              <li>Verificar, hacer commit y <strong>push</strong>.</li>
-              <li>Responder el cuestionario y completar la escala.</li>
-            </ol>
           </div>
         </aside>
       </div>

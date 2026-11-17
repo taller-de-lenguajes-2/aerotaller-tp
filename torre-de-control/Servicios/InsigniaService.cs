@@ -18,7 +18,7 @@ public class InsigniaService(
     }
 
     // Revisa todas las insignias que el alumno todavía no tiene y otorga las que ya cumple.
-    // Devuelve las NUEVAS (para festejarlas en pantalla).
+    // Devuelve las NUEVAS (para anunciarlas en pantalla).
     public List<Insignia> Evaluar(int alumnoId)
     {
         HashSet<string> obtenidas = repositorio.Listar(alumnoId).Select(i => i.InsigniaId).ToHashSet();
@@ -31,7 +31,7 @@ public class InsigniaService(
             {
                 repositorio.Otorgar(alumnoId, insignia.Id);
                 nuevas.Add(insignia);
-                logger.LogInformation("Alumno {AlumnoId} ganó la insignia {Insignia}", alumnoId, insignia.Id);
+                logger.LogInformation("Alumno {AlumnoId} obtuvo la insignia {Insignia}", alumnoId, insignia.Id);
             }
         }
         return nuevas;
@@ -53,7 +53,7 @@ public class InsigniaService(
         _ => false
     };
 
-    // Junta (de a una vez, solo si hace falta) todo lo que miran las reglas
+    // Reúne, de forma diferida y solo cuando se necesitan, los datos que evalúan las reglas
     private class DatosAlumno(int alumnoId, IContenidoRepository contenido, IProgresoRepository progreso,
         IIntentoQuizRepository intentos, IBitacoraRepository bitacora)
     {
@@ -98,7 +98,7 @@ public class InsigniaService(
 
         public int Dudas => bitacora.Listar(alumnoId).Count(n => n.Tipo == TiposNota.Duda);
 
-        // El cuestionario que más intentos le llevó aprobar (si lo aprobó)
+        // Mayor cantidad de intentos necesarios para aprobar un cuestionario (solo se consideran los aprobados)
         public int MaximoIntentosHastaAprobar =>
             intentosQuiz.Value.GroupBy(i => i.DesafioId)
                 .Where(g => g.Any(i => i.Aprobado))

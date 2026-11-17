@@ -1,6 +1,6 @@
 using Microsoft.Data.Sqlite;
 
-// Mira la base que creó la app del alumno (la temporal), sin modificarla.
+// Lee la base creada por la aplicación del alumno (la temporal), sin modificarla.
 public class BaseDatos(string ruta)
 {
     public string Ruta { get; } = ruta;
@@ -10,7 +10,7 @@ public class BaseDatos(string ruta)
     {
         if (!File.Exists(Ruta))
             throw new VerificacionAbortada("La aplicación inició pero no creó la base de datos: primero debe completarse el desafío 1 (CrearBaseSiNoExiste con la cadena de la configuración).");
-        // Pooling=False: no dejar el archivo abierto (la app del alumno también lo usa)
+        // Pooling=False: no dejar el archivo abierto (la aplicación del alumno también lo usa)
         var conexion = new SqliteConnection($"Data Source={Ruta};Mode=ReadOnly;Pooling=False");
         conexion.Open();
         return conexion;
@@ -81,10 +81,10 @@ public class BaseDatos(string ruta)
     }
 
     public int IdVuelo(string numero) =>
-        Convert.ToInt32(Escalar("SELECT Id FROM Vuelo WHERE Numero = @n", ("@n", numero)) ?? throw new VerificacionAbortada($"No está el vuelo {numero} de material/datos.sql"));
+        Convert.ToInt32(Escalar("SELECT Id FROM Vuelo WHERE Numero = @n", ("@n", numero)) ?? throw new VerificacionAbortada($"No se encontró el vuelo {numero} de los datos de aerotaller.sql"));
 
     public int IdPasajero(string dni) =>
-        Convert.ToInt32(Escalar("SELECT Id FROM Pasajero WHERE Dni = @d", ("@d", dni)) ?? throw new VerificacionAbortada($"No está el pasajero con DNI {dni} de material/datos.sql"));
+        Convert.ToInt32(Escalar("SELECT Id FROM Pasajero WHERE Dni = @d", ("@d", dni)) ?? throw new VerificacionAbortada($"No se encontró el pasajero con DNI {dni} de los datos de aerotaller.sql"));
 
     public long ReservasConfirmadas(int vueloId, string asiento) =>
         Contar("SELECT COUNT(*) FROM Reserva WHERE VueloId = @v AND Asiento = @a AND Estado = 'Confirmada'", ("@v", vueloId), ("@a", asiento));

@@ -1,17 +1,18 @@
-## 🎯 Misión
+## :target: Misión
 
 En su estado actual, AeroTaller acepta cualquier dato: el asiento `99Z`, un asiento que ya está ocupado, una reserva en
-un vuelo que salió ayer, un pasajero sin nombre, un DNI `hola`. Este desafío cumple el papel del control migratorio de la
-aplicación: **ningún dato inválido debe pasar**.
+un vuelo que salió ayer, un pasajero sin nombre, un DNI `hola`. Este desafío incorpora la validación, que cumple en la aplicación
+el papel de un control migratorio: **ningún dato inválido debe ser aceptado**.
 
 Al terminar este desafío:
 
 1. Los tres formularios (`Reservas/Crear`, `Pasajeros/Crear` y `Vuelos/Crear`) validan **la forma** de cada campo con
    atributos, en el servidor **y** en el navegador.
-2. Las reglas que necesitan la base (asiento libre, vuelo lleno, DNI repetido…) se controlan en el servidor y el error
-   aparece **al lado del campo** que corresponde.
+2. Las reglas que requieren consultar la base (asiento libre, vuelo lleno, DNI repetido…) se controlan en el servidor y
+   el error aparece **al lado del campo** que corresponde.
 3. Un atributo propio, `[FechaFutura]`, impide crear vuelos en el pasado.
-4. Si algo falla, **no se modifica la base** y el formulario vuelve con los datos que el usuario había cargado.
+4. Si alguna validación falla, **no se modifica la base** y el formulario se vuelve a mostrar con los datos que el
+   usuario había cargado.
 
 Las reglas son las del **contrato** (`CONTRATO.md`, "Reglas del negocio"):
 
@@ -26,16 +27,16 @@ Las reglas son las del **contrato** (`CONTRATO.md`, "Reglas del negocio"):
 | DNI: 7 u 8 dígitos y único | `Dni` |
 | Vuelo: salida futura, origen ≠ destino, número `AT` + 4 dígitos y único | el campo correspondiente |
 
-## 📚 Repaso
+## :book-open-text: Repaso
 
 Lo visto en el tema 13, en cuatro ideas:
 
-- **Nunca confiar en lo que llega del cliente.** La validación del navegador es una comodidad; la del servidor es la que
-  protege. Y la base (`NOT NULL`, `UNIQUE`, `FOREIGN KEY`) es la última red.
+- **Nunca confiar en los datos que llegan del cliente.** La validación del navegador es una comodidad; la del servidor
+  es la que protege la aplicación. La base (`NOT NULL`, `UNIQUE`, `FOREIGN KEY`) es la última línea de defensa.
 - **DRY:** la regla se declara **una vez**, como atributo en el ViewModel, y ASP.NET la aplica en los dos lados:
   en el servidor (`ModelState`) y en el navegador (`data-val-*` + jQuery Validation).
-- **`ModelState.IsValid`** no detiene nada por sí solo: los atributos anotan los errores, y **la acción decide**.
-- **Las reglas que consultan datos** ("¿ese DNI ya existe?") no pueden ser atributos: se agregan a mano con
+- **`ModelState.IsValid`** no detiene nada por sí solo: los atributos registran los errores y **la acción determina cómo proceder**.
+- **Las reglas que consultan datos** ("¿ese DNI ya existe?") no pueden ser atributos: se agregan manualmente con
   `ModelState.AddModelError(nameof(modelo.Campo), "mensaje")`.
 
 | Qué | Dónde | En AeroTaller |
@@ -45,9 +46,34 @@ Lo visto en el tema 13, en cuatro ideas:
 | Integridad | la base | `UNIQUE` en `Dni` y `Numero`, `FOREIGN KEY`, `CHECK (OrigenId <> DestinoId)` |
 | Comodidad | el navegador, generado a partir de los atributos | aviso antes de enviar |
 
-Lo que vimos en clase: [Tema 13 — Validación](https://taller-de-lenguajes-2.github.io/clases/tema-13-validacion/index.html).
+Lo visto en clase: [Tema 13 — Validación](https://taller-de-lenguajes-2.github.io/clases/tema-13-validacion/index.html).
 
-## 💻 Paso a paso
+### :lightbulb: Tips y recursos
+
+**¿Dónde se ubica una regla que evalúa dos campos (origen ≠ destino)?**
+
+| Forma | Cómo | Ventaja | Desventaja | Cuándo |
+|---|---|---|---|---|
+| `AddModelError` en el controlador | un `if` en el POST | simple, igual que en el tema 13 | el controlador aumenta de tamaño | **lo visto en clase**; en el parcial es suficiente |
+| `IValidatableObject` en el ViewModel | el ViewModel implementa `Validate(...)` y devuelve los errores | la regla se define junto con el formulario | no accede a la base; se ejecuta solo si las propiedades superaron sus atributos | reglas entre campos del mismo formulario (no se vio en clase) |
+| Restricción en la base | `CHECK (OrigenId <> DestinoId)` (ya está en `aerotaller.sql`) | no puede omitirse, ni siquiera con SQL ejecutado manualmente | el error es una excepción de SQLite, no un mensaje legible | **además** de las otras: es la última línea de defensa |
+
+**¿Conviene escribir manualmente el JavaScript de la validación?**
+
+| Forma | Ventaja | Desventaja | Cuándo |
+|---|---|---|---|
+| Atributos + `_ValidationScriptsPartial` | una sola regla para servidor y navegador (DRY) | solo cubre los atributos que admite jQuery Validation | **siempre** como base |
+| JavaScript propio en la vista | control total del mensaje y del momento | la regla queda escrita dos veces, en dos lenguajes | casi nunca |
+| Solo servidor (sin scripts) | menos componentes | el usuario debe esperar una solicitud al servidor para ver el error | si el formulario es pequeño; **la del servidor nunca se elimina** |
+
+:::catedra
+El tema 13 implementa las reglas con datos en el controlador (`PacientesController` y `TurnosController`) y menciona la
+alternativa: "en el controlador (o en un servicio)". En el desafío 6 se aplica precisamente esa alternativa: se trasladan a
+`ReservaService`. `IValidatableObject` no se vio en clase: es una alternativa válida, pero en el parcial corresponde usar
+lo visto en la materia.
+:::
+
+## :code-xml: Paso a paso
 
 ### Paso 1 · Atributos en el formulario de reserva
 
@@ -79,30 +105,30 @@ public class ReservaCrearViewModel
 }
 ```
 
-El `@` delante del patrón indica un *verbatim string*: así `\d` y `\s` llegan tal cual al motor de expresiones
-regulares. ¿El patrón acepta `99Z`? No: la `Z` no está en `[A-Fa-f]`. ¿Y `25A` en un avión de 20 filas? Sí: el atributo
-no sabe cuántas filas tiene ese avión. Esa regla corresponde al paso 3.
+El `@` delante del patrón indica un *verbatim string*: así `\d` y `\s` llegan sin modificaciones al motor de
+expresiones regulares. El patrón rechaza `99Z`, porque la `Z` no está en `[A-Fa-f]`. En cambio, acepta `25A` en un avión
+de 20 filas: el atributo no tiene acceso a la cantidad de filas de ese avión. Esa regla corresponde al paso 3.
 
 Agregar también `[ValidateNever]` en las listas de `VueloIndexViewModel` (`Destinos` y `Resultados`).
 
 ### Paso 2 · `ModelState` en el servidor y los errores en la vista
 
-En el POST, lo primero es consultar el estado de la validación. Si algo falló, se vuelve a mostrar **el mismo
-formulario** con lo que cargó el usuario (y las listas recargadas):
+En el POST, lo primero es consultar el estado de la validación. Si alguna validación falló, se vuelve a mostrar
+**el mismo formulario** con los datos que cargó el usuario (y las listas recargadas):
 
 ```csharp
 [HttpPost]
 [ValidateAntiForgeryToken]
 public IActionResult Crear(ReservaCrearViewModel modelo)
 {
-    // 1 · Los atributos ya corrieron durante el binding: si algo falló, ModelState lo registra
+    // 1 · Los atributos ya se ejecutaron durante el binding: si algo falló, ModelState lo registra
     if (!ModelState.IsValid)
     {
         CargarListas(modelo);
         return View(modelo);
     }
 
-    // 2 · Reglas que necesitan la base (paso 3)
+    // 2 · Reglas que requieren consultar la base (paso 3)
     // 3 · Guardar y redirigir
 }
 ```
@@ -139,7 +165,7 @@ los scripts de validación del navegador:
 ```
 
 `_ValidationScriptsPartial.cshtml` ya está en `Views/Shared/` (carga jQuery, jQuery Validation y Unobtrusive desde un
-CDN, igual que en la clínica). El layout tiene el `RenderSectionAsync("Scripts", …)` que lo recibe.
+CDN, igual que en la clínica). El layout contiene el `RenderSectionAsync("Scripts", …)` que lo incluye.
 
 Abrir el formulario, presionar F12 e inspeccionar el HTML del `<input>` del asiento: aparece `data-val-regex-pattern`
 con **el mismo** patrón declarado en el ViewModel. Es la regla escrita una sola vez (DRY), reflejada en el navegador.
@@ -149,17 +175,17 @@ La clase `field-validation-error` (el texto rojo) y `validation-summary-errors` 
 verificador busca precisamente `field-validation-error` para determinar si el formulario mostró el error.
 :::
 
-### Paso 3 · Las reglas que necesitan la base
+### Paso 3 · Las reglas que requieren consultar la base
 
-Un atributo evalúa un valor aislado. Para saber si el 3A está ocupado o si el AT0500 está lleno hay que consultar los
-repositorios. Por ahora esas reglas van **en el controlador**, después del primer `if` (en el desafío 6 se trasladan a
+Un atributo evalúa un valor aislado. Para determinar si el 3A está ocupado o si el AT0500 está lleno es necesario
+consultar los repositorios. Por ahora esas reglas se ubican **en el controlador**, después del primer `if` (en el desafío 6 se trasladan a
 un servicio).
 
 El orden importa: primero se normaliza el asiento (`"12c "` → `"12C"`) y después se controla, en este orden: vuelo que
 ya salió → asiento que no existe en ese avión → vuelo lleno → asiento ocupado → pasajero repetido. Cada error se
 registra con `nameof` para evitar errores de escritura en el nombre del campo.
 
-Se recomienda intentarlo con lo que ya ofrecen los repositorios: `vuelo.YaSalio`, `vuelo.TieneAsiento(asiento)`,
+Se recomienda intentarlo con los miembros que ya exponen el modelo y los repositorios: `vuelo.YaSalio`, `vuelo.TieneAsiento(asiento)`,
 `vuelo.Capacidad`, `reservas.ContarConfirmadas(vueloId)`, `reservas.AsientosOcupados(vueloId)` y
 `reservas.PasajeroTieneReserva(vueloId, pasajeroId)`.
 
@@ -176,12 +202,12 @@ public IActionResult Crear(ReservaCrearViewModel modelo)
         return View(modelo);
     }
 
-    // Pasó [Required]: en este punto los int? ya tienen valor
+    // Superada la validación de [Required]: en este punto los int? ya tienen valor
     string asiento = modelo.Asiento.Trim().ToUpperInvariant();      // "12c " → "12C"
     Vuelo? vuelo = vuelos.Obtener(modelo.VueloId!.Value);
     Pasajero? pasajero = pasajeros.Obtener(modelo.PasajeroId!.Value);
 
-    // 2 · Reglas que necesitan la base: el error va al campo que corresponde
+    // 2 · Reglas que requieren consultar la base: el error se asigna al campo que corresponde
     if (vuelo is null)
         ModelState.AddModelError(nameof(modelo.VueloId), "Ese vuelo no existe.");
     else if (vuelo.YaSalio)
@@ -222,12 +248,12 @@ public IActionResult Crear(ReservaCrearViewModel modelo)
 :::
 
 ¿Por qué el `else if`? Para mostrar **un** error de vuelo/asiento por vez, el más importante primero: si el vuelo ya
-salió, no tiene sentido informar además que el asiento está ocupado. El del pasajero va aparte porque corresponde a otro
-campo.
+salió, no tiene sentido informar además que el asiento está ocupado. El error del pasajero se evalúa por separado porque
+corresponde a otro campo.
 
-¿Por qué controlar `vuelo is null` si el desplegable solo muestra vuelos existentes? Porque **el POST puede armarse a
-mano**: el verificador (y cualquiera con un `.http` o con F12) envía `VueloId=999` o el Id del AT0999 aunque no esté
-en la lista.
+¿Por qué controlar `vuelo is null` si el desplegable solo muestra vuelos existentes? Porque **el POST puede construirse
+manualmente**: el verificador (y cualquier usuario con un archivo `.http` o con F12) envía `VueloId=999` o el Id del
+AT0999 aunque no esté en la lista.
 
 ### Paso 4 · Alta de pasajeros
 
@@ -266,7 +292,7 @@ public class PasajeroFormViewModel
 En el mensaje, `{0}` es el nombre del campo y `{1}`, `{2}`… son los parámetros del atributo: en `[StringLength(100,
 MinimumLength = 3)]`, `{1}` es 100 y `{2}` es 3.
 
-El controlador sigue el modelo del `PacientesController` del tema 13: la regla del DNI repetido necesita la base.
+El controlador sigue el modelo del `PacientesController` del tema 13: la regla del DNI repetido requiere consultar la base.
 
 ```csharp
 [HttpGet]
@@ -315,12 +341,12 @@ public class FechaFuturaAttribute : ValidationAttribute
 
 - Hereda de `ValidationAttribute` y **sobrescribe** `IsValid`: herencia y polimorfismo (tema 03).
 - El nombre termina en `Attribute`; al usarlo se escribe `[FechaFutura]`.
-- Corre **solo en el servidor**: no se implementa la parte de JavaScript.
+- Se ejecuta **solo en el servidor**: no se implementa la parte de JavaScript.
 
 ### Paso 6 · Alta de vuelos
 
 `GET/POST /Vuelos/Crear` con `Numero`, `OrigenId`, `DestinoId`, `Salida`, `DuracionMinutos`, `Filas` y `Precio`.
-Combina todo lo anterior: combos con `int?`, `[FechaFutura]`, `[Range]` y dos reglas con datos.
+Combina todo lo anterior: desplegables con `int?`, `[FechaFutura]`, `[Range]` y dos reglas con datos.
 
 :::solucion Ver VueloCrearViewModel
 ```csharp
@@ -369,8 +395,8 @@ public class VueloCrearViewModel
 ```
 :::
 
-Las dos reglas con datos van en el POST de `VuelosController`. Origen ≠ destino no necesita la base, pero sí evaluar
-**dos** campos a la vez: un atributo sobre una propiedad no tiene acceso a la otra.
+Las dos reglas con datos se implementan en el POST de `VuelosController`. Origen ≠ destino no requiere consultar la
+base, pero sí evaluar **dos** campos a la vez: un atributo sobre una propiedad no tiene acceso a la otra.
 
 ```csharp
 [HttpPost]
@@ -390,7 +416,7 @@ public IActionResult Crear(VueloCrearViewModel modelo)
         return View(modelo);
     }
 
-    // Si llega un Id de aeropuerto inventado, Obtener devuelve null: en el desafío 6 lo controla el servicio
+    // Si llega un Id de aeropuerto inexistente, Obtener devuelve null: en el desafío 6 lo controla el servicio
     var vuelo = new Vuelo
     {
         Numero = numero,
@@ -406,7 +432,7 @@ public IActionResult Crear(VueloCrearViewModel modelo)
 }
 ```
 
-`ListaDeAeropuertos()` es un método privado que arma los `SelectListItem` (lo usan el GET de `Crear`, el POST y el
+`ListaDeAeropuertos()` es un método privado que construye los `SelectListItem` (lo usan el GET de `Crear`, el POST y el
 `Index`; conviene extraerlo del `Index` del desafío 4 para no repetirlo). En la vista, `<input asp-for="Salida" />` con
 un `DateTime?` genera un `<input type="datetime-local">`.
 
@@ -416,11 +442,11 @@ En el desafío 9, `Vuelos/Crear` quedará restringido al rol Admin. Por ahora cu
 
 ### Paso 7 · Probar el servidor sin la ayuda del navegador
 
-Con los scripts de validación, el navegador detiene el formulario vacío antes de enviarlo: en ese caso no se está
-probando el servidor. Para probarlo efectivamente:
+Con los scripts de validación, el navegador bloquea el envío del formulario vacío: en ese caso no se está probando el
+servidor. Para probarlo efectivamente:
 
 1. **Desactivar JavaScript** (Chrome: F12 → `Ctrl/Cmd + Shift + P` → "Disable JavaScript") y enviar el formulario
-   vacío. Los errores deben aparecer igual: esos los generó el **servidor**.
+   vacío. Los errores deben aparecer de todos modos: en ese caso los genera el **servidor**.
 2. **Antiforgery:** con F12, en la pestaña Elementos, eliminar el `<input type="hidden" name="__RequestVerificationToken">`
    que el tag helper `<form>` agregó automáticamente, y enviar. Respuesta: **400 Bad Request**, y la acción ni siquiera
    se ejecuta (con un breakpoint se comprueba que no se detiene). Ese es el efecto de `[ValidateAntiForgeryToken]`.
@@ -431,77 +457,8 @@ probando el servidor. Para probarlo efectivamente:
 | AT1001, Bruno Díaz, `25A` | "El asiento 25A no existe en este avión…" |
 | AT1001, Bruno Díaz, `3A` | "El asiento 3A ya está ocupado." |
 | AT1001, Ana Gómez, `5C` | "Ana Gómez ya tiene una reserva en este vuelo." |
-| AT0500, Gabriela Sosa, `1F` | ✅ se guarda (el avión queda lleno: 6 de 6) |
+| AT0500, Gabriela Sosa, `1F` | :circle-check: se guarda (el avión queda lleno: 6 de 6) |
 | AT0500, Hernán Molina, `1A` | "El vuelo AT0500 está completo." |
 | AT0999 (enviado con F12: cambiar el `value` de una opción a `1`) | "El vuelo AT0999 ya salió." |
 
 Después de cada error, verificar en DB Browser que **no** apareció ninguna fila nueva en `Reserva`.
-
-## 🔴 Breakpoints
-
-:::breakpoint ReservasController.cs · Crear (POST) · if (!ModelState.IsValid)
-Con JavaScript desactivado, enviar el formulario vacío. En **Inspección**, agregar `ModelState.IsValid` y
-`ModelState.ErrorCount`. Desplegar `ModelState["Asiento"].Errors[0].ErrorMessage`: ¿coincide con el mensaje declarado en
-el atributo? Observar también `modelo.VueloId`: ¿es `null` o `0`?
-:::
-
-:::breakpoint FechaFuturaAttribute.cs · IsValid
-Crear un vuelo con salida de ayer. Observar `value` en **Variables**: ¿de qué tipo es? Luego borrar la fecha y enviar
-otra vez: ¿se detiene? Si se detiene, ¿qué vale `value` y qué devuelve el método? ¿Quién termina mostrando el error en
-ese caso?
-:::
-
-:::breakpoint ReservasController.cs · Crear (POST) · el segundo if (!ModelState.IsValid)
-Reservar el `25A` en el AT1001. Con F10, recorrer las reglas: ¿en qué `else if` entra? Antes y después del
-`AddModelError`, observar `ModelState.IsValid` en **Inspección**: así se ve cómo una regla "a mano" se suma a las de los
-atributos.
-:::
-
-Preguntas para analizar:
-
-- Si el usuario carga `12c` (minúscula), ¿qué se guarda en la base? ¿Dónde se realizó la conversión?
-- ¿Por qué en `Pasajeros/Crear` solo se llama a `ExisteDni` si `ModelState.IsValid` ya es `true`?
-
-## 🔀 Alternativas
-
-**¿Dónde va una regla que evalúa dos campos (origen ≠ destino)?**
-
-| Forma | Cómo | Ventaja | Desventaja | Cuándo |
-|---|---|---|---|---|
-| `AddModelError` en el controlador | un `if` en el POST | simple, igual que en el tema 13 | el controlador crece | **lo visto en clase**; en el parcial es suficiente |
-| `IValidatableObject` en el ViewModel | el ViewModel implementa `Validate(...)` y devuelve los errores | la regla viaja con el formulario | no accede a la base; corre solo si los atributos de las propiedades pasaron | reglas entre campos del mismo formulario (no se vio en clase) |
-| Restricción en la base | `CHECK (OrigenId <> DestinoId)` (ya está en `aerotaller.sql`) | nadie puede saltearla, ni con SQL a mano | el error es una excepción de SQLite, no un mensaje legible | **además** de las otras: es la última red |
-
-**¿Conviene escribir a mano el JavaScript de la validación?**
-
-| Forma | Ventaja | Desventaja | Cuándo |
-|---|---|---|---|
-| Atributos + `_ValidationScriptsPartial` | una sola regla para servidor y navegador (DRY) | solo cubre los atributos que jQuery Validation conoce | **siempre** como base |
-| JavaScript a mano en la vista | control total del mensaje y del momento | la regla queda escrita dos veces, en dos lenguajes | casi nunca |
-| Solo servidor (sin scripts) | menos piezas | el usuario debe esperar un viaje al servidor para ver el error | si el formulario es chico; **la del servidor nunca se elimina** |
-
-:::catedra
-El tema 13 implementa las reglas con datos en el controlador (`PacientesController` y `TurnosController`) y menciona la
-alternativa: "en el controlador (o en un servicio)". En el desafío 6 se hace justamente eso: se trasladan a
-`ReservaService`. `IValidatableObject` no se vio en clase: es una alternativa válida, pero en el parcial corresponde usar
-lo visto en la materia.
-:::
-
-## ⚠️ Errores típicos
-
-- **Atributos sin `if (!ModelState.IsValid)`**: los errores se anotan pero la acción continúa y guarda (o lanza una
-  excepción). En MVC el `if` debe escribirse explícitamente; el 400 automático es propio de la Web API con
-  `[ApiController]`.
-- **`int VueloId` sin `?`**: si el campo no llega, queda en 0 y `[Required]` no lo detecta; si llega vacío, el error es
-  uno genérico en inglés (*The value '' is invalid.*). Con `int?` aparece el mensaje propio.
-- **El nombre del campo mal escrito en `AddModelError("Vuelo", …)`**: `ModelState.IsValid` da `false`, pero ningún
-  `asp-validation-for` tiene ese nombre y el resumen `ModelOnly` solo muestra errores con nombre vacío: **el error no se
-  ve en ningún lado**. Usar `nameof(modelo.VueloId)`.
-- **Mensajes en inglés** (*The Nombre field is required.*): con `<Nullable>enable</Nullable>`, un `string` sin `?` ya
-  es obligatorio aunque no tenga `[Required]`, y el mensaje es el de .NET. Agregar `[Required(ErrorMessage = …)]`.
-- **Sin la sección `Scripts`**: no hay validación en el navegador (el servidor sigue validando, pero el usuario espera
-  el viaje). Y a la inversa: validar **solo** en el navegador equivale a no validar.
-- **"Los vuelos de ejemplo ya salieron"**: las fechas de `datos.sql` se calculan desde el día en que se **creó** la
-  base. Si se creó hace una semana, el AT1001 ya salió. Borrar `aerotaller.db` y volver a iniciar la aplicación.
-- **Omitir `CargarListas` en el camino del segundo `if`**: el formulario vuelve con los errores… y los desplegables
-  vacíos.
