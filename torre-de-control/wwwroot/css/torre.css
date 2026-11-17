@@ -99,7 +99,19 @@ label.campo { display: block; font-weight: 600; margin: .8rem 0 .3rem; }
 .boarding dt { font-size: .7rem; text-transform: uppercase; letter-spacing: .1em; color: var(--tinta-suave); }
 .boarding dd { margin: 0 0 .5rem; font-weight: 600; }
 .perfiles { display: grid; gap: .6rem; }
-.perfil { display: flex; justify-content: space-between; align-items: center; padding: .8rem 1rem; border-radius: 10px; border: 1px solid var(--linea); background: var(--papel); cursor: pointer; text-align: left; color: var(--tinta); }
+.perfil { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.1rem; border-radius: 14px; border: 1px solid var(--linea); background: var(--papel); cursor: pointer; text-align: left; color: var(--tinta); font: inherit; box-shadow: var(--sombra); }
+.perfil .avatar { flex: none; width: 3.2rem; height: 3.2rem; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 1.15rem; letter-spacing: .03em;
+  background: var(--azul-suave); color: var(--azul); border: 2px solid var(--azul); }
+.perfil-datos { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: .1rem; }
+.perfil-datos small { font-size: .68rem; letter-spacing: .1em; color: var(--tinta-suave); }
+.perfil-datos strong { font-size: 1.08rem; }
+.perfil-datos .suave { font-size: .85rem; }
+.perfil-avance { font-size: .85rem; margin-top: .3rem; }
+.perfil-datos .progreso { margin-top: .25rem; }
+.perfil-continuar { flex: none; pointer-events: none; }
+/* Casilla con su texto en la misma línea */
+.casilla { display: flex; align-items: flex-start; gap: .55rem; margin-top: .9rem; font-size: .92rem; cursor: pointer; }
+.casilla input { flex: none; width: 18px; height: 18px; margin: .15rem 0 0; accent-color: var(--ambar); }
 .perfil:hover { border-color: var(--azul); }
 
 /* ── Plan de vuelo (mapa) ─────────────────────── */
@@ -411,3 +423,4 @@ details.caja.solucion { background: var(--fondo); }
 .indice a.plegada { opacity: .55; }
 .plegar-acciones { display: grid; gap: .35rem; margin-top: .8rem; }
 .plegar-acciones .boton { justify-content: flex-start; }
+.plegar-acciones small { font-size: .78rem; line-height: 1.35; }

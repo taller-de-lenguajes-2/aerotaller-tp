@@ -6,6 +6,7 @@ import { estado, elegirAlumno, refrescarResumen, avisar, mostrarError } from '..
 export default {
   setup() {
     const alumnos = ref([]);
+    const resumenes = ref({});   // id → { completados, total } de cada tarjeta existente
     const editando = computed(() => !!estado.alumnoId && !!estado.resumen);
     const form = reactive({ nombre: '', rutaProyecto: '', modoLibre: false });
     const error = ref(null);
@@ -14,6 +15,9 @@ export default {
     onMounted(async () => {
       try {
         alumnos.value = await api.alumnos();
+        // El avance de cada tarjeta, para mostrarlo en la lista
+        const pares = await Promise.all(alumnos.value.map(a => api.resumen(a.id).then(r => [a.id, r]).catch(() => [a.id, null])));
+        resumenes.value = Object.fromEntries(pares);
         if (editando.value) {
           const a = estado.resumen.alumno;
           Object.assign(form, { nombre: a.nombre, rutaProyecto: a.rutaProyecto || '', modoLibre: a.modoLibre });
@@ -54,7 +58,14 @@ export default {
       location.hash = '#/plan';
     }
 
-    return { alumnos, form, guardar, elegir, error, guardando, editando, iniciales, asiento };
+    const inicialesDe = nombre => (nombre || '?').trim().split(/\s+/).map(p => p[0]).join('').slice(0, 2).toUpperCase();
+    const fechaDe = f => f ? new Date(f).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+    const avance = id => {
+      const r = resumenes.value[id];
+      return r ? { completados: r.completados, total: r.total, porcentaje: r.total ? Math.round(r.completados * 100 / r.total) : 0 } : null;
+    };
+
+    return { alumnos, inicialesDe, fechaDe, avance, form, guardar, elegir, error, guardando, editando, iniciales, asiento };
   },
   template: `
     <div class="embarque">
@@ -75,8 +86,9 @@ export default {
               <label class="campo" for="ruta">Carpeta del repositorio (la que contiene AeroTaller/)</label>
               <input id="ruta" type="text" v-model="form.rutaProyecto" class="mono">
               <p class="suave" style="font-size:.85rem;margin:.3rem 0 0">Se utiliza para el botón Verificar y para consultar el estado de git. Si la Torre se ejecuta desde el repositorio clonado, no es necesario modificarla.</p>
-              <label class="fila" style="margin-top:.9rem;font-size:.92rem">
-                <input type="checkbox" v-model="form.modoLibre"> Modo libre: todos los desafíos desbloqueados (para repasar)
+              <label class="casilla">
+                <input type="checkbox" v-model="form.modoLibre">
+                <span><strong>Modo libre</strong>: todos los desafíos desbloqueados (para repasar)</span>
               </label>
               <div class="error-caja" v-if="error" style="margin-top:.8rem">{{ error }}</div>
               <p style="margin-top:1.2rem">
@@ -97,12 +109,22 @@ export default {
       </section>
 
       <section v-if="!editando">
-        <h2>Tarjetas existentes</h2>
+        <h2>Tarjetas de embarque existentes</h2>
+        <p class="suave">Cada tarjeta guarda el progreso de una persona en esta computadora. Para retomar el TP, elegir la propia.</p>
         <p class="suave" v-if="alumnos.length === 0">Todavía no hay tarjetas en esta computadora.</p>
         <div class="perfiles">
-          <button type="button" class="perfil" v-for="a in alumnos" :key="a.id" @click="elegir(a)">
-            <span><strong>{{ a.nombre }}</strong></span>
-            <span>continuar ▸</span>
+          <button type="button" class="perfil" v-for="a in alumnos" :key="a.id" @click="elegir(a)" :aria-label="'Continuar con la tarjeta de ' + a.nombre">
+            <span class="avatar" aria-hidden="true">{{ inicialesDe(a.nombre) }}</span>
+            <span class="perfil-datos">
+              <small class="mono">TARJETA DE EMBARQUE</small>
+              <strong>{{ a.nombre }}</strong>
+              <span class="suave">Comenzó el {{ fechaDe(a.creado) }}<template v-if="a.modoLibre"> · modo libre</template></span>
+              <template v-if="avance(a.id)">
+                <span class="perfil-avance">{{ avance(a.id).completados }} de {{ avance(a.id).total }} escalas completadas</span>
+                <span class="progreso"><span :style="{ width: avance(a.id).porcentaje + '%' }"></span></span>
+              </template>
+            </span>
+            <span class="boton ambar chico perfil-continuar">Continuar <Icono nombre="arrow-right" /></span>
           </button>
         </div>
       </section>

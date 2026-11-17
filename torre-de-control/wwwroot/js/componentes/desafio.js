@@ -240,9 +240,13 @@ export default {
       if (plegadas[idSeccion]) plegar(idSeccion, false);
       setTimeout(() => document.getElementById(idSeccion)?.scrollIntoView({ behavior: 'smooth' }), 0);
     };
-    // "Solo trabajo": pliega la parte de lectura (misión, repaso, lecturas) para acceder directamente al paso a paso
-    const TEORIA = ['mision', 'repaso', 'investigar'];
-    const soloTrabajo = () => plegarVarias(TEORIA, true);
+    // "Solo trabajo": pliega la teoría (repaso y lecturas) y deja abierto lo necesario para trabajar:
+    // la misión (qué hay que hacer), el paso a paso, el checklist y el resto de las secciones de cierre
+    const TEORIA = ['repaso', 'investigar'];
+    const soloTrabajo = () => {
+      plegarVarias(TEORIA, true);
+      plegarVarias(indice.value.map(s => s.id).filter(id => !TEORIA.includes(id)), false);
+    };
     const desplegarTodo = () => plegarVarias(indice.value.map(s => s.id), false);
 
     async function copiar(texto) {
@@ -270,8 +274,9 @@ export default {
         <a v-for="s in indice" :key="s.id" :href="'#/desafio/' + d.id" @click.prevent="ir(s.id)" :class="{ plegada: plegadas[s.id] }"
            :title="plegadas[s.id] ? 'Sección plegada: hacer clic para desplegarla y acceder a ella' : ''"><Icono :nombre="s.icono" /> {{ s.titulo }}</a>
         <div class="plegar-acciones">
-          <button type="button" class="boton secundario chico" @click="soloTrabajo" title="Pliega misión, repaso y lecturas"><Icono nombre="minimize-2" /> Solo trabajo</button>
+          <button type="button" class="boton secundario chico" @click="soloTrabajo" title="Pliega el repaso y las lecturas"><Icono nombre="minimize-2" /> Solo trabajo</button>
           <button type="button" class="boton secundario chico" @click="desplegarTodo"><Icono nombre="maximize-2" /> Desplegar todo</button>
+          <small class="suave">«Solo trabajo» pliega el repaso y las lecturas, y deja a la vista la misión, el paso a paso y el checklist. Cada sección también se pliega desde su título.</small>
         </div>
         <div class="requisitos" v-if="d.tipo !== 'checkpoint'">
           <div><Icono :nombre="tareasHechas === d.tareas.length ? 'square-check' : 'square'" :class="{ ok: tareasHechas === d.tareas.length }" /> Tareas {{ tareasHechas }}/{{ d.tareas.length }}</div>
